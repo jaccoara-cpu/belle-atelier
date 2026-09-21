@@ -462,8 +462,8 @@
       const p = Number(it.price) || 0;
       const q = Number(it.quantity) || 1;
       const rowPrice = p * q;
-      const img = it.image || '/images/berehynia_dress_1789843600634.jpg';
-      const prodUrl = `/product.html?id=${it.id || 'beregynya'}`;
+      const img = it.image || 'images/berehynia_dress_1789843600634.jpg';
+      const prodUrl = `product.html?id=${it.id || 'beregynya'}`;
 
       return `
         <div class="flex flex-col sm:flex-row gap-space-md items-start sm:items-center justify-between pb-4 border-b border-surface-container-high/60 last:border-0 last:pb-0">
