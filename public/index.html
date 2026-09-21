@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html class="scroll-smooth" lang="uk">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Belle Atelier &amp; Boutique — Український кутюр з характером</title>
+  <link href="https://fonts.googleapis.com" rel="preconnect"/>
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            background: "#fbf9f4",
+            surface: "#fbf9f4",
+            primary: "#5e1020",
+            "primary-container": "#7c2735",
+            secondary: "#725b38",
+            "secondary-container": "#fedeb2",
+            tertiary: "#2f2f2e",
+            "surface-container-low": "#f5f3ee",
+            "surface-container": "#f0eee9",
+            "surface-container-high": "#eae8e3",
+            "surface-container-highest": "#e4e2dd",
+            "surface-container-lowest": "#ffffff",
+            "on-surface": "#1b1c19",
+            "on-surface-variant": "#554243",
+            "on-primary": "#ffffff",
+            outline: "#887273"
+          },
+          fontFamily: {
+            headline: ["Cormorant Garamond", "Playfair Display", "serif"],
+            body: ["Montserrat", "Plus Jakarta Sans", "sans-serif"]
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    @layer base {
+      html, body { margin: 0; padding: 0; background-color: #fbf9f4; }
+    }
+    ::-webkit-scrollbar { display: none; }
+  </style>
+</head>
+<body class="bg-surface text-on-surface font-body antialiased selection:bg-secondary-container selection:text-on-surface">
+
+  <!-- Minimalist Header (Shopersvi style with left menu icon) -->
+  <header class="sticky top-0 left-0 w-full z-50 bg-surface/95 backdrop-blur-md border-b border-surface-container-high">
+    <div class="h-16 sm:h-20 max-w-7xl mx-auto px-4 md:px-8 flex items-center justify-between">
+      <!-- Left side: Hamburger menu button + Logo and Name -->
+      <div class="flex items-center gap-3 sm:gap-6">
+        <button id="index-mobile-menu-btn" class="p-2 -ml-2 text-on-surface hover:text-primary transition-colors focus:outline-none" aria-label="Відкрити меню">
+          <span class="material-symbols-outlined text-[26px]">menu</span>
+        </button>
+
+        <a class="flex items-center gap-3 group" href="/">
+          <img src="/images/logo.png" alt="Belle Atelier Logo" class="h-10 w-10 sm:h-12 sm:w-12 object-contain rounded-full shadow-xs ring-1 ring-secondary/20 group-hover:scale-105 transition-transform" />
+          <div class="flex flex-col">
+            <span class="font-headline text-xl sm:text-2xl tracking-wider uppercase text-primary font-bold leading-none">Belle Atelier</span>
+          </div>
+        </a>
+      </div>
+
+      <!-- Right side: Search, Wishlist, Cart -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        <a href="/catalog" class="p-2 text-on-surface hover:text-primary transition-colors" aria-label="Пошук">
+          <span class="material-symbols-outlined text-[22px]">search</span>
+        </a>
+        <a href="/catalog" class="relative p-2 text-on-surface hover:text-primary transition-colors" aria-label="Обране">
+          <span class="material-symbols-outlined text-[22px]">favorite</span>
+          <span class="wishlist-badge-count absolute top-1 right-1 w-2 h-2 bg-primary rounded-full hidden"></span>
+        </a>
+        <a href="/cart" class="relative p-2 text-on-surface hover:text-primary transition-colors flex items-center" aria-label="Кошик">
+          <span class="material-symbols-outlined text-[24px]">shopping_bag</span>
+          <span class="cart-badge-count absolute top-0 right-0 w-4 h-4 bg-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center">1</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Clean Slide-Down Menu for Mobile & Desktop Drawer -->
+    <div id="index-mobile-nav" class="hidden border-t border-surface-container-high bg-surface px-6 py-5 flex flex-col gap-3 text-xs font-semibold tracking-wider uppercase shadow-xl">
+      <a class="text-primary py-1 border-b border-surface-container-high/60 flex items-center justify-between" href="/catalog">
+        <span class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-[18px]">grid_view</span>
+          <span>Весь каталог</span>
+        </span>
+        <span class="material-symbols-outlined text-[16px] text-outline">chevron_right</span>
+      </a>
+
+      <!-- Dynamically populated categories from BelleStore.getCategories() -->
+      <div id="nav-categories-list" class="flex flex-col gap-2 py-1">
+        <!-- Жіночий одяг, Чоловічий одяг, Парні комплекти, Аксесуари, Сувеніри, SALE (червоний) -->
+      </div>
+
+      <!-- Additional Informational & Policy Links -->
+      <div class="border-t border-surface-container-high/60 pt-3 flex flex-col gap-2.5 text-on-surface-variant font-medium">
+        <button type="button" onclick="openPolicyModal('about')" class="text-left hover:text-primary py-0.5 flex items-center gap-2 uppercase">
+          <span class="material-symbols-outlined text-[18px] text-secondary">info</span>
+          <span>Про ательє</span>
+        </button>
+        <button type="button" onclick="openPolicyModal('reviews')" class="text-left hover:text-primary py-0.5 flex items-center gap-2 uppercase">
+          <span class="material-symbols-outlined text-[18px] text-secondary">star</span>
+          <span>Відгуки клієнтів</span>
+        </button>
+        <a class="hover:text-primary py-0.5 flex items-center gap-2" href="/#contacts" onclick="document.getElementById('index-mobile-nav').classList.add('hidden')">
+          <span class="material-symbols-outlined text-[18px] text-secondary">location_on</span>
+          <span>Контакти</span>
+        </a>
+        <button type="button" onclick="openPolicyModal('offer')" class="text-left hover:text-primary py-0.5 flex items-center gap-2 uppercase">
+          <span class="material-symbols-outlined text-[18px] text-secondary">description</span>
+          <span>Договір оферти</span>
+        </button>
+        <button type="button" onclick="openPolicyModal('privacy')" class="text-left hover:text-primary py-0.5 flex items-center gap-2 uppercase">
+          <span class="material-symbols-outlined text-[18px] text-secondary">shield</span>
+          <span>Політика конфіденційності</span>
+        </button>
+        <button type="button" onclick="openPolicyModal('rules')" class="text-left hover:text-primary py-0.5 flex items-center gap-2 uppercase">
+          <span class="material-symbols-outlined text-[18px] text-secondary">gavel</span>
+          <span>Правила покупки</span>
+        </button>
+        <button type="button" onclick="openPolicyModal('exchange')" class="text-left hover:text-primary py-0.5 flex items-center gap-2 uppercase">
+          <span class="material-symbols-outlined text-[18px] text-secondary">published_with_changes</span>
+          <span>Обмін / повернення</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="w-full">
+    <!-- Hero Section (Clean & Impactful) -->
+    <section class="relative w-full min-h-[70vh] sm:min-h-[80vh] flex items-center justify-center bg-[#F4EFE6] overflow-hidden">
+      <div class="absolute inset-0 z-0 opacity-40">
+        <img class="w-full h-full object-cover" src="/images/belle_hero_banner_1789843699753.jpg" alt="Belle Atelier Hero"/>
+      </div>
+      <div class="relative z-10 max-w-3xl mx-auto px-5 py-12 text-center flex flex-col items-center">
+        <h1 class="font-headline text-3xl sm:text-5xl lg:text-6xl text-primary font-bold leading-tight tracking-tight mb-4">
+          Ексклюзивний одяг для всієї родини!
+        </h1>
+        <p class="font-headline text-lg sm:text-2xl text-secondary font-medium italic mb-8 max-w-xl">
+          Обирай свій образ
+        </p>
+        <div class="flex flex-row items-center justify-center">
+          <a href="/catalog" class="bg-primary text-white text-xs sm:text-sm font-semibold tracking-widest uppercase px-9 py-3.5 hover:bg-tertiary transition-all shadow-md active:scale-95">
+            Каталог
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Categories Grid Section (Clean & Compact) -->
+    <section class="max-w-4xl mx-auto px-4 md:px-8 py-10 sm:py-16">
+      <div class="mb-6 pb-2 border-b border-surface-container-high text-center sm:text-left">
+        <h2 class="font-headline text-2xl sm:text-3xl text-primary font-bold">Категорії</h2>
+      </div>
+
+      <!-- Long Top Rectangular Button: Весь каталог -->
+      <div class="mb-3">
+        <a href="/catalog" class="w-full flex items-center justify-between p-3.5 bg-primary text-white border border-primary hover:bg-tertiary transition-all rounded-xs shadow-xs group">
+          <span class="flex items-center gap-2.5">
+            <span class="material-symbols-outlined text-[20px]">grid_view</span>
+            <span class="text-xs uppercase tracking-wider font-bold">Весь каталог</span>
+          </span>
+          <span class="material-symbols-outlined text-[18px] group-hover:translate-x-0.5 transition-transform">arrow_forward</span>
+        </a>
+      </div>
+
+      <!-- Categories in neat narrow rectangles, 2 per row -->
+      <div class="grid grid-cols-2 gap-2.5 sm:gap-3" id="home-categories-grid">
+        <!-- Categories dynamically rendered from BelleStore.getCategories() -->
+      </div>
+    </section>
+
+    <!-- Fitting & Salon Location -->
+    <section id="contacts" class="w-full bg-[#1b1c19] text-[#fbf9f4] py-14 px-4 md:px-8">
+      <div class="max-w-5xl mx-auto text-center space-y-4">
+        <span id="home-contacts-badge" class="text-xs uppercase tracking-[0.3em] text-[#fedeb2] font-semibold">Київ • Belle Atelier</span>
+        <h2 id="home-contacts-title" class="font-headline text-3xl sm:text-4xl text-white">Ательє та шоурум</h2>
+        <p id="home-contacts-address" class="text-xs sm:text-sm text-gray-300 max-w-xl mx-auto">
+          м. Київ, просп. Європейського Союзу, 45Б
+        </p>
+        <div class="pt-4 flex flex-wrap items-center justify-center gap-3">
+          <a id="home-contacts-phone-link" href="tel:+380939716065" class="bg-[#5e1020] text-white text-xs uppercase tracking-widest px-6 py-3 hover:bg-[#7c2735] transition-colors inline-flex items-center gap-2">
+            <span class="material-symbols-outlined text-[18px]">call</span> <span id="home-contacts-phone-text">0 (93) 971 60 65</span>
+          </a>
+          <a id="home-contacts-insta-link" href="https://www.instagram.com/belle.atelier.boutique?stkn=bzZ2ZWs5aTE0a3Fw" target="_blank" class="bg-transparent border border-gray-500 text-white text-xs uppercase tracking-widest px-6 py-3 hover:border-white transition-colors inline-flex items-center gap-2">
+            <span class="material-symbols-outlined text-[18px]">photo_camera</span> <span id="home-contacts-insta-text">Instagram</span>
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Universal Footer -->
+  <footer class="w-full bg-surface-container-low border-t border-surface-container-high py-12 px-4 md:px-8 text-on-surface-variant">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-xs">
+      <div class="flex flex-col items-center md:items-start">
+        <div class="flex items-center gap-3 mb-2">
+          <img src="/images/logo.png" alt="Belle Atelier Logo" class="h-9 w-9 object-contain rounded-full shadow-sm ring-1 ring-secondary/30" />
+          <span class="font-headline text-xl text-primary font-bold">Belle Atelier</span>
+        </div>
+        <span class="text-[10px] uppercase tracking-widest text-secondary mt-0.5">© 2025 Belle Atelier. Всі права захищено.</span>
+      </div>
+      <div class="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 uppercase tracking-wider text-[11px]">
+        <a href="/catalog" class="hover:text-primary">Каталог</a>
+        <a href="/cart" class="hover:text-primary">Кошик</a>
+        <a href="#contacts" class="hover:text-primary">Контакти</a>
+        <button type="button" onclick="openPolicyModal('offer')" class="hover:text-primary uppercase">Договір оферти</button>
+        <button type="button" onclick="openPolicyModal('privacy')" class="hover:text-primary uppercase">Політика конфіденційності</button>
+        <button type="button" onclick="openPolicyModal('about')" class="hover:text-primary uppercase">Про нас</button>
+        <button type="button" onclick="openPolicyModal('reviews')" class="hover:text-primary uppercase">Відгуки клієнтів</button>
+      </div>
+      <div class="text-[11px] text-outline">
+        Ukrainian Artisanal Haute Couture
+      </div>
+    </div>
+  </footer>
+
+  <!-- Modal: Policies, Offer, Privacy, About, Reviews -->
+  <div id="policy-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+    <div class="bg-surface border border-surface-container-high max-w-2xl w-full p-6 sm:p-8 shadow-2xl relative max-h-[85vh] overflow-y-auto rounded-xs">
+      <button onclick="closePolicyModal()" class="absolute top-4 right-4 text-outline hover:text-primary transition-colors">
+        <span class="material-symbols-outlined text-[24px]">close</span>
+      </button>
+
+      <div id="policy-modal-content">
+        <!-- Injected dynamically -->
+      </div>
+
+      <div class="mt-6 pt-4 border-t border-surface-container-high flex justify-end">
+        <button onclick="closePolicyModal()" class="px-6 py-2 bg-primary text-white text-xs uppercase tracking-wider font-semibold hover:bg-tertiary transition-colors">
+          Зрозуміло
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/cart-store.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      renderHomeCategories();
+      renderHomeContacts();
+
+      window.addEventListener('belle-categories-updated', () => {
+        renderHomeCategories();
+      });
+
+      window.addEventListener('belle-site-texts-updated', () => {
+        renderHomeContacts();
+      });
+
+      // Mobile menu toggle
+      const iMobileBtn = document.getElementById('index-mobile-menu-btn');
+      const iMobileNav = document.getElementById('index-mobile-nav');
+      if (iMobileBtn && iMobileNav) {
+        iMobileBtn.addEventListener('click', () => {
+          iMobileNav.classList.toggle('hidden');
+        });
+      }
+    });
+
+    function renderHomeContacts() {
+      if (typeof BelleStore === 'undefined' || !BelleStore.getSiteTexts) return;
+      const texts = BelleStore.getSiteTexts();
+
+      const badgeEl = document.getElementById('home-contacts-badge');
+      const titleEl = document.getElementById('home-contacts-title');
+      const addressEl = document.getElementById('home-contacts-address');
+      const phoneLink = document.getElementById('home-contacts-phone-link');
+      const phoneText = document.getElementById('home-contacts-phone-text');
+      const instaLink = document.getElementById('home-contacts-insta-link');
+      const instaText = document.getElementById('home-contacts-insta-text');
+
+      if (badgeEl && texts.contacts_badge) badgeEl.textContent = texts.contacts_badge;
+      if (titleEl && texts.contacts_title) titleEl.textContent = texts.contacts_title;
+      if (addressEl && texts.contacts_address) addressEl.textContent = texts.contacts_address;
+      
+      if (phoneLink && texts.contacts_phone) {
+        const cleanPhone = texts.contacts_phone.replace(/[^0-9+]/g, '');
+        phoneLink.href = `tel:${cleanPhone}`;
+        if (phoneText) phoneText.textContent = texts.contacts_phone;
+      }
+
+      if (instaLink && texts.contacts_instagram) {
+        instaLink.href = texts.contacts_instagram;
+        if (instaText && texts.contacts_instagram_handle) {
+          instaText.textContent = texts.contacts_instagram_handle;
+        }
+      }
+    }
+
+    function renderHomeCategories() {
+      const grid = document.getElementById('home-categories-grid');
+      const navList = document.getElementById('nav-categories-list');
+      if (!grid || typeof BelleStore === 'undefined') return;
+
+      const categories = BelleStore.getCategories();
+
+      // Render home grid as compact narrow rectangles (no item count)
+      grid.innerHTML = categories.map(cat => {
+        const isSale = cat.id === 'sale' || cat.isSale || cat.name.toUpperCase().includes('SALE');
+
+        if (isSale) {
+          return `
+            <a href="/catalog?category=${cat.id}" class="flex items-center justify-between p-3 bg-red-50/80 hover:bg-red-100 border border-red-200 rounded-xs transition-all duration-200 hover:shadow-xs">
+              <span class="flex items-center gap-2 text-red-600 font-bold text-xs uppercase tracking-wider">
+                <span class="material-symbols-outlined text-[18px]">local_offer</span>
+                <span>${cat.name}</span>
+              </span>
+              <span class="material-symbols-outlined text-[16px] text-red-400">chevron_right</span>
+            </a>
+          `;
+        }
+
+        return `
+          <a href="/catalog?category=${cat.id}" class="flex items-center justify-between p-3 bg-surface-container-lowest hover:bg-surface-container-low border border-surface-container-high/80 hover:border-primary/50 text-on-surface hover:text-primary rounded-xs transition-all duration-200 hover:shadow-xs">
+            <span class="flex items-center gap-2 font-headline font-semibold text-xs sm:text-sm tracking-wide">
+              <span class="material-symbols-outlined text-[18px] text-secondary">${cat.icon || 'folder'}</span>
+              <span>${cat.name}</span>
+            </span>
+            <span class="material-symbols-outlined text-[16px] text-outline">chevron_right</span>
+          </a>
+        `;
+      }).join('');
+
+      // Render dropdown / drawer list
+      if (navList) {
+        navList.innerHTML = categories.map(cat => {
+          const isSale = cat.id === 'sale' || cat.isSale || cat.name.toUpperCase().includes('SALE');
+          if (isSale) {
+            return `<a class="text-red-600 font-bold py-1 hover:text-red-700 flex items-center gap-2" href="/catalog?category=${cat.id}">
+              <span class="material-symbols-outlined text-[18px]">local_offer</span>
+              <span>${cat.name}</span>
+            </a>`;
+          }
+          return `<a class="text-on-surface py-1 hover:text-primary flex items-center gap-2" href="/catalog?category=${cat.id}">
+            <span class="material-symbols-outlined text-[18px] text-secondary">${cat.icon || 'folder'}</span>
+            <span>${cat.name}</span>
+          </a>`;
+        }).join('');
+      }
+    }
+
+    // Modal logic for Policies, Offer, Privacy, About, Reviews
+    let reviewSlideIndex = 0;
+    window.openPolicyModal = function(type) {
+      const modal = document.getElementById('policy-modal');
+      const content = document.getElementById('policy-modal-content');
+      if (!modal || !content) return;
+
+      const texts = (typeof BelleStore !== 'undefined' && BelleStore.getSiteTexts) 
+        ? BelleStore.getSiteTexts() 
+        : {};
+
+      if (type === 'about') {
+        const raw = texts.about_text || '';
+        const paragraphs = raw.split('\n').filter(p => p.trim()).map(p => `<p class="leading-relaxed">${p.trim()}</p>`).join('');
+        content.innerHTML = `
+          <div class="flex items-center gap-2 text-primary mb-3">
+            <span class="material-symbols-outlined text-2xl">info</span>
+            <h3 class="font-headline text-2xl font-bold">Про ательє Belle Atelier</h3>
+          </div>
+          <div class="space-y-3 text-xs text-on-surface leading-relaxed">
+            ${paragraphs}
+          </div>
+        `;
+      } else if (type === 'reviews') {
+        const reviews = BelleStore.getCustomerReviews();
+        reviewSlideIndex = 0;
+        content.innerHTML = `
+          <div class="flex items-center justify-between gap-2 text-primary mb-4 pb-2 border-b border-surface-container-high">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-2xl">star</span>
+              <h3 class="font-headline text-2xl font-bold">Відгуки клієнтів</h3>
+            </div>
+            <span class="text-xs text-secondary font-medium">Фотогалерея</span>
+          </div>
+          
+          <div class="relative w-full aspect-[4/3] bg-surface-container-low rounded-xs overflow-hidden border border-surface-container-high shadow-xs">
+            <img id="review-modal-img" src="${reviews[0] ? reviews[0].img : '/images/berehynia_dress_1789843600634.jpg'}" class="w-full h-full object-contain p-2 transition-opacity duration-300" alt="Відгук" />
+            
+            <button type="button" onclick="prevReviewSlide()" class="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/80 hover:bg-white text-primary flex items-center justify-center shadow-md">
+              <span class="material-symbols-outlined text-[20px]">chevron_left</span>
+            </button>
+            <button type="button" onclick="nextReviewSlide()" class="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/80 hover:bg-white text-primary flex items-center justify-center shadow-md">
+              <span class="material-symbols-outlined text-[20px]">chevron_right</span>
+            </button>
+          </div>
+
+          <p id="review-modal-caption" class="text-center text-xs text-secondary mt-3 italic font-medium">
+            ${reviews[0] ? (reviews[0].caption || 'Фото відгуку клієнтки') : ''}
+          </p>
+
+          <div class="flex items-center justify-center gap-1.5 mt-2" id="review-dots-container">
+            ${reviews.map((_, i) => `<span class="w-2 h-2 rounded-full ${i === 0 ? 'bg-primary' : 'bg-outline/30'}"></span>`).join('')}
+          </div>
+        `;
+      } else if (type === 'offer') {
+        const raw = texts.offer_text || '';
+        const paragraphs = raw.split('\n').filter(p => p.trim()).map(p => `<p class="leading-relaxed">${p.trim()}</p>`).join('');
+        content.innerHTML = `
+          <div class="flex items-center gap-2 text-primary mb-3">
+            <span class="material-symbols-outlined text-2xl">description</span>
+            <h3 class="font-headline text-2xl font-bold">Договір оферти</h3>
+          </div>
+          <div class="space-y-3 text-xs text-on-surface leading-relaxed font-mono">
+            ${paragraphs}
+          </div>
+        `;
+      } else if (type === 'privacy') {
+        const raw = texts.privacy_text || '';
+        const paragraphs = raw.split('\n').filter(p => p.trim()).map(p => `<p class="leading-relaxed">${p.trim()}</p>`).join('');
+        content.innerHTML = `
+          <div class="flex items-center gap-2 text-primary mb-3">
+            <span class="material-symbols-outlined text-2xl">shield</span>
+            <h3 class="font-headline text-2xl font-bold">Політика конфіденційності</h3>
+          </div>
+          <div class="space-y-3 text-xs text-on-surface leading-relaxed">
+            ${paragraphs}
+          </div>
+        `;
+      } else if (type === 'rules') {
+        const rawRules = texts.rules_text || '';
+        const paragraphs = rawRules.split('\n').filter(p => p.trim()).map(p => `<p class="leading-relaxed">${p.trim()}</p>`).join('');
+        content.innerHTML = `
+          <div class="flex items-center gap-2 text-primary mb-3">
+            <span class="material-symbols-outlined text-2xl">gavel</span>
+            <h3 class="font-headline text-2xl font-bold">Правила покупки</h3>
+          </div>
+          <div class="space-y-3 text-xs text-on-surface leading-relaxed">
+            ${paragraphs}
+          </div>
+        `;
+      } else if (type === 'exchange') {
+        const rawExchange = texts.exchange_text || '';
+        const paragraphs = rawExchange.split('\n').filter(p => p.trim()).map(p => `<p class="leading-relaxed">${p.trim()}</p>`).join('');
+        content.innerHTML = `
+          <div class="flex items-center gap-2 text-primary mb-3">
+            <span class="material-symbols-outlined text-2xl">published_with_changes</span>
+            <h3 class="font-headline text-2xl font-bold">Обмін та повернення</h3>
+          </div>
+          <div class="space-y-3 text-xs text-on-surface leading-relaxed">
+            ${paragraphs}
+          </div>
+        `;
+      }
+
+      modal.classList.remove('hidden');
+    };
+
+    window.closePolicyModal = function() {
+      const modal = document.getElementById('policy-modal');
+      if (modal) modal.classList.add('hidden');
+    };
+
+    window.prevReviewSlide = function() {
+      const reviews = BelleStore.getCustomerReviews();
+      if (reviews.length === 0) return;
+      reviewSlideIndex = (reviewSlideIndex - 1 + reviews.length) % reviews.length;
+      updateReviewModalSlide(reviews);
+    };
+
+    window.nextReviewSlide = function() {
+      const reviews = BelleStore.getCustomerReviews();
+      if (reviews.length === 0) return;
+      reviewSlideIndex = (reviewSlideIndex + 1) % reviews.length;
+      updateReviewModalSlide(reviews);
+    };
+
+    function updateReviewModalSlide(reviews) {
+      const imgEl = document.getElementById('review-modal-img');
+      const capEl = document.getElementById('review-modal-caption');
+      const dots = document.getElementById('review-dots-container');
+      if (imgEl && reviews[reviewSlideIndex]) {
+        imgEl.src = reviews[reviewSlideIndex].img;
+      }
+      if (capEl && reviews[reviewSlideIndex]) {
+        capEl.textContent = reviews[reviewSlideIndex].caption || 'Фото відгуку клієнтки';
+      }
+      if (dots) {
+        dots.innerHTML = reviews.map((_, i) => `<span class="w-2 h-2 rounded-full ${i === reviewSlideIndex ? 'bg-primary' : 'bg-outline/30'}"></span>`).join('');
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+node_modules/
+.DS_Store
+.wrangler/
+.env
+.agents/
+stitch_assets/
+stitch_belle_atelier_fashion_e_commerce/

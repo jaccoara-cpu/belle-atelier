@@ -1,0 +1,2059 @@
+<!DOCTYPE html>
+<html class="scroll-smooth" lang="uk">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Belle Atelier — Панель Адміністратора</title>
+  <link href="https://fonts.googleapis.com" rel="preconnect"/>
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            background: "#fbf9f4",
+            surface: "#fbf9f4",
+            primary: "#5e1020",
+            "primary-container": "#7c2735",
+            secondary: "#725b38",
+            "secondary-container": "#fedeb2",
+            tertiary: "#2f2f2e",
+            "surface-container-low": "#f5f3ee",
+            "surface-container": "#f0eee9",
+            "surface-container-high": "#eae8e3",
+            "surface-container-highest": "#e4e2dd",
+            "surface-container-lowest": "#ffffff",
+            "on-surface": "#1b1c19",
+            "on-surface-variant": "#554243",
+            "on-primary": "#ffffff",
+            outline: "#887273"
+          },
+          fontFamily: {
+            headline: ["Cormorant Garamond", "Playfair Display", "serif"],
+            body: ["Montserrat", "sans-serif"]
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    @layer base {
+      html, body { margin: 0; padding: 0; background-color: #fbf9f4; }
+    }
+    ::-webkit-scrollbar { display: none; }
+  </style>
+</head>
+<body class="bg-surface text-on-surface font-body antialiased min-h-screen flex flex-col selection:bg-secondary-container selection:text-on-surface">
+
+  <!-- Unauthenticated Lock Screen (Shown if no 2FA session) -->
+  <div id="admin-lock-screen" class="fixed inset-0 z-50 bg-[#FBF9F4] flex items-center justify-center p-4">
+    <div class="max-w-md w-full bg-white p-8 border border-surface-container-high shadow-xl rounded-xs text-center space-y-6">
+      <div class="w-16 h-16 mx-auto rounded-full bg-primary text-white flex items-center justify-center shadow-md">
+        <span class="material-symbols-outlined text-[32px]">shield_person</span>
+      </div>
+      <div>
+        <h1 class="font-headline text-2xl sm:text-3xl text-primary font-bold">Belle Atelier</h1>
+        <p class="text-xs text-secondary tracking-widest uppercase font-semibold mt-1">Доступ до адмін-панелі захищено</p>
+      </div>
+      <p class="text-xs text-on-surface-variant leading-relaxed">
+        Для входу потрібна двофакторна автентифікація через Telegram-бота.
+      </p>
+      
+      <div id="lock-step-request" class="space-y-3">
+        <button onclick="BelleStore.handleSend2FACode(); switchLockStep();" class="w-full bg-primary hover:bg-tertiary text-white py-3.5 px-6 font-semibold text-xs tracking-widest uppercase transition-colors flex items-center justify-center gap-2 shadow-sm">
+          <span class="material-symbols-outlined text-[18px]">send</span>
+          <span>Отримати код у Telegram</span>
+        </button>
+        <a href="/" class="block text-xs text-secondary hover:text-primary underline pt-2">Повернутися на сайт</a>
+      </div>
+
+      <div id="lock-step-verify" class="space-y-4 hidden">
+        <div>
+          <input type="text" id="lock-2fa-input" maxlength="6" placeholder="000000" class="w-full text-center tracking-[0.4em] font-headline text-3xl font-bold py-3 bg-surface border border-outline focus:border-primary focus:outline-none" />
+        </div>
+        <div id="lock-verify-error" class="text-xs text-red-600 font-medium hidden"></div>
+        <button onclick="verifyLockScreenCode()" class="w-full bg-primary hover:bg-tertiary text-white py-3.5 px-6 font-semibold text-xs tracking-widest uppercase transition-colors flex items-center justify-center gap-2 shadow-sm">
+          <span class="material-symbols-outlined text-[18px]">login</span>
+          <span>Підтвердити 2FA код</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Authenticated Admin Layout -->
+  <div id="admin-app" class="hidden flex-1 flex flex-col">
+    <!-- Top Admin Header -->
+    <header class="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-surface-container-high px-4 sm:px-8 py-3.5 flex items-center justify-between">
+      <div class="flex items-center gap-3 sm:gap-6">
+        <a href="/" class="flex items-center gap-3">
+          <img src="/images/logo.png" alt="Belle Logo" class="h-9 w-9 rounded-full ring-1 ring-secondary/30 object-contain" />
+          <div>
+            <div class="font-headline text-lg sm:text-xl font-bold text-primary tracking-wider uppercase leading-none">Belle Atelier</div>
+            <div class="text-[9px] tracking-[0.2em] text-secondary uppercase font-semibold mt-0.5">Admin Management</div>
+          </div>
+        </a>
+        <span class="hidden md:inline-block px-2.5 py-0.5 bg-secondary-container/40 text-secondary text-[11px] font-semibold rounded-full">
+          2FA Активна
+        </span>
+      </div>
+
+      <div class="flex items-center gap-2 sm:gap-4">
+        <a href="/catalog" target="_blank" class="text-xs font-semibold text-secondary hover:text-primary flex items-center gap-1 py-1.5 px-3 border border-surface-container-high bg-surface rounded-xs transition-colors">
+          <span class="material-symbols-outlined text-[16px]">visibility</span>
+          <span class="hidden sm:inline">Переглянути сайт</span>
+        </a>
+        <button onclick="BelleStore.logoutAdmin()" class="text-xs font-semibold text-primary hover:text-red-700 flex items-center gap-1 py-1.5 px-3 bg-red-50 border border-red-200 rounded-xs transition-colors">
+          <span class="material-symbols-outlined text-[16px]">logout</span>
+          <span class="hidden sm:inline">Вийти</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Admin Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+      
+      <!-- Stats Row -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+        <div class="bg-white p-4 sm:p-5 border border-surface-container-high rounded-xs shadow-xs">
+          <div class="flex items-center justify-between text-secondary">
+            <span class="text-xs uppercase tracking-wider font-semibold">Всього виробів</span>
+            <span class="material-symbols-outlined text-[20px]">inventory_2</span>
+          </div>
+          <div class="mt-2 font-headline text-2xl sm:text-3xl font-bold text-primary" id="stat-total-count">0</div>
+        </div>
+
+        <div class="bg-white p-4 sm:p-5 border border-surface-container-high rounded-xs shadow-xs">
+          <div class="flex items-center justify-between text-emerald-700">
+            <span class="text-xs uppercase tracking-wider font-semibold">Активні на сайті</span>
+            <span class="material-symbols-outlined text-[20px]">check_circle</span>
+          </div>
+          <div class="mt-2 font-headline text-2xl sm:text-3xl font-bold text-emerald-800" id="stat-active-count">0</div>
+        </div>
+
+        <div class="bg-white p-4 sm:p-5 border border-surface-container-high rounded-xs shadow-xs">
+          <div class="flex items-center justify-between text-secondary">
+            <span class="text-xs uppercase tracking-wider font-semibold">Категорій</span>
+            <span class="material-symbols-outlined text-[20px]">category</span>
+          </div>
+          <div class="mt-2 font-headline text-2xl sm:text-3xl font-bold text-secondary" id="stat-categories-count">0</div>
+        </div>
+
+        <div class="bg-white p-4 sm:p-5 border border-surface-container-high rounded-xs shadow-xs cursor-pointer hover:border-primary transition-colors" onclick="switchTab('tab-telegram')">
+          <div class="flex items-center justify-between text-primary">
+            <span class="text-xs uppercase tracking-wider font-semibold">Telegram-бот</span>
+            <span class="material-symbols-outlined text-[20px]">smart_toy</span>
+          </div>
+          <div class="mt-2 flex items-center gap-1.5" id="stat-telegram-status">
+            <span class="w-2.5 h-2.5 rounded-full bg-gray-400"></span>
+            <span class="text-xs font-semibold text-on-surface">Перевірка...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <div class="flex items-center border-b border-surface-container-high gap-3 sm:gap-8 overflow-x-auto">
+        <button id="nav-btn-products" onclick="switchTab('tab-products')" class="tab-btn pb-3 text-xs sm:text-sm font-semibold uppercase tracking-wider text-primary border-b-2 border-primary flex items-center gap-2 whitespace-nowrap">
+          <span class="material-symbols-outlined text-[18px]">styler</span>
+          <span>Керування товарами</span>
+        </button>
+        <button id="nav-btn-categories" onclick="switchTab('tab-categories')" class="tab-btn pb-3 text-xs sm:text-sm font-semibold uppercase tracking-wider text-on-surface-variant hover:text-primary transition-colors flex items-center gap-2 whitespace-nowrap">
+          <span class="material-symbols-outlined text-[18px]">category</span>
+          <span>Керування категоріями</span>
+        </button>
+        <button id="nav-btn-sizechart" onclick="switchTab('tab-sizechart')" class="tab-btn pb-3 text-xs sm:text-sm font-semibold uppercase tracking-wider text-on-surface-variant hover:text-primary transition-colors flex items-center gap-2 whitespace-nowrap">
+          <span class="material-symbols-outlined text-[18px]">straighten</span>
+          <span>Розмірна таблиця (Фото)</span>
+        </button>
+        <button id="nav-btn-reviews" onclick="switchTab('tab-reviews')" class="tab-btn pb-3 text-xs sm:text-sm font-semibold uppercase tracking-wider text-on-surface-variant hover:text-primary transition-colors flex items-center gap-2 whitespace-nowrap">
+          <span class="material-symbols-outlined text-[18px]">photo_library</span>
+          <span>Відгуки клієнтів (Фото)</span>
+        </button>
+        <button id="nav-btn-texts" onclick="switchTab('tab-texts')" class="tab-btn pb-3 text-xs sm:text-sm font-semibold uppercase tracking-wider text-on-surface-variant hover:text-primary transition-colors flex items-center gap-2 whitespace-nowrap">
+          <span class="material-symbols-outlined text-[18px]">edit_note</span>
+          <span>Тексти (Про нас / Оферта / Правила)</span>
+        </button>
+        <button id="nav-btn-telegram" onclick="switchTab('tab-telegram')" class="tab-btn pb-3 text-xs sm:text-sm font-semibold uppercase tracking-wider text-on-surface-variant hover:text-primary transition-colors flex items-center gap-2 whitespace-nowrap">
+          <span class="material-symbols-outlined text-[18px]">send</span>
+          <span>Telegram-Бот &amp; 2FA</span>
+        </button>
+      </div>
+
+      <!-- TAB 1: Products Management -->
+      <div id="tab-products" class="tab-content space-y-4">
+        <!-- Control Bar: Search, Category Filter, Add Button -->
+        <div class="bg-white p-4 border border-surface-container-high rounded-xs flex flex-col md:flex-row items-center justify-between gap-3 shadow-xs">
+          <div class="flex flex-wrap items-center gap-2 w-full md:w-auto flex-1">
+            <!-- Search -->
+            <div class="relative flex-1 sm:max-w-xs w-full">
+              <input type="text" id="admin-search-input" oninput="renderAdminTable()" placeholder="Пошук за назвою чи артикулом..." class="w-full text-xs py-2 pl-3 pr-8 bg-surface border border-surface-container-high focus:outline-none focus:border-primary" />
+              <span class="material-symbols-outlined text-[18px] text-outline absolute right-2.5 top-2 pointer-events-none">search</span>
+            </div>
+
+            <!-- Category filter -->
+            <select id="admin-filter-category" onchange="renderAdminTable()" class="text-xs py-2 px-3 bg-surface border border-surface-container-high focus:outline-none text-on-surface cursor-pointer">
+              <option value="all">Усі категорії</option>
+            </select>
+
+            <!-- Status filter -->
+            <select id="admin-filter-status" onchange="renderAdminTable()" class="text-xs py-2 px-3 bg-surface border border-surface-container-high focus:outline-none text-on-surface cursor-pointer">
+              <option value="all">Усі статуси</option>
+              <option value="active">Лише активні</option>
+              <option value="archived">Лише в архіві</option>
+            </select>
+          </div>
+
+          <!-- Add Product Button -->
+          <div class="flex items-center gap-2 w-full md:w-auto justify-end">
+            <button onclick="openProductModal()" class="w-full sm:w-auto text-xs font-semibold py-2.5 px-5 bg-primary hover:bg-tertiary text-white transition-colors flex items-center justify-center gap-2 shadow-xs uppercase tracking-wider rounded-xs">
+              <span class="material-symbols-outlined text-[18px]">add_circle</span>
+              <span>Додати виріб</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Products Table -->
+        <div class="bg-white border border-surface-container-high rounded-xs shadow-xs overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-surface-container-low border-b border-surface-container-high text-[11px] font-semibold text-secondary uppercase tracking-wider">
+                <th class="py-3 px-4">Фото</th>
+                <th class="py-3 px-4">Назва &amp; Арт</th>
+                <th class="py-3 px-4">Категорія</th>
+                <th class="py-3 px-4">Ціна (₴)</th>
+                <th class="py-3 px-4">Наявність</th>
+                <th class="py-3 px-4">Статус</th>
+                <th class="py-3 px-4 text-right">Дії</th>
+              </tr>
+            </thead>
+            <tbody id="admin-products-tbody" class="divide-y divide-surface-container-high/60 text-xs">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+          <div id="admin-empty-state" class="py-12 text-center text-on-surface-variant hidden">
+            <span class="material-symbols-outlined text-4xl text-outline mb-2">inventory</span>
+            <p class="font-headline text-lg">Жодного виробу не знайдено</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: Categories Management -->
+      <div id="tab-categories" class="tab-content space-y-4 hidden">
+        <div class="bg-white p-4 border border-surface-container-high rounded-xs flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xs">
+          <div>
+            <h3 class="font-headline text-lg font-bold text-primary">Категорії виробів</h3>
+            <p class="text-xs text-secondary font-medium">Редагуйте наявні або додавайте власні нові категорії каталогу</p>
+          </div>
+          <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+            <button onclick="openCategoryModal()" class="w-full sm:w-auto text-xs font-semibold py-2.5 px-5 bg-primary hover:bg-tertiary text-white transition-colors flex items-center justify-center gap-2 shadow-xs uppercase tracking-wider rounded-xs">
+              <span class="material-symbols-outlined text-[18px]">add_circle</span>
+              <span>Додати категорію</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="bg-white border border-surface-container-high rounded-xs shadow-xs overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-surface-container-low border-b border-surface-container-high text-[11px] font-semibold text-secondary uppercase tracking-wider">
+                <th class="py-3 px-4 w-16">Іконка</th>
+                <th class="py-3 px-4">Назва категорії</th>
+                <th class="py-3 px-4">URL-адреса категорії</th>
+                <th class="py-3 px-4">Товарів у категорії</th>
+                <th class="py-3 px-4 text-right">Дії</th>
+              </tr>
+            </thead>
+            <tbody id="admin-categories-tbody" class="divide-y divide-surface-container-high/60 text-xs">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB 3: Size Chart Photo Management -->
+      <div id="tab-sizechart" class="tab-content space-y-6 hidden">
+        <div class="bg-white p-6 sm:p-8 border border-surface-container-high rounded-xs shadow-xs max-w-4xl space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-surface-container-high">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-[28px]">straighten</span>
+              </div>
+              <div>
+                <h2 class="font-headline text-xl sm:text-2xl font-bold text-primary">Розмірна таблиця (Фото)</h2>
+                <p class="text-xs text-secondary font-medium">Керування фотографіями розмірної сітки для кнопки «Розмірна таблиця» на товарах</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <input type="file" id="sizechart-file-input" accept="image/*" class="hidden" onchange="handleSizeChartUpload(this)" />
+              <button type="button" onclick="document.getElementById('sizechart-file-input').click()" class="bg-primary hover:bg-tertiary text-white py-2.5 px-4 text-xs font-semibold uppercase tracking-wider transition-colors flex items-center gap-2 shadow-xs">
+                <span class="material-symbols-outlined text-[18px]">add_photo_alternate</span>
+                <span>Завантажити нове фото</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- List of Size Chart Images -->
+          <div id="sizechart-images-list" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Dynamically populated -->
+          </div>
+
+          <div class="pt-4 border-t border-surface-container-high text-xs text-secondary space-y-2 bg-surface-container-low p-4 rounded-xs">
+            <div class="flex items-center gap-2 font-semibold text-primary">
+              <span class="material-symbols-outlined text-[18px]">info</span>
+              <span>Як це відображається клієнту:</span>
+            </div>
+            <p>У картці будь-якого товару при кліку на кнопку <b>«Розмірна таблиця»</b> відкривається спливаюче вікно з цими фотографіями у високій роздільній здатності. Клієнт може легко переглянути заміри виробу.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 4: Customer Reviews Photo Management -->
+      <div id="tab-reviews" class="tab-content space-y-6 hidden">
+        <div class="bg-white p-6 sm:p-8 border border-surface-container-high rounded-xs shadow-xs max-w-4xl space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-surface-container-high">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-[28px]">photo_library</span>
+              </div>
+              <div>
+                <h2 class="font-headline text-xl sm:text-2xl font-bold text-primary">Відгуки клієнтів (Фотогалерея)</h2>
+                <p class="text-xs text-secondary font-medium">Керування фотографіями та підписами для галереї відгуків (відкривається в меню та футері)</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <input type="file" id="reviews-file-input" accept="image/*" class="hidden" onchange="handleReviewUpload(this)" />
+              <button type="button" onclick="document.getElementById('reviews-file-input').click()" class="bg-primary hover:bg-tertiary text-white py-2.5 px-4 text-xs font-semibold uppercase tracking-wider transition-colors flex items-center gap-2 shadow-xs">
+                <span class="material-symbols-outlined text-[18px]">add_photo_alternate</span>
+                <span>Завантажити фото відгуку</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- List of Customer Review Images -->
+          <div id="reviews-images-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <!-- Dynamically populated -->
+          </div>
+
+          <div class="pt-4 border-t border-surface-container-high text-xs text-secondary space-y-2 bg-surface-container-low p-4 rounded-xs">
+            <div class="flex items-center gap-2 font-semibold text-primary">
+              <span class="material-symbols-outlined text-[18px]">info</span>
+              <span>Як це працює:</span>
+            </div>
+            <p>Усі додані фото відображаються у слайдері спливаючого вікна <b>«Відгуки клієнтів»</b> на всіх сторінках магазину. Клієнти можуть зручно гортати фотографії готових замовлень.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 5: Site Texts (About, Offer, Privacy, Contacts & Policies) -->
+      <div id="tab-texts" class="tab-content space-y-6 hidden">
+        <div class="bg-white p-6 sm:p-8 border border-surface-container-high rounded-xs shadow-xs max-w-4xl space-y-6">
+          <div class="flex items-center justify-between pb-4 border-b border-surface-container-high">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+                <span class="material-symbols-outlined text-[28px]">edit_note</span>
+              </div>
+              <div>
+                <h2 class="font-headline text-xl sm:text-2xl font-bold text-primary">Редагування текстів та сторінок сайту</h2>
+                <p class="text-xs text-secondary font-medium">Змінюйте інформацію про ательє, договір оферти, політику конфіденційності та правила в реальному часі</p>
+              </div>
+            </div>
+            <button onclick="resetSiteTextsToDefault()" type="button" class="text-xs text-outline hover:text-red-700 underline font-medium">
+              Скинути до стандартних
+            </button>
+          </div>
+
+          <form onsubmit="handleSiteTextsSubmit(event)" class="space-y-6 text-xs">
+            <!-- SECTION 1: About Us -->
+            <div class="space-y-3 bg-surface-container-low p-4 sm:p-5 rounded-xs border border-surface-container-high">
+              <div class="flex items-center gap-2 text-primary font-bold uppercase tracking-wider text-xs border-b border-surface-container-high/60 pb-2">
+                <span class="material-symbols-outlined text-[18px]">auto_awesome</span>
+                <span>Розділ «Про ательє / Про нас» (Меню, Футер &amp; Модальне вікно)</span>
+              </div>
+              <div>
+                <label class="block font-semibold text-on-surface mb-1">Текст про бренд та майстринь Belle Atelier:</label>
+                <textarea id="text-about-text" rows="5" placeholder="Belle Atelier — українське ательє ексклюзивного авторського одягу..." class="w-full py-2 px-3 bg-white border border-surface-container-high focus:outline-none focus:border-primary font-mono text-xs leading-relaxed"></textarea>
+              </div>
+            </div>
+
+            <!-- SECTION 2: Offer Contract -->
+            <div class="space-y-3 bg-surface-container-low p-4 sm:p-5 rounded-xs border border-surface-container-high">
+              <div class="flex items-center gap-2 text-primary font-bold uppercase tracking-wider text-xs border-b border-surface-container-high/60 pb-2">
+                <span class="material-symbols-outlined text-[18px]">description</span>
+                <span>Розділ «Договір оферти» (Публічна оферта)</span>
+              </div>
+              <div>
+                <label class="block font-semibold text-on-surface mb-1">Текст публічного договору оферти:</label>
+                <textarea id="text-offer-text" rows="6" placeholder="Введіть юридичний текст публічного договору оферти..." class="w-full py-2 px-3 bg-white border border-surface-container-high focus:outline-none focus:border-primary font-mono text-xs leading-relaxed"></textarea>
+              </div>
+            </div>
+
+            <!-- SECTION 3: Privacy Policy -->
+            <div class="space-y-3 bg-surface-container-low p-4 sm:p-5 rounded-xs border border-surface-container-high">
+              <div class="flex items-center gap-2 text-primary font-bold uppercase tracking-wider text-xs border-b border-surface-container-high/60 pb-2">
+                <span class="material-symbols-outlined text-[18px]">shield</span>
+                <span>Розділ «Політика конфіденційності»</span>
+              </div>
+              <div>
+                <label class="block font-semibold text-on-surface mb-1">Текст політики конфіденційності та захисту персональних даних:</label>
+                <textarea id="text-privacy-text" rows="6" placeholder="Введіть умови обробки та захисту персональних даних..." class="w-full py-2 px-3 bg-white border border-surface-container-high focus:outline-none focus:border-primary font-mono text-xs leading-relaxed"></textarea>
+              </div>
+            </div>
+
+            <!-- SECTION 4: Contacts & Studio -->
+            <div class="space-y-4 bg-surface-container-low p-4 sm:p-5 rounded-xs border border-surface-container-high">
+              <div class="flex items-center gap-2 text-primary font-bold uppercase tracking-wider text-xs border-b border-surface-container-high/60 pb-2">
+                <span class="material-symbols-outlined text-[18px]">location_on</span>
+                <span>Блок «Контакти та Салон» (Головна сторінка &amp; Шапка/Футер)</span>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block font-semibold text-on-surface mb-1">Заголовок блоку контактів</label>
+                  <input type="text" id="text-contacts-title" class="w-full py-2 px-3 bg-white border border-surface-container-high focus:outline-none focus:border-primary font-medium" />
+                </div>
+                <div>
+                  <label class="block font-semibold text-on-surface mb-1">Підзаголовок / Бейдж міста</label>
+                  <input type="text" id="text-contacts-badge" class="w-full py-2 px-3 bg-white border border-surface-container-high focus:outline-none focus:border-primary font-medium" />
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block font-semibold text-on-surface mb-1">Номер телефону для зв'язку / дзвінків</label>
+                  <input type="text" id="text-contacts-phone" class="w-full py-2 px-3 bg-white border border-surface-container-high focus:outline-none focus:border-primary font-medium" />
+                </div>
+                <div>
+                  <label class="block font-semibold text-on-surface mb-1">Адреса для самовивозу в кошику</label>
+                  <input type="text" id="text-contacts-salon-city" class="w-full py-2 px-3 bg-white border border-surface-container-high focus:outline-none focus:border-primary font-medium" />
+                </div>
+              </div>
+
+              <div>
+                <label class="block font-semibold text-on-surface mb-1">Повна адреса салону / ательє</label>
+                <input type="text" id="text-contacts-address" class="w-full py-2 px-3 bg-white border border-surface-container-high focus:outline-none focus:border-primary font-medium" />
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block font-semibold text-on-surface mb-1">Instagram (Посилання URL)</label>
+                  <input type="url" id="text-contacts-instagram" class="w-full py-2 px-3 bg-white border border-surface-container-high focus:outline-none focus:border-primary font-mono text-[11px]" />
+                </div>
+                <div>
+                  <label class="block font-semibold text-on-surface mb-1">Instagram нікнейм</label>
+                  <input type="text" id="text-contacts-instagram-handle" placeholder="@belle.atelier.boutique" class="w-full py-2 px-3 bg-white border border-surface-container-high focus:outline-none focus:border-primary font-medium" />
+                </div>
+              </div>
+            </div>
+
+            <!-- SECTION 5: Rules -->
+            <div class="space-y-3 bg-surface-container-low p-4 sm:p-5 rounded-xs border border-surface-container-high">
+              <div class="flex items-center gap-2 text-primary font-bold uppercase tracking-wider text-xs border-b border-surface-container-high/60 pb-2">
+                <span class="material-symbols-outlined text-[18px]">gavel</span>
+                <span>Вкладка «Правила покупки» (Спливаюче вікно на всіх сторінках)</span>
+              </div>
+              <div>
+                <label class="block font-semibold text-on-surface mb-1">Текст правил покупки (кожен пункт з нового рядка):</label>
+                <textarea id="text-rules-text" rows="5" class="w-full py-2 px-3 bg-white border border-surface-container-high focus:outline-none focus:border-primary font-mono text-xs leading-relaxed"></textarea>
+              </div>
+            </div>
+
+            <!-- SECTION 6: Exchange & Returns -->
+            <div class="space-y-3 bg-surface-container-low p-4 sm:p-5 rounded-xs border border-surface-container-high">
+              <div class="flex items-center gap-2 text-primary font-bold uppercase tracking-wider text-xs border-b border-surface-container-high/60 pb-2">
+                <span class="material-symbols-outlined text-[18px]">published_with_changes</span>
+                <span>Вкладка «Обмін / повернення» (Спливаюче вікно на всіх сторінках)</span>
+              </div>
+              <div>
+                <label class="block font-semibold text-on-surface mb-1">Текст умов повернення та обміну:</label>
+                <textarea id="text-exchange-text" rows="5" class="w-full py-2 px-3 bg-white border border-surface-container-high focus:outline-none focus:border-primary font-mono text-xs leading-relaxed"></textarea>
+              </div>
+            </div>
+
+            <!-- Save CTA -->
+            <div class="pt-3 flex items-center justify-end gap-3 border-t border-surface-container-high">
+              <button type="submit" class="bg-primary hover:bg-tertiary text-white py-3 px-8 text-xs font-semibold uppercase tracking-wider transition-colors flex items-center gap-2 shadow-xs rounded-xs">
+                <span class="material-symbols-outlined text-[18px]">save</span>
+                <span>Зберегти всі тексти сайту</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- TAB 5: Telegram Bot Settings -->
+      <div id="tab-telegram" class="tab-content space-y-6 hidden">
+        <div class="bg-white p-6 sm:p-8 border border-surface-container-high rounded-xs shadow-xs max-w-3xl space-y-6">
+          <div class="flex items-center gap-3 pb-4 border-b border-surface-container-high">
+            <div class="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+              <span class="material-symbols-outlined text-[28px]">smart_toy</span>
+            </div>
+            <div>
+              <h2 class="font-headline text-xl sm:text-2xl font-bold text-primary">Інтеграція з Telegram-ботом</h2>
+              <p class="text-xs text-secondary font-medium">Отримання 2FA кодів входу та сповіщень про нові замовлення</p>
+            </div>
+          </div>
+
+          <!-- Telegram Config Form -->
+          <div class="space-y-4">
+            <div>
+              <label class="block text-xs font-semibold text-on-surface uppercase tracking-wider mb-1.5" for="tg-bot-token">
+                Telegram Bot Token:
+              </label>
+              <input type="text" id="tg-bot-token" placeholder="8682075215:AAEfRKiuZo443UCaZop9I3CPrGGSKGM2IEs" class="w-full text-xs font-mono py-2.5 px-3 bg-surface border border-surface-container-high focus:outline-none focus:border-primary" />
+              <p class="text-[11px] text-outline mt-1">Отримується у бота @BotFather при створенні бота.</p>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-on-surface uppercase tracking-wider mb-1.5" for="tg-chat-id">
+                Chat ID або Group ID (ID чату/групи):
+              </label>
+              <input type="text" id="tg-chat-id" placeholder="-5522138796" class="w-full text-xs font-mono py-2.5 px-3 bg-surface border border-surface-container-high focus:outline-none focus:border-primary" />
+              <p class="text-[11px] text-outline mt-1">ID групи, куди додано створеного бота з правами надсилати повідомлення.</p>
+            </div>
+
+            <div class="pt-2 flex flex-wrap items-center gap-3">
+              <button onclick="saveTelegramSettings()" class="bg-primary hover:bg-tertiary text-white py-2.5 px-6 text-xs font-semibold uppercase tracking-wider transition-colors flex items-center gap-2 shadow-xs">
+                <span class="material-symbols-outlined text-[18px]">save</span>
+                <span>Зберегти налаштування</span>
+              </button>
+              <button onclick="testTelegramConnection()" class="bg-surface hover:bg-surface-container text-secondary border border-surface-container-high py-2.5 px-5 text-xs font-semibold uppercase tracking-wider transition-colors flex items-center gap-2">
+                <span class="material-symbols-outlined text-[18px]">send</span>
+                <span>Надіслати тестове сповіщення</span>
+              </button>
+            </div>
+            
+            <div id="tg-test-result" class="text-xs p-3 rounded hidden border"></div>
+          </div>
+
+          <!-- Guide Accordion -->
+          <div class="pt-4 border-t border-surface-container-high space-y-3">
+            <h3 class="font-headline text-base font-semibold text-primary">💡 Інструкція: Як підключити бота</h3>
+            <ol class="list-decimal list-inside space-y-2 text-xs text-on-surface-variant leading-relaxed">
+              <li>Створіть бота в <b>@BotFather</b> через <code>/newbot</code> і скопіюйте <b>Bot Token</b>.</li>
+              <li>Створіть у Telegram групу для замовлень та додайте туди свого бота.</li>
+              <li>Дізнайтеся <b>Chat ID</b> групи (наприклад через @RawDataBot) та вставте його у форму вище.</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Modal: Add / Edit Product -->
+  <div id="product-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+    <div class="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-surface-container-high shadow-2xl p-6 sm:p-8 relative rounded-xs space-y-5">
+      <button onclick="closeProductModal()" class="absolute top-4 right-4 text-outline hover:text-primary p-1">
+        <span class="material-symbols-outlined text-[22px]">close</span>
+      </button>
+
+      <div class="border-b border-surface-container-high pb-3">
+        <h2 id="modal-product-title" class="font-headline text-2xl font-bold text-primary">Додати новий виріб</h2>
+        <p class="text-xs text-secondary uppercase tracking-wider font-semibold">Каталог Belle Atelier</p>
+      </div>
+
+      <form id="product-form" onsubmit="handleProductFormSubmit(event)" class="space-y-4 text-xs">
+        <input type="hidden" id="form-product-id" value="" />
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block font-semibold text-on-surface mb-1">Назва виробу *</label>
+            <input type="text" id="form-name" required placeholder="Напр. Сукня «Берегиня»" class="w-full py-2 px-3 bg-surface border border-surface-container-high focus:outline-none focus:border-primary font-medium" />
+          </div>
+
+          <div>
+            <label class="block font-semibold text-on-surface mb-1">Артикул (SKU) *</label>
+            <input type="text" id="form-art" required placeholder="BL-402" class="w-full py-2 px-3 bg-surface border border-surface-container-high focus:outline-none focus:border-primary font-mono" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label class="block font-semibold text-on-surface mb-1">Категорія *</label>
+            <select id="form-cat" required class="w-full py-2 px-3 bg-surface border border-surface-container-high focus:outline-none focus:border-primary">
+              <!-- Dynamically populated from categories -->
+            </select>
+          </div>
+
+          <div>
+            <label class="block font-semibold text-on-surface mb-1">Поточна ціна (₴) *</label>
+            <input type="number" id="form-price" required min="1" step="any" placeholder="4800" oninput="onPriceInputChange()" class="w-full py-2 px-3 bg-surface border border-surface-container-high focus:outline-none focus:border-primary font-bold text-primary" />
+          </div>
+
+          <div>
+            <label class="block font-semibold text-on-surface mb-1">Стара / Базова ціна (₴)</label>
+            <input type="number" id="form-old-price" min="1" step="any" placeholder="5600" oninput="onOldPriceInputChange()" class="w-full py-2 px-3 bg-surface border border-surface-container-high focus:outline-none focus:border-primary" />
+          </div>
+        </div>
+
+        <!-- Discount / SALE Helper Block -->
+        <div class="bg-surface-container-lowest p-3.5 border border-surface-container-high rounded-xs space-y-2.5">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-1.5 font-semibold text-primary">
+              <span class="material-symbols-outlined text-[18px]">percent</span>
+              <span>Знижка (SALE)</span>
+            </div>
+            <div id="form-discount-badge" class="hidden font-bold text-[11px] px-2 py-0.5 bg-primary text-white rounded-xs uppercase tracking-wider">
+              -0%
+            </div>
+          </div>
+          
+          <div class="flex flex-wrap items-center gap-1.5">
+            <span class="text-[11px] text-secondary font-medium mr-1">Швидкі відсотки:</span>
+            <button type="button" onclick="applyFormDiscountPercent(10)" class="px-2 py-1 text-xs font-semibold bg-surface border border-surface-container-high hover:border-primary hover:text-primary rounded-xs transition-colors">-10%</button>
+            <button type="button" onclick="applyFormDiscountPercent(15)" class="px-2 py-1 text-xs font-semibold bg-surface border border-surface-container-high hover:border-primary hover:text-primary rounded-xs transition-colors">-15%</button>
+            <button type="button" onclick="applyFormDiscountPercent(20)" class="px-2 py-1 text-xs font-semibold bg-surface border border-surface-container-high hover:border-primary hover:text-primary rounded-xs transition-colors">-20%</button>
+            <button type="button" onclick="applyFormDiscountPercent(25)" class="px-2 py-1 text-xs font-semibold bg-surface border border-surface-container-high hover:border-primary hover:text-primary rounded-xs transition-colors">-25%</button>
+            <button type="button" onclick="applyFormDiscountPercent(30)" class="px-2 py-1 text-xs font-semibold bg-surface border border-surface-container-high hover:border-primary hover:text-primary rounded-xs transition-colors">-30%</button>
+            <button type="button" onclick="applyFormDiscountPercent(50)" class="px-2 py-1 text-xs font-semibold bg-surface border border-surface-container-high hover:border-primary hover:text-primary rounded-xs transition-colors">-50%</button>
+            <button type="button" onclick="clearFormDiscount()" class="px-2 py-1 text-xs font-semibold text-red-700 bg-red-50 hover:bg-red-100 rounded-xs transition-colors ml-auto">✕ Прибрати знижку</button>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-on-surface mb-1">Тканина / Матеріал</label>
+          <input type="text" id="form-fabric" placeholder="100% пом'якшений льон" class="w-full py-2 px-3 bg-surface border border-surface-container-high focus:outline-none focus:border-primary" />
+        </div>
+
+        <div>
+          <label class="block font-semibold text-on-surface mb-1">Опис виробу</label>
+          <textarea id="form-desc" rows="3" placeholder="Опишіть особливості крою, вишивки та стилю..." class="w-full py-2 px-3 bg-surface border border-surface-container-high focus:outline-none focus:border-primary"></textarea>
+        </div>
+
+        <!-- Product Photo Section -->
+        <div class="space-y-2">
+          <label class="block font-semibold text-on-surface">Фотографія виробу *</label>
+          <div class="flex flex-col sm:flex-row items-start gap-4 p-3.5 bg-surface-container-lowest border border-surface-container-high rounded-xs">
+            <!-- Thumbnail Preview -->
+            <div class="relative w-24 h-32 bg-surface-container rounded-xs overflow-hidden border border-surface-container-high shrink-0 shadow-xs group">
+              <img id="form-img-preview" src="/images/berehynia_dress_1789843600634.jpg" class="w-full h-full object-cover" alt="Попередній перегляд" />
+              <button type="button" onclick="document.getElementById('form-img-file-input').click()" class="absolute inset-0 bg-black/50 text-white text-[11px] font-medium opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-1 transition-opacity">
+                <span class="material-symbols-outlined text-[20px]">photo_camera</span>
+                <span>Змінити</span>
+              </button>
+            </div>
+
+            <!-- Upload / Select Controls -->
+            <div class="flex-1 space-y-3 w-full">
+              <div class="flex flex-wrap items-center gap-2">
+                <input type="file" id="form-img-file-input" accept="image/*" class="hidden" onchange="handleProductImageFileUpload(this)" />
+                <button type="button" onclick="document.getElementById('form-img-file-input').click()" class="py-2 px-3.5 bg-primary hover:bg-tertiary text-white font-semibold text-xs rounded-xs flex items-center gap-1.5 transition-colors shadow-xs">
+                  <span class="material-symbols-outlined text-[16px]">upload</span>
+                  <span>Завантажити фото з комп'ютера / телефону</span>
+                </button>
+              </div>
+
+              <!-- Quick Presets -->
+              <div>
+                <span class="text-[11px] font-semibold text-secondary block mb-1.5">Або оберіть зі студійної галереї ательє:</span>
+                <div class="grid grid-cols-4 sm:grid-cols-7 gap-1.5" id="gallery-preset-thumbnails">
+                  <!-- Dynamically rendered or presets -->
+                  <button type="button" onclick="setProductFormImg('/images/berehynia_dress_1789843600634.jpg')" class="h-14 rounded-xs overflow-hidden border border-surface-container-high hover:border-primary transition-all focus:ring-2 focus:ring-primary" title="Сукня «Берегиня»">
+                    <img src="/images/berehynia_dress_1789843600634.jpg" class="w-full h-full object-cover" alt="Берегиня" />
+                  </button>
+                  <button type="button" onclick="setProductFormImg('/images/mavka_dress_1789843642965.jpg')" class="h-14 rounded-xs overflow-hidden border border-surface-container-high hover:border-primary transition-all focus:ring-2 focus:ring-primary" title="Сукня «Мавка»">
+                    <img src="/images/mavka_dress_1789843642965.jpg" class="w-full h-full object-cover" alt="Мавка" />
+                  </button>
+                  <button type="button" onclick="setProductFormImg('/images/oberig_shirt_1789843615744.jpg')" class="h-14 rounded-xs border border-surface-container-high hover:border-primary transition-all focus:ring-2 focus:ring-primary" title="Сорочка «Оберіг»">
+                    <img src="/images/oberig_shirt_1789843615744.jpg" class="w-full h-full object-cover" alt="Оберіг" />
+                  </button>
+                  <button type="button" onclick="setProductFormImg('/images/hetman_jacket_1789843629464.jpg')" class="h-14 rounded-xs border border-surface-container-high hover:border-primary transition-all focus:ring-2 focus:ring-primary" title="Жакет «Гетьманський»">
+                    <img src="/images/hetman_jacket_1789843629464.jpg" class="w-full h-full object-cover" alt="Гетьманський" />
+                  </button>
+                  <button type="button" onclick="setProductFormImg('/images/dzherelo_set_1789843655280.jpg')" class="h-14 rounded-xs border border-surface-container-high hover:border-primary transition-all focus:ring-2 focus:ring-primary" title="Сет «Джерело»">
+                    <img src="/images/dzherelo_set_1789843655280.jpg" class="w-full h-full object-cover" alt="Джерело" />
+                  </button>
+                  <button type="button" onclick="setProductFormImg('/images/podillya_corset_1789843684134.jpg')" class="h-14 rounded-xs border border-surface-container-high hover:border-primary transition-all focus:ring-2 focus:ring-primary" title="Корсет «Поділля»">
+                    <img src="/images/podillya_corset_1789843684134.jpg" class="w-full h-full object-cover" alt="Поділля" />
+                  </button>
+                  <button type="button" onclick="setProductFormImg('/images/zorya_tunic_1789843670230.jpg')" class="h-14 rounded-xs border border-surface-container-high hover:border-primary transition-all focus:ring-2 focus:ring-primary" title="Туніка «Зоря»">
+                    <img src="/images/zorya_tunic_1789843670230.jpg" class="w-full h-full object-cover" alt="Зоря" />
+                  </button>
+                </div>
+              </div>
+
+              <!-- Direct Image URL / Custom Path (collapsed by default, neat) -->
+              <details class="text-[11px] text-secondary">
+                <summary class="cursor-pointer font-medium hover:text-primary select-none flex items-center gap-1">
+                  <span>Ввести пряме посилання на фото (URL)</span>
+                </summary>
+                <div class="mt-2">
+                  <input type="text" id="form-img" oninput="onFormImgUrlChange(this.value)" placeholder="https://... або /images/photo.jpg" class="w-full py-1.5 px-2.5 bg-surface border border-surface-container-high focus:outline-none focus:border-primary font-mono text-[11px]" />
+                </div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <!-- Colors configuration -->
+        <div class="bg-surface-container-lowest p-4 border border-surface-container-high rounded-xs space-y-3">
+          <div class="flex items-center justify-between">
+            <div>
+              <label class="block font-semibold text-primary text-xs uppercase tracking-wider">
+                Доступні кольори виробу
+              </label>
+              <p class="text-[11px] text-secondary font-medium mt-0.5">Клікніть, щоб додати колір (клієнт зможе обирати колір кнопками на сайті)</p>
+            </div>
+          </div>
+
+          <!-- Quick Preset Color Pills -->
+          <div class="flex flex-wrap items-center gap-1.5" id="form-colors-selector">
+            <!-- Populated dynamically -->
+          </div>
+
+          <!-- Custom color input -->
+          <div class="flex items-center gap-2 pt-1">
+            <input type="text" id="form-custom-color-input" placeholder="Власний колір (напр. Смарагдовий, Теракот, Олива)..." class="flex-1 py-1.5 px-2.5 bg-surface border border-surface-container-high focus:outline-none focus:border-primary text-xs" />
+            <button type="button" onclick="addCustomColorToForm()" class="py-1.5 px-3 bg-secondary/10 hover:bg-secondary hover:text-white text-secondary font-semibold text-xs transition-colors rounded-xs flex items-center gap-1">
+              <span class="material-symbols-outlined text-[16px]">add</span>
+              <span>Додати колір</span>
+            </button>
+          </div>
+          <input type="hidden" id="form-colors-hidden" value="Молочний,Чорний,Бордо" />
+        </div>
+
+        <!-- Sizes configuration -->
+        <div class="bg-surface-container-lowest p-4 border border-surface-container-high rounded-xs space-y-3">
+          <div class="flex items-center justify-between">
+            <div>
+              <label class="block font-semibold text-primary text-xs uppercase tracking-wider">
+                Доступні розміри виробу
+              </label>
+              <p class="text-[11px] text-secondary font-medium mt-0.5">Клікніть, щоб обрати доступні розміри (XS, S, M, L, XL тощо)</p>
+            </div>
+          </div>
+
+          <!-- Quick Preset Size Pills -->
+          <div class="flex flex-wrap items-center gap-1.5" id="form-sizes-selector">
+            <!-- Dynamically populated or interactive buttons -->
+          </div>
+
+          <!-- Custom size input -->
+          <div class="flex items-center gap-2 pt-1">
+            <input type="text" id="form-custom-size-input" placeholder="Власний розмір (напр. XXL, 42, 44)..." class="flex-1 py-1.5 px-2.5 bg-surface border border-surface-container-high focus:outline-none focus:border-primary text-xs" />
+            <button type="button" onclick="addCustomSizeToForm()" class="py-1.5 px-3 bg-secondary/10 hover:bg-secondary hover:text-white text-secondary font-semibold text-xs transition-colors rounded-xs flex items-center gap-1">
+              <span class="material-symbols-outlined text-[16px]">add</span>
+              <span>Додати розмір</span>
+            </button>
+          </div>
+          <input type="hidden" id="form-sizes-hidden" value="XS,S,M,L,XL" />
+        </div>
+
+        <!-- Variants / Special Pricing & Discounts by Size/Color -->
+        <div class="bg-surface-container-lowest p-4 border border-surface-container-high rounded-xs space-y-3">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="flex items-center gap-1.5 font-semibold text-primary text-xs uppercase tracking-wider">
+                <span class="material-symbols-outlined text-[18px]">tune</span>
+                <span>Окремі фото, ціни та знижки для конкретного кольору чи розміру</span>
+              </div>
+              <p class="text-[11px] text-secondary font-medium mt-0.5">Додайте особливе фото або спецціну/знижку (наприклад, для червоного кольору чи розміру XL)</p>
+            </div>
+            <button type="button" onclick="addVariantRow()" class="py-1 px-2.5 bg-primary/10 text-primary hover:bg-primary hover:text-white rounded-xs font-semibold text-xs transition-colors flex items-center gap-1">
+              <span class="material-symbols-outlined text-[15px]">add</span>
+              <span>Додати спец-варіант</span>
+            </button>
+          </div>
+
+          <div id="form-variants-container" class="space-y-2.5">
+            <!-- Dynamically populated variant rows -->
+          </div>
+          <div id="form-variants-empty" class="text-center py-2 text-[11px] text-outline italic">
+            Немає індивідуальних спец-варіантів (діє єдина базова ціна і головне фото)
+          </div>
+        </div>
+
+        <div class="flex items-center gap-6 pt-2">
+          <label class="flex items-center gap-2 cursor-pointer font-semibold text-on-surface">
+            <input type="checkbox" id="form-in-stock" checked class="w-4 h-4 text-primary accent-primary rounded" />
+            <span>В наявності в ательє</span>
+          </label>
+        </div>
+
+        <div class="pt-4 border-t border-surface-container-high flex items-center justify-end gap-3">
+          <button type="button" onclick="closeProductModal()" class="py-2.5 px-4 bg-surface hover:bg-surface-container border border-surface-container-high text-on-surface font-semibold uppercase tracking-wider">
+            Скасувати
+          </button>
+          <button type="submit" class="py-2.5 px-6 bg-primary hover:bg-tertiary text-white font-semibold uppercase tracking-wider shadow-xs transition-colors">
+            Зберегти виріб
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Add / Edit Category -->
+  <div id="category-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+    <div class="bg-white w-full max-w-md border border-surface-container-high shadow-2xl p-6 sm:p-8 relative rounded-xs space-y-5">
+      <button onclick="closeCategoryModal()" class="absolute top-4 right-4 text-outline hover:text-primary p-1">
+        <span class="material-symbols-outlined text-[22px]">close</span>
+      </button>
+
+      <div class="border-b border-surface-container-high pb-3">
+        <h2 id="modal-category-title" class="font-headline text-2xl font-bold text-primary">Додати категорію</h2>
+        <p class="text-xs text-secondary uppercase tracking-wider font-semibold">Категорії каталогу Belle Atelier</p>
+      </div>
+
+      <form id="category-form" onsubmit="handleCategoryFormSubmit(event)" class="space-y-4 text-xs">
+        <input type="hidden" id="form-cat-id" value="" />
+
+        <div>
+          <label class="block font-semibold text-on-surface mb-1">Назва категорії *</label>
+          <input type="text" id="form-cat-name" required placeholder="Напр. Пальта &amp; Кейпи" oninput="autoGenerateCategorySlug(this.value)" class="w-full py-2 px-3 bg-surface border border-surface-container-high focus:outline-none focus:border-primary font-medium" />
+        </div>
+
+        <div>
+          <label class="block font-semibold text-on-surface mb-1">Адреса посилання (генерується автоматично)</label>
+          <div class="flex items-center gap-1.5">
+            <span class="text-outline font-mono text-xs">/catalog?cat=</span>
+            <input type="text" id="form-cat-slug" placeholder="palta-i-kepi" class="flex-1 py-2 px-3 bg-surface border border-surface-container-high focus:outline-none focus:border-primary font-mono text-[11px]" />
+          </div>
+          <p class="text-[10px] text-outline mt-0.5">Створюється автоматично з назви (можна змінити за бажанням).</p>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-on-surface mb-1">Іконка категорії</label>
+          <div class="flex items-center gap-2">
+            <select id="form-cat-icon" class="w-full py-2 px-3 bg-surface border border-surface-container-high focus:outline-none focus:border-primary text-xs">
+              <option value="checkroom">👗 Сукні / Плічка (checkroom)</option>
+              <option value="auto_fix_high">✨ Вишиванка / Магія (auto_fix_high)</option>
+              <option value="styler">🧥 Жакети / Стиль (styler)</option>
+              <option value="straighten">📏 Корсети / Сантиметр (straighten)</option>
+              <option value="favorite">❤️ Сети / Серце (favorite)</option>
+              <option value="local_offer">🏷️ SALE / Знижки (local_offer)</option>
+              <option value="diamond">💎 Преміум / Кутюр (diamond)</option>
+              <option value="spa">🌿 Льон / Органіка (spa)</option>
+              <option value="dry_cleaning">🧣 Палантини / Аксесуари (dry_cleaning)</option>
+              <option value="folder">📁 Загальна (folder)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="pt-4 border-t border-surface-container-high flex items-center justify-end gap-3">
+          <button type="button" onclick="closeCategoryModal()" class="py-2.5 px-4 bg-surface hover:bg-surface-container border border-surface-container-high text-on-surface font-semibold uppercase tracking-wider">
+            Скасувати
+          </button>
+          <button type="submit" class="py-2.5 px-6 bg-primary hover:bg-tertiary text-white font-semibold uppercase tracking-wider shadow-xs transition-colors">
+            Зберегти категорію
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/cart-store.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      checkAuth();
+      loadTelegramSettings();
+      loadSiteTexts();
+      populateCategorySelects();
+      renderAdminTable();
+      renderCategoriesTable();
+    });
+
+    function checkAuth() {
+      const isAuth = BelleStore.isAdminAuthenticated();
+      const lockScreen = document.getElementById('admin-lock-screen');
+      const app = document.getElementById('admin-app');
+      
+      if (isAuth) {
+        lockScreen.classList.add('hidden');
+        app.classList.remove('hidden');
+      } else {
+        lockScreen.classList.remove('hidden');
+        app.classList.add('hidden');
+      }
+    }
+
+    function switchLockStep() {
+      document.getElementById('lock-step-request').classList.add('hidden');
+      document.getElementById('lock-step-verify').classList.remove('hidden');
+      document.getElementById('lock-2fa-input').focus();
+    }
+
+    function verifyLockScreenCode() {
+      const input = document.getElementById('lock-2fa-input');
+      const errBox = document.getElementById('lock-verify-error');
+      const res = BelleStore.verify2FACode(input.value.trim());
+
+      if (res.success) {
+        checkAuth();
+        BelleStore.showToast('Успішний вхід в панель адміністратора ✨');
+      } else {
+        errBox.classList.remove('hidden');
+        errBox.textContent = res.error;
+      }
+    }
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('text-primary', 'border-b-2', 'border-primary');
+        btn.classList.add('text-on-surface-variant');
+      });
+
+      const activeTab = document.getElementById(tabId);
+      if (activeTab) activeTab.classList.remove('hidden');
+
+      if (tabId === 'tab-products') {
+        document.getElementById('nav-btn-products').classList.add('text-primary', 'border-b-2', 'border-primary');
+        document.getElementById('nav-btn-products').classList.remove('text-on-surface-variant');
+      } else if (tabId === 'tab-categories') {
+        document.getElementById('nav-btn-categories').classList.add('text-primary', 'border-b-2', 'border-primary');
+        document.getElementById('nav-btn-categories').classList.remove('text-on-surface-variant');
+        renderCategoriesTable();
+      } else {
+        document.getElementById('nav-btn-telegram').classList.add('text-primary', 'border-b-2', 'border-primary');
+        document.getElementById('nav-btn-telegram').classList.remove('text-on-surface-variant');
+      }
+    }
+
+    function populateCategorySelects() {
+      const categories = BelleStore.getCategories();
+      const filterSelect = document.getElementById('admin-filter-category');
+      const formCatSelect = document.getElementById('form-cat');
+
+      if (filterSelect) {
+        const curVal = filterSelect.value || 'all';
+        filterSelect.innerHTML = `<option value="all">Усі категорії</option>` + 
+          categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+        filterSelect.value = curVal;
+      }
+
+      if (formCatSelect) {
+        const curVal = formCatSelect.value;
+        formCatSelect.innerHTML = categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+        if (curVal) formCatSelect.value = curVal;
+      }
+
+      document.getElementById('stat-categories-count').textContent = categories.length;
+    }
+
+    // --- PRODUCTS TABLE ---
+    function renderAdminTable() {
+      const products = BelleStore.getProducts();
+      const categories = BelleStore.getCategories();
+      const catMap = {};
+      categories.forEach(c => { catMap[c.id] = c.name; });
+
+      const tbody = document.getElementById('admin-products-tbody');
+      const emptyState = document.getElementById('admin-empty-state');
+      const searchQuery = (document.getElementById('admin-search-input')?.value || '').toLowerCase().trim();
+      const catFilter = document.getElementById('admin-filter-category')?.value || 'all';
+      const statusFilter = document.getElementById('admin-filter-status')?.value || 'all';
+
+      // Update Stats
+      const totalCount = products.length;
+      const activeCount = products.filter(p => !p.isArchived).length;
+      const archivedCount = products.filter(p => p.isArchived).length;
+      
+      document.getElementById('stat-total-count').textContent = totalCount;
+      document.getElementById('stat-active-count').textContent = activeCount;
+      document.getElementById('stat-categories-count').textContent = categories.length;
+
+      // Filter products
+      const filtered = products.filter(p => {
+        const matchesSearch = !searchQuery || p.name.toLowerCase().includes(searchQuery) || (p.art && p.art.toLowerCase().includes(searchQuery));
+        const matchesCat = catFilter === 'all' || p.cat === catFilter;
+        let matchesStatus = true;
+        if (statusFilter === 'active') matchesStatus = !p.isArchived;
+        if (statusFilter === 'archived') matchesStatus = Boolean(p.isArchived);
+        return matchesSearch && matchesCat && matchesStatus;
+      });
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        return;
+      }
+
+      emptyState.classList.add('hidden');
+      tbody.innerHTML = filtered.map(p => {
+        const statusBadge = p.isArchived 
+          ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-800">В архіві</span>`
+          : `<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800">Активний</span>`;
+
+        const discountBadge = (p.oldPrice && p.oldPrice > p.price)
+          ? `<span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-primary text-white text-[10px] font-bold rounded-xs uppercase tracking-wider" title="Знижка">
+              <span class="material-symbols-outlined text-[12px]">local_offer</span>
+              <span>-${Math.round((1 - p.price / p.oldPrice) * 100)}%</span>
+             </span>`
+          : `<button onclick="openQuickDiscountModal('${p.id}')" class="text-[10px] text-outline hover:text-primary font-medium underline flex items-center gap-0.5 transition-colors">
+              <span>+ Знижка</span>
+             </button>`;
+
+        return `
+          <tr class="hover:bg-surface-container-low transition-colors ${p.isArchived ? 'opacity-70 bg-gray-50' : ''}">
+            <td class="py-2.5 px-4">
+              <div class="relative w-12 h-16 bg-surface-container overflow-hidden rounded-xs border border-surface-container-high group/img cursor-pointer" onclick="openProductModal('${p.id}')" title="Натисніть, щоб змінити фото або виріб">
+                <img src="${p.img}" class="w-full h-full object-cover group-hover/img:scale-105 transition-transform" alt="${p.name}"/>
+                ${p.sale ? `<span class="absolute bottom-0 left-0 right-0 bg-primary/90 text-white text-[8px] font-bold py-0.5 text-center uppercase tracking-tighter pointer-events-none">SALE</span>` : ''}
+                <div class="absolute inset-0 bg-black/50 text-white flex flex-col items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity">
+                  <span class="material-symbols-outlined text-[16px]">photo_camera</span>
+                  <span class="text-[8px] font-bold leading-none mt-0.5 uppercase">Фото</span>
+                </div>
+              </div>
+            </td>
+            <td class="py-2.5 px-4">
+              <div class="font-headline font-semibold text-sm text-on-surface leading-tight">${p.name}</div>
+              <div class="text-[11px] font-mono text-outline mt-0.5">${p.art || '—'}</div>
+            </td>
+            <td class="py-2.5 px-4 text-on-surface-variant font-medium">
+              ${catMap[p.cat] || p.cat}
+            </td>
+            <td class="py-2.5 px-4">
+              <div class="flex items-center gap-1.5">
+                <input type="number" value="${p.price}" onchange="quickUpdatePrice('${p.id}', this.value)" class="w-20 py-1 px-1.5 bg-surface border border-surface-container-high focus:border-primary font-bold text-primary text-xs" />
+                <span class="text-xs font-semibold text-primary">₴</span>
+              </div>
+              <div class="flex items-center gap-2 mt-1">
+                ${p.oldPrice ? `<span class="text-[10px] text-outline line-through">${p.oldPrice} ₴</span>` : ''}
+                ${discountBadge}
+              </div>
+            </td>
+            <td class="py-2.5 px-4">
+              <button onclick="quickToggleStock('${p.id}')" class="px-2 py-1 text-[11px] font-medium rounded ${p.inStock ? 'text-emerald-800 bg-emerald-50 hover:bg-emerald-100' : 'text-amber-800 bg-amber-50 hover:bg-amber-100'} transition-colors">
+                ${p.inStock ? '● В наявності' : '○ Під замовлення'}
+              </button>
+            </td>
+            <td class="py-2.5 px-4">
+              ${statusBadge}
+            </td>
+            <td class="py-2.5 px-4 text-right">
+              <div class="flex items-center justify-end gap-1">
+                <button onclick="openProductModal('${p.id}')" title="Редагувати" class="p-1.5 text-secondary hover:text-primary hover:bg-surface-container rounded transition-colors">
+                  <span class="material-symbols-outlined text-[18px]">edit</span>
+                </button>
+                <button onclick="toggleArchive('${p.id}')" title="${p.isArchived ? 'Повернути з архіву' : 'В архів'}" class="p-1.5 text-secondary hover:text-amber-700 hover:bg-surface-container rounded transition-colors">
+                  <span class="material-symbols-outlined text-[18px]">${p.isArchived ? 'unarchive' : 'archive'}</span>
+                </button>
+                <button onclick="confirmDelete('${p.id}', '${p.name.replace(/'/g, "\\'")}')" title="Видалити" class="p-1.5 text-outline hover:text-red-700 hover:bg-red-50 rounded transition-colors">
+                  <span class="material-symbols-outlined text-[18px]">delete</span>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function quickUpdatePrice(id, newPrice) {
+      BelleStore.updateProduct(id, { price: Number(newPrice) });
+      renderAdminTable();
+    }
+
+    function quickToggleStock(id) {
+      const products = BelleStore.getProducts();
+      const p = products.find(item => item.id === id);
+      if (p) {
+        BelleStore.updateProduct(id, { inStock: !p.inStock });
+        renderAdminTable();
+      }
+    }
+
+    function toggleArchive(id) {
+      BelleStore.toggleArchiveProduct(id);
+      renderAdminTable();
+    }
+
+    function confirmDelete(id, name) {
+      if (confirm(`Ви впевнені, що хочете остаточно видалити виріб «${name}»?`)) {
+        BelleStore.deleteProduct(id);
+        renderAdminTable();
+      }
+    }
+
+    // --- CATEGORIES TABLE ---
+    function renderCategoriesTable() {
+      const categories = BelleStore.getCategories();
+      const products = BelleStore.getProducts();
+      const tbody = document.getElementById('admin-categories-tbody');
+
+      populateCategorySelects();
+
+      tbody.innerHTML = categories.map(c => {
+        const prodCount = products.filter(p => p.cat === c.id).length;
+        return `
+          <tr class="hover:bg-surface-container-low transition-colors">
+            <td class="py-3 px-4">
+              <div class="w-8 h-8 rounded-full bg-secondary/10 text-secondary flex items-center justify-center">
+                <span class="material-symbols-outlined text-[18px]">${c.icon || 'folder'}</span>
+              </div>
+            </td>
+            <td class="py-3 px-4 font-headline text-sm font-semibold text-primary">
+              ${c.name}
+            </td>
+            <td class="py-3 px-4 font-mono text-outline text-xs">
+              <code>${c.id}</code>
+            </td>
+            <td class="py-3 px-4 font-medium text-on-surface">
+              <span class="px-2 py-0.5 bg-surface-container rounded-full text-[11px]">${prodCount} виробів</span>
+            </td>
+            <td class="py-3 px-4 text-right">
+              <div class="flex items-center justify-end gap-1">
+                <button onclick="openCategoryModal('${c.id}')" title="Редагувати" class="p-1.5 text-secondary hover:text-primary hover:bg-surface-container rounded transition-colors">
+                  <span class="material-symbols-outlined text-[18px]">edit</span>
+                </button>
+                <button onclick="confirmDeleteCategory('${c.id}', '${c.name.replace(/'/g, "\\'")}')" title="Видалити" class="p-1.5 text-outline hover:text-red-700 hover:bg-red-50 rounded transition-colors">
+                  <span class="material-symbols-outlined text-[18px]">delete</span>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Transliteration helper for category URL
+    function cyrillicToLatinSlug(text) {
+      const map = {
+        'а':'a','б':'b','в':'v','г':'h','ґ':'g','д':'d','е':'e','є':'ye','ж':'zh','з':'z',
+        'и':'y','і':'i','ї':'yi','й':'y','к':'k','л':'l','м':'m','н':'n','о':'o','п':'p',
+        'р':'r','с':'s','т':'t','у':'u','ф':'f','х':'kh','ц':'ts','ч':'ch','ш':'sh','щ':'shch',
+        'ю':'yu','я':'ya','ь':'','ъ':'','&':'i','+':'plus'
+      };
+      return text
+        .toLowerCase()
+        .split('')
+        .map(char => map[char] !== undefined ? map[char] : char)
+        .join('')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+    }
+
+    function autoGenerateCategorySlug(name) {
+      const idInput = document.getElementById('form-cat-id');
+      // Only auto-generate if adding a new category (not editing existing ID)
+      if (!idInput.value) {
+        document.getElementById('form-cat-slug').value = cyrillicToLatinSlug(name);
+      }
+    }
+
+    // Category Modal Operations
+    function openCategoryModal(id = null) {
+      const modal = document.getElementById('category-modal');
+      const form = document.getElementById('category-form');
+      const title = document.getElementById('modal-category-title');
+
+      if (id) {
+        title.textContent = 'Редагувати категорію';
+        const c = BelleStore.getCategories().find(item => item.id === id);
+        if (c) {
+          document.getElementById('form-cat-id').value = c.id;
+          document.getElementById('form-cat-name').value = c.name;
+          document.getElementById('form-cat-slug').value = c.id;
+          document.getElementById('form-cat-slug').disabled = true;
+          document.getElementById('form-cat-icon').value = c.icon || 'folder';
+        }
+      } else {
+        title.textContent = 'Додати нову категорію';
+        form.reset();
+        document.getElementById('form-cat-id').value = '';
+        document.getElementById('form-cat-slug').disabled = false;
+        document.getElementById('form-cat-slug').value = '';
+      }
+
+      modal.classList.remove('hidden');
+    }
+
+    function closeCategoryModal() {
+      document.getElementById('category-modal').classList.add('hidden');
+    }
+
+    function handleCategoryFormSubmit(e) {
+      e.preventDefault();
+      const id = document.getElementById('form-cat-id').value;
+      const name = document.getElementById('form-cat-name').value.trim();
+      let slug = document.getElementById('form-cat-slug').value.trim();
+      const icon = document.getElementById('form-cat-icon').value;
+
+      if (!slug) {
+        slug = cyrillicToLatinSlug(name) || ('cat_' + Date.now());
+      }
+
+      if (id) {
+        BelleStore.updateCategory(id, { name, icon });
+      } else {
+        BelleStore.addCategory({ id: slug, name, icon });
+      }
+
+      closeCategoryModal();
+      renderCategoriesTable();
+      renderAdminTable();
+    }
+
+    function confirmDeleteCategory(id, name) {
+      if (confirm(`Ви впевнені, що хочете видалити категорію «${name}»? Товари цієї категорії залишаться в базі.`)) {
+        BelleStore.deleteCategory(id);
+        renderCategoriesTable();
+        renderAdminTable();
+      }
+    }
+
+    // Discount Calculation Helpers
+    function updateDiscountBadge() {
+      const priceInput = document.getElementById('form-price');
+      const oldPriceInput = document.getElementById('form-old-price');
+      const badge = document.getElementById('form-discount-badge');
+      if (!priceInput || !oldPriceInput || !badge) return;
+
+      const price = Number(priceInput.value);
+      const oldPrice = Number(oldPriceInput.value);
+
+      if (oldPrice && oldPrice > price && price > 0) {
+        const pct = Math.round((1 - price / oldPrice) * 100);
+        badge.textContent = `-${pct}% ЗНИЖКА`;
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+      }
+    }
+
+    function onPriceInputChange() {
+      updateDiscountBadge();
+    }
+
+    function onOldPriceInputChange() {
+      updateDiscountBadge();
+    }
+
+    function applyFormDiscountPercent(percent) {
+      const priceInput = document.getElementById('form-price');
+      const oldPriceInput = document.getElementById('form-old-price');
+      if (!priceInput || !oldPriceInput) return;
+
+      let basePrice = Number(oldPriceInput.value) || Number(priceInput.value);
+      if (!basePrice || basePrice <= 0) basePrice = 5000;
+
+      // Base price becomes oldPrice
+      oldPriceInput.value = basePrice;
+      // Calculate discounted price rounded to nearest 50 UAH
+      const discounted = Math.round((basePrice * (1 - percent / 100)) / 50) * 50;
+      priceInput.value = discounted;
+      updateDiscountBadge();
+    }
+
+    function clearFormDiscount() {
+      const priceInput = document.getElementById('form-price');
+      const oldPriceInput = document.getElementById('form-old-price');
+      if (!priceInput || !oldPriceInput) return;
+
+      if (oldPriceInput.value) {
+        priceInput.value = oldPriceInput.value;
+      }
+      oldPriceInput.value = '';
+      updateDiscountBadge();
+    }
+
+    function openQuickDiscountModal(productId) {
+      const p = BelleStore.getProducts().find(item => item.id === productId);
+      if (!p) return;
+
+      const currentBase = p.oldPrice || p.price;
+      const pctInput = prompt(`Введіть відсоток знижки для «${p.name}» (наприклад 10, 15, 20, 25, 30, 50) або 0 щоб прибрати знижку:`, "20");
+      if (pctInput === null) return;
+
+      const pct = parseInt(pctInput, 10);
+      if (isNaN(pct) || pct < 0 || pct >= 100) {
+        alert("Будь ласка, введіть число від 0 до 99.");
+        return;
+      }
+
+      if (pct === 0) {
+        BelleStore.updateProduct(productId, {
+          price: currentBase,
+          oldPrice: null,
+          sale: null
+        });
+      } else {
+        const newPrice = Math.round((currentBase * (1 - pct / 100)) / 50) * 50;
+        BelleStore.updateProduct(productId, {
+          price: newPrice,
+          oldPrice: currentBase,
+          sale: `SALE −${pct}%`
+        });
+      }
+      renderAdminTable();
+    }
+
+    // Photo Picker & Upload Helpers
+    function setProductFormImg(url) {
+      const imgInput = document.getElementById('form-img');
+      const preview = document.getElementById('form-img-preview');
+      if (imgInput) imgInput.value = url;
+      if (preview) preview.src = url;
+    }
+
+    function onFormImgUrlChange(val) {
+      const preview = document.getElementById('form-img-preview');
+      if (preview && val) {
+        preview.src = val;
+      }
+    }
+
+    function handleProductImageFileUpload(input) {
+      if (input.files && input.files[0]) {
+        const file = input.files[0];
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const rawBase64 = e.target.result;
+          const img = new Image();
+          img.onload = function() {
+            try {
+              // Resize and compress using canvas to ensure high quality while fitting in localStorage (<150KB)
+              const canvas = document.createElement('canvas');
+              let width = img.width;
+              let height = img.height;
+              const maxDim = 1200;
+
+              if (width > maxDim || height > maxDim) {
+                if (width > height) {
+                  height = Math.round((height * maxDim) / width);
+                  width = maxDim;
+                } else {
+                  width = Math.round((width * maxDim) / height);
+                  height = maxDim;
+                }
+              }
+
+              canvas.width = width;
+              canvas.height = height;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0, width, height);
+
+              const compressedBase64 = canvas.toDataURL('image/jpeg', 0.84);
+              setProductFormImg(compressedBase64);
+              BelleStore.showToast("Фото успішно завантажено та збережено! ✨");
+            } catch (err) {
+              console.error("Canvas compression failed, using original base64:", err);
+              setProductFormImg(rawBase64);
+              BelleStore.showToast("Фото завантажено! ✨");
+            }
+          };
+          img.onerror = function() {
+            setProductFormImg(rawBase64);
+            BelleStore.showToast("Фото завантажено!");
+          };
+          img.src = rawBase64;
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    // --- COLOR PALETTE MANAGEMENT IN PRODUCT MODAL ---
+    const ALL_PRESET_COLORS = [
+      'Молочний', 'Білий', 'Чорний', 'Бордо', 'Червоний', 'Зелений', 
+      'Смарагдовий', 'Олива', 'Графіт', 'Синій', 'Волошковий', 
+      'Бежевий', 'Пісочний', 'Шоколадний', 'Лавандовий', 'Жовтий'
+    ];
+    let currentProductColors = ['Молочний', 'Чорний', 'Бордо'];
+
+    function renderColorsSelector() {
+      const container = document.getElementById('form-colors-selector');
+      const hiddenInput = document.getElementById('form-colors-hidden');
+      if (!container) return;
+
+      const allUnique = Array.from(new Set([...ALL_PRESET_COLORS, ...currentProductColors]));
+
+      container.innerHTML = allUnique.map(color => {
+        const isSelected = currentProductColors.includes(color);
+        return `
+          <button type="button" onclick="toggleProductColor('${color}')" class="px-2.5 py-1 text-xs font-semibold rounded-xs border transition-all ${
+            isSelected 
+              ? 'bg-primary text-white border-primary shadow-xs' 
+              : 'bg-surface text-on-surface border-surface-container-high hover:border-primary'
+          }">
+            ${color} ${isSelected ? '✓' : '+'}
+          </button>
+        `;
+      }).join('');
+
+      if (hiddenInput) {
+        hiddenInput.value = currentProductColors.join(',');
+      }
+    }
+
+    function toggleProductColor(color) {
+      const idx = currentProductColors.indexOf(color);
+      if (idx > -1) {
+        currentProductColors.splice(idx, 1);
+      } else {
+        currentProductColors.push(color);
+      }
+      renderColorsSelector();
+    }
+
+    function addCustomColorToForm() {
+      const input = document.getElementById('form-custom-color-input');
+      if (!input) return;
+      const val = input.value.trim();
+      if (val && !currentProductColors.includes(val)) {
+        currentProductColors.push(val);
+        input.value = '';
+        renderColorsSelector();
+      }
+    }
+
+    // Variant Management (Size & Color specific pricing, photos & discounts)
+    let currentVariants = [];
+
+    function renderVariantsUI() {
+      const container = document.getElementById('form-variants-container');
+      const emptyEl = document.getElementById('form-variants-empty');
+      if (!container || !emptyEl) return;
+
+      if (!currentVariants || currentVariants.length === 0) {
+        container.innerHTML = '';
+        emptyEl.classList.remove('hidden');
+        return;
+      }
+
+      emptyEl.classList.add('hidden');
+      const availColors = currentProductColors.length > 0 ? currentProductColors : ['Молочний', 'Чорний', 'Бордо'];
+      const availSizes = currentProductSizes.length > 0 ? currentProductSizes : ['XS', 'S', 'M', 'L', 'XL'];
+
+      container.innerHTML = currentVariants.map((v, idx) => {
+        const discountPct = (v.oldPrice && Number(v.oldPrice) > Number(v.price)) 
+          ? Math.round((1 - Number(v.price) / Number(v.oldPrice)) * 100) 
+          : 0;
+
+        return `
+          <div class="p-3 bg-surface-container-low border border-surface-container-high rounded-xs text-xs space-y-2.5">
+            <div class="flex items-center justify-between border-b border-surface-container-high/60 pb-2">
+              <span class="font-bold text-primary uppercase text-[11px] flex items-center gap-1">
+                <span class="material-symbols-outlined text-[16px]">tune</span>
+                <span>Спец-варіант #${idx + 1}</span>
+              </span>
+              <button type="button" onclick="removeVariantRow(${idx})" title="Видалити варіант" class="text-outline hover:text-red-700 text-xs flex items-center gap-0.5">
+                <span class="material-symbols-outlined text-[16px]">delete</span>
+                <span>Видалити</span>
+              </button>
+            </div>
+
+            <div class="flex flex-col sm:flex-row items-start gap-3">
+              <!-- Variant Photo Thumbnail & Upload -->
+              <div class="relative w-20 h-24 bg-surface-container rounded-xs overflow-hidden border border-surface-container-high shrink-0 group">
+                <img id="variant-preview-${idx}" src="${v.img || '/images/berehynia_dress_1789843600634.jpg'}" class="w-full h-full object-cover" alt="Фото варіанту" />
+                <input type="file" id="variant-file-input-${idx}" accept="image/*" class="hidden" onchange="handleVariantImageUpload(this, ${idx})" />
+                <button type="button" onclick="document.getElementById('variant-file-input-${idx}').click()" class="absolute inset-0 bg-black/60 text-white text-[10px] font-semibold opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-1 transition-opacity">
+                  <span class="material-symbols-outlined text-[18px]">photo_camera</span>
+                  <span>Змінити фото</span>
+                </button>
+              </div>
+
+              <!-- Controls Grid -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 flex-1 w-full">
+                <!-- Color -->
+                <div>
+                  <label class="block text-[10px] text-primary font-bold uppercase mb-1">Колір *</label>
+                  <select onchange="updateVariantData(${idx}, 'color', this.value)" class="w-full py-1.5 px-2 bg-white border border-surface-container-high focus:border-primary font-medium text-xs">
+                    <option value="">Всі кольори</option>
+                    ${availColors.map(c => `<option value="${c}" ${v.color === c ? 'selected' : ''}>${c}</option>`).join('')}
+                    ${v.color && !availColors.includes(v.color) ? `<option value="${v.color}" selected>${v.color}</option>` : ''}
+                  </select>
+                </div>
+
+                <!-- Size -->
+                <div>
+                  <label class="block text-[10px] text-outline font-semibold uppercase mb-1">Розмір</label>
+                  <select onchange="updateVariantData(${idx}, 'size', this.value)" class="w-full py-1.5 px-2 bg-white border border-surface-container-high focus:border-primary font-medium text-xs">
+                    <option value="">Всі розміри</option>
+                    ${availSizes.map(s => `<option value="${s}" ${v.size === s ? 'selected' : ''}>${s}</option>`).join('')}
+                    ${v.size && !availSizes.includes(v.size) ? `<option value="${v.size}" selected>${v.size}</option>` : ''}
+                  </select>
+                </div>
+
+                <!-- Price -->
+                <div>
+                  <label class="block text-[10px] text-primary font-bold uppercase mb-1">Ціна (₴) *</label>
+                  <input type="number" required min="1" step="any" placeholder="4800" value="${v.price || ''}" oninput="updateVariantData(${idx}, 'price', this.value)" class="w-full py-1.5 px-2 bg-white border border-surface-container-high focus:border-primary font-bold text-primary text-xs" />
+                </div>
+
+                <!-- Old Price / Discount -->
+                <div>
+                  <label class="block text-[10px] text-outline font-semibold uppercase mb-1">Стара ціна (₴)</label>
+                  <div class="flex items-center gap-1">
+                    <input type="number" min="1" step="any" placeholder="5600" value="${v.oldPrice || ''}" oninput="updateVariantData(${idx}, 'oldPrice', this.value)" class="w-full py-1.5 px-2 bg-white border border-surface-container-high focus:border-primary font-medium text-xs" />
+                    ${discountPct > 0 ? `<span class="shrink-0 text-[10px] font-bold bg-primary text-white px-1.5 py-0.5 rounded-xs">-${discountPct}%</span>` : ''}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function handleVariantImageUpload(input, index) {
+      if (input.files && input.files[0] && currentVariants[index]) {
+        const file = input.files[0];
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const rawBase64 = e.target.result;
+          const img = new Image();
+          img.onload = function() {
+            try {
+              const canvas = document.createElement('canvas');
+              let width = img.width;
+              let height = img.height;
+              const maxDim = 1200;
+
+              if (width > maxDim || height > maxDim) {
+                if (width > height) {
+                  height = Math.round((height * maxDim) / width);
+                  width = maxDim;
+                } else {
+                  width = Math.round((width * maxDim) / height);
+                  height = maxDim;
+                }
+              }
+
+              canvas.width = width;
+              canvas.height = height;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0, width, height);
+
+              const compressedBase64 = canvas.toDataURL('image/jpeg', 0.84);
+              currentVariants[index].img = compressedBase64;
+              const previewEl = document.getElementById(`variant-preview-${index}`);
+              if (previewEl) previewEl.src = compressedBase64;
+              BelleStore.showToast("Фото варіанту збережено! ✨");
+            } catch (err) {
+              currentVariants[index].img = rawBase64;
+              const previewEl = document.getElementById(`variant-preview-${index}`);
+              if (previewEl) previewEl.src = rawBase64;
+              BelleStore.showToast("Фото варіанту додано! ✨");
+            }
+          };
+          img.src = rawBase64;
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function addVariantRow() {
+      const basePrice = Number(document.getElementById('form-price')?.value) || 4800;
+      const mainImg = document.getElementById('form-img')?.value || '/images/berehynia_dress_1789843600634.jpg';
+      currentVariants.push({
+        size: '',
+        color: currentProductColors[0] || '',
+        price: basePrice,
+        oldPrice: null,
+        img: mainImg
+      });
+      renderVariantsUI();
+    }
+
+    function removeVariantRow(index) {
+      currentVariants.splice(index, 1);
+      renderVariantsUI();
+    }
+
+    function updateVariantData(index, field, value) {
+      if (!currentVariants[index]) return;
+      if (field === 'price' || field === 'oldPrice') {
+        currentVariants[index][field] = value ? Number(value) : null;
+      } else {
+        currentVariants[index][field] = value.trim();
+      }
+      // Re-render only if oldPrice was modified to update badge
+      if (field === 'oldPrice' || field === 'price') {
+        renderVariantsUI();
+      }
+    }
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('text-primary', 'border-b-2', 'border-primary');
+        btn.classList.add('text-on-surface-variant');
+      });
+
+      const activeTab = document.getElementById(tabId);
+      if (activeTab) activeTab.classList.remove('hidden');
+
+      if (tabId === 'tab-products') {
+        document.getElementById('nav-btn-products').classList.add('text-primary', 'border-b-2', 'border-primary');
+        document.getElementById('nav-btn-products').classList.remove('text-on-surface-variant');
+      } else if (tabId === 'tab-categories') {
+        document.getElementById('nav-btn-categories').classList.add('text-primary', 'border-b-2', 'border-primary');
+        document.getElementById('nav-btn-categories').classList.remove('text-on-surface-variant');
+        renderCategoriesTable();
+      } else if (tabId === 'tab-sizechart') {
+        document.getElementById('nav-btn-sizechart').classList.add('text-primary', 'border-b-2', 'border-primary');
+        document.getElementById('nav-btn-sizechart').classList.remove('text-on-surface-variant');
+        renderSizeChartList();
+      } else if (tabId === 'tab-reviews') {
+        document.getElementById('nav-btn-reviews').classList.add('text-primary', 'border-b-2', 'border-primary');
+        document.getElementById('nav-btn-reviews').classList.remove('text-on-surface-variant');
+        renderReviewsList();
+      } else if (tabId === 'tab-texts') {
+        document.getElementById('nav-btn-texts').classList.add('text-primary', 'border-b-2', 'border-primary');
+        document.getElementById('nav-btn-texts').classList.remove('text-on-surface-variant');
+        loadSiteTexts();
+      } else {
+        document.getElementById('nav-btn-telegram').classList.add('text-primary', 'border-b-2', 'border-primary');
+        document.getElementById('nav-btn-telegram').classList.remove('text-on-surface-variant');
+      }
+    }
+
+    // --- SITE TEXTS MANAGEMENT ---
+    function loadSiteTexts() {
+      const texts = BelleStore.getSiteTexts();
+      const setVal = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.value = val || '';
+      };
+
+      setVal('text-about-text', texts.about_text);
+      setVal('text-offer-text', texts.offer_text);
+      setVal('text-privacy-text', texts.privacy_text);
+      setVal('text-contacts-title', texts.contacts_title);
+      setVal('text-contacts-badge', texts.contacts_badge);
+      setVal('text-contacts-address', texts.contacts_address);
+      setVal('text-contacts-phone', texts.contacts_phone);
+      setVal('text-contacts-instagram', texts.contacts_instagram);
+      setVal('text-contacts-instagram-handle', texts.contacts_instagram_handle);
+      setVal('text-contacts-salon-city', texts.contacts_salon_city);
+      setVal('text-rules-text', texts.rules_text);
+      setVal('text-exchange-text', texts.exchange_text);
+    }
+
+    function handleSiteTextsSubmit(e) {
+      e.preventDefault();
+      const getVal = id => document.getElementById(id)?.value.trim() || '';
+
+      const updated = {
+        about_text: getVal('text-about-text'),
+        offer_text: getVal('text-offer-text'),
+        privacy_text: getVal('text-privacy-text'),
+        contacts_title: getVal('text-contacts-title'),
+        contacts_badge: getVal('text-contacts-badge'),
+        contacts_address: getVal('text-contacts-address'),
+        contacts_phone: getVal('text-contacts-phone'),
+        contacts_instagram: getVal('text-contacts-instagram'),
+        contacts_instagram_handle: getVal('text-contacts-instagram-handle'),
+        contacts_salon_city: getVal('text-contacts-salon-city'),
+        rules_text: getVal('text-rules-text'),
+        exchange_text: getVal('text-exchange-text')
+      };
+
+      BelleStore.saveSiteTexts(updated);
+    }
+
+    function resetSiteTextsToDefault() {
+      if (confirm('⚠️ Скинути всі тексти правил, оферти, конфіденційності та контактів до стандартних значень за замовчуванням?')) {
+        const defaults = BelleStore.getDefaultSiteTexts();
+        BelleStore.saveSiteTexts(defaults);
+        loadSiteTexts();
+      }
+    }
+
+    // --- CUSTOMER REVIEWS MANAGEMENT ---
+    function renderReviewsList() {
+      const container = document.getElementById('reviews-images-list');
+      if (!container) return;
+      const reviews = BelleStore.getCustomerReviews();
+
+      if (reviews.length === 0) {
+        container.innerHTML = `
+          <div class="col-span-full py-8 text-center text-outline">
+            <span class="material-symbols-outlined text-4xl mb-1">image_not_supported</span>
+            <p>Немає доданих фотографій відгуків</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = reviews.map((rev, idx) => `
+        <div class="relative bg-surface border border-surface-container-high rounded-xs overflow-hidden group shadow-xs flex flex-col justify-between">
+          <div class="aspect-[4/3] w-full bg-surface-container overflow-hidden">
+            <img src="${rev.img}" alt="Відгук ${idx + 1}" class="w-full h-full object-contain p-2" />
+          </div>
+          <div class="p-3 bg-white border-t border-surface-container-high space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold text-primary">Відгук №${idx + 1}</span>
+              <button type="button" onclick="deleteReview(${idx})" title="Видалити відгук" class="p-1 text-outline hover:text-red-700 hover:bg-red-50 rounded transition-colors">
+                <span class="material-symbols-outlined text-[18px]">delete</span>
+              </button>
+            </div>
+            <input type="text" value="${rev.caption || ''}" placeholder="Підпис до фото (напр. Сукня «Берегиня»)..." onchange="updateReviewCaption(${idx}, this.value)" class="w-full py-1 px-2 text-[11px] bg-surface border border-surface-container-high focus:outline-none focus:border-primary rounded-xs" />
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function handleReviewUpload(input) {
+      if (input.files && input.files[0]) {
+        const file = input.files[0];
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const rawBase64 = e.target.result;
+          const img = new Image();
+          img.onload = function() {
+            try {
+              const canvas = document.createElement('canvas');
+              let width = img.width;
+              let height = img.height;
+              const maxDim = 1200;
+
+              if (width > maxDim || height > maxDim) {
+                if (width > height) {
+                  height = Math.round((height * maxDim) / width);
+                  width = maxDim;
+                } else {
+                  width = Math.round((width * maxDim) / height);
+                  height = maxDim;
+                }
+              }
+
+              canvas.width = width;
+              canvas.height = height;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0, width, height);
+
+              const compressed = canvas.toDataURL('image/jpeg', 0.84);
+              const reviews = BelleStore.getCustomerReviews();
+              reviews.push({ img: compressed, caption: 'Фото від клієнтки' });
+              BelleStore.saveCustomerReviews(reviews);
+              renderReviewsList();
+              BelleStore.showToast("Фото відгуку успішно додано! ✨");
+            } catch (err) {
+              const reviews = BelleStore.getCustomerReviews();
+              reviews.push({ img: rawBase64, caption: 'Фото від клієнтки' });
+              BelleStore.saveCustomerReviews(reviews);
+              renderReviewsList();
+              BelleStore.showToast("Фото відгуку додано! ✨");
+            }
+          };
+          img.src = rawBase64;
+        };
+        reader.readAsDataURL(file);
+        input.value = '';
+      }
+    }
+
+    function updateReviewCaption(index, newCaption) {
+      const reviews = BelleStore.getCustomerReviews();
+      if (reviews[index]) {
+        reviews[index].caption = newCaption.trim();
+        BelleStore.saveCustomerReviews(reviews);
+        BelleStore.showToast("Підпис збережено");
+      }
+    }
+
+    function deleteReview(index) {
+      if (confirm('Видалити це фото відгуку?')) {
+        const reviews = BelleStore.getCustomerReviews();
+        reviews.splice(index, 1);
+        BelleStore.saveCustomerReviews(reviews);
+        renderReviewsList();
+        BelleStore.showToast("Фото відгуку видалено");
+      }
+    }
+
+    // --- SIZE CHART IMAGES MANAGEMENT ---
+    function renderSizeChartList() {
+      const container = document.getElementById('sizechart-images-list');
+      if (!container) return;
+      const images = BelleStore.getSizeChartImages();
+
+      if (images.length === 0) {
+        container.innerHTML = `
+          <div class="col-span-full py-8 text-center text-outline">
+            <span class="material-symbols-outlined text-4xl mb-1">image_not_supported</span>
+            <p>Немає доданих фотографій розмірної таблиці</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = images.map((imgUrl, idx) => `
+        <div class="relative bg-surface border border-surface-container-high rounded-xs overflow-hidden group shadow-xs">
+          <div class="aspect-[4/3] w-full bg-surface-container overflow-hidden">
+            <img src="${imgUrl}" alt="Розмірна таблиця ${idx + 1}" class="w-full h-full object-contain p-2" />
+          </div>
+          <div class="p-3 bg-white border-t border-surface-container-high flex items-center justify-between">
+            <span class="text-xs font-semibold text-primary">Фото №${idx + 1}</span>
+            <div class="flex items-center gap-1">
+              <button type="button" onclick="deleteSizeChartImage(${idx})" title="Видалити фото" class="p-1.5 text-outline hover:text-red-700 hover:bg-red-50 rounded transition-colors">
+                <span class="material-symbols-outlined text-[18px]">delete</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function handleSizeChartUpload(input) {
+      if (input.files && input.files[0]) {
+        const file = input.files[0];
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const rawBase64 = e.target.result;
+          const img = new Image();
+          img.onload = function() {
+            try {
+              const canvas = document.createElement('canvas');
+              let width = img.width;
+              let height = img.height;
+              const maxDim = 1200;
+
+              if (width > maxDim || height > maxDim) {
+                if (width > height) {
+                  height = Math.round((height * maxDim) / width);
+                  width = maxDim;
+                } else {
+                  width = Math.round((width * maxDim) / height);
+                  height = maxDim;
+                }
+              }
+
+              canvas.width = width;
+              canvas.height = height;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0, width, height);
+
+              const compressed = canvas.toDataURL('image/jpeg', 0.84);
+              const images = BelleStore.getSizeChartImages();
+              images.push(compressed);
+              BelleStore.saveSizeChartImages(images);
+              renderSizeChartList();
+              BelleStore.showToast("Фото розмірної таблиці успішно додано! 📏");
+            } catch (err) {
+              const images = BelleStore.getSizeChartImages();
+              images.push(rawBase64);
+              BelleStore.saveSizeChartImages(images);
+              renderSizeChartList();
+              BelleStore.showToast("Фото додано! 📏");
+            }
+          };
+          img.onerror = function() {
+            const images = BelleStore.getSizeChartImages();
+            images.push(rawBase64);
+            BelleStore.saveSizeChartImages(images);
+            renderSizeChartList();
+            BelleStore.showToast("Фото додано! 📏");
+          };
+          img.src = rawBase64;
+        };
+        reader.readAsDataURL(file);
+        input.value = '';
+      }
+    }
+
+    function deleteSizeChartImage(index) {
+      if (confirm('Видалити це фото розмірної таблиці?')) {
+        const images = BelleStore.getSizeChartImages();
+        images.splice(index, 1);
+        BelleStore.saveSizeChartImages(images);
+        renderSizeChartList();
+        BelleStore.showToast("Фото видалено");
+      }
+    }
+
+    // --- SIZES SELECTOR IN PRODUCT MODAL ---
+    const ALL_PRESET_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'One Size', 'Індивідуальні мірки'];
+    let currentProductSizes = ['XS', 'S', 'M', 'L', 'XL'];
+
+    function renderSizesSelector() {
+      const container = document.getElementById('form-sizes-selector');
+      const hiddenInput = document.getElementById('form-sizes-hidden');
+      if (!container) return;
+
+      const allUnique = Array.from(new Set([...ALL_PRESET_SIZES, ...currentProductSizes]));
+
+      container.innerHTML = allUnique.map(size => {
+        const isSelected = currentProductSizes.includes(size);
+        return `
+          <button type="button" onclick="toggleProductSize('${size}')" class="px-2.5 py-1 text-xs font-semibold rounded-xs border transition-all ${
+            isSelected 
+              ? 'bg-primary text-white border-primary shadow-xs' 
+              : 'bg-surface text-on-surface border-surface-container-high hover:border-primary'
+          }">
+            ${size} ${isSelected ? '✓' : '+'}
+          </button>
+        `;
+      }).join('');
+
+      if (hiddenInput) {
+        hiddenInput.value = currentProductSizes.join(',');
+      }
+    }
+
+    function toggleProductSize(size) {
+      const idx = currentProductSizes.indexOf(size);
+      if (idx > -1) {
+        currentProductSizes.splice(idx, 1);
+      } else {
+        currentProductSizes.push(size);
+      }
+      renderSizesSelector();
+    }
+
+    function addCustomSizeToForm() {
+      const input = document.getElementById('form-custom-size-input');
+      if (!input) return;
+      const val = input.value.trim();
+      if (val && !currentProductSizes.includes(val)) {
+        currentProductSizes.push(val);
+        input.value = '';
+        renderSizesSelector();
+      }
+    }
+
+    // Product Modal Operations
+    function openProductModal(id = null) {
+      const modal = document.getElementById('product-modal');
+      const form = document.getElementById('product-form');
+      const title = document.getElementById('modal-product-title');
+      populateCategorySelects();
+
+      if (id) {
+        title.textContent = 'Редагувати виріб';
+        const p = BelleStore.getProducts().find(item => item.id === id);
+        if (p) {
+          document.getElementById('form-product-id').value = p.id;
+          document.getElementById('form-name').value = p.name;
+          document.getElementById('form-art').value = p.art || '';
+          document.getElementById('form-cat').value = p.cat;
+          document.getElementById('form-price').value = p.price;
+          document.getElementById('form-old-price').value = p.oldPrice || '';
+          document.getElementById('form-fabric').value = p.fabric || '';
+          document.getElementById('form-desc').value = p.description || '';
+          document.getElementById('form-img').value = p.img || '';
+          document.getElementById('form-img-preview').src = p.img || '/images/berehynia_dress_1789843600634.jpg';
+          document.getElementById('form-in-stock').checked = p.inStock !== false;
+          
+          currentProductColors = Array.isArray(p.colors) && p.colors.length > 0 ? [...p.colors] : ['Молочний', 'Чорний', 'Бордо'];
+          renderColorsSelector();
+
+          currentProductSizes = Array.isArray(p.sizes) && p.sizes.length > 0 ? [...p.sizes] : ['XS', 'S', 'M', 'L', 'XL'];
+          renderSizesSelector();
+          
+          currentVariants = Array.isArray(p.variants) ? JSON.parse(JSON.stringify(p.variants)) : [];
+          renderVariantsUI();
+          updateDiscountBadge();
+        }
+      } else {
+        title.textContent = 'Додати новий виріб';
+        form.reset();
+        document.getElementById('form-product-id').value = '';
+        document.getElementById('form-art').value = 'BL-' + Math.floor(100 + Math.random() * 900);
+        document.getElementById('form-img-preview').src = '/images/berehynia_dress_1789843600634.jpg';
+        document.getElementById('form-img').value = '/images/berehynia_dress_1789843600634.jpg';
+        
+        currentProductColors = ['Молочний', 'Чорний', 'Бордо'];
+        renderColorsSelector();
+
+        currentProductSizes = ['XS', 'S', 'M', 'L', 'XL'];
+        renderSizesSelector();
+
+        currentVariants = [];
+        renderVariantsUI();
+        updateDiscountBadge();
+      }
+
+      modal.classList.remove('hidden');
+    }
+
+    function closeProductModal() {
+      document.getElementById('product-modal').classList.add('hidden');
+    }
+
+    function handleProductFormSubmit(e) {
+      e.preventDefault();
+      const id = document.getElementById('form-product-id').value;
+      const productData = {
+        name: document.getElementById('form-name').value.trim(),
+        art: document.getElementById('form-art').value.trim(),
+        cat: document.getElementById('form-cat').value,
+        price: Number(document.getElementById('form-price').value),
+        oldPrice: document.getElementById('form-old-price').value ? Number(document.getElementById('form-old-price').value) : null,
+        fabric: document.getElementById('form-fabric').value.trim(),
+        description: document.getElementById('form-desc').value.trim(),
+        img: document.getElementById('form-img').value.trim() || '/images/berehynia_dress_1789843600634.jpg',
+        inStock: document.getElementById('form-in-stock').checked,
+        colors: currentProductColors.length > 0 ? currentProductColors : ['Молочний'],
+        sizes: currentProductSizes.length > 0 ? currentProductSizes : ['XS', 'S', 'M', 'L', 'XL'],
+        variants: currentVariants.filter(v => v.price && (v.size || v.color || v.img))
+      };
+
+      if (id) {
+        BelleStore.updateProduct(id, productData);
+      } else {
+        BelleStore.addProduct(productData);
+      }
+
+      closeProductModal();
+      renderAdminTable();
+    }
+
+    // Telegram Settings
+    function loadTelegramSettings() {
+      const config = BelleStore.getTelegramConfig();
+      const tokenInput = document.getElementById('tg-bot-token');
+      const chatInput = document.getElementById('tg-chat-id');
+      const statusEl = document.getElementById('stat-telegram-status');
+
+      if (tokenInput) tokenInput.value = config.botToken || '';
+      if (chatInput) chatInput.value = config.chatId || '';
+
+      if (statusEl) {
+        if (config.isActive) {
+          statusEl.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span><span class="text-xs font-semibold text-emerald-800">Підключено</span>`;
+        } else {
+          statusEl.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span><span class="text-xs font-semibold text-amber-800">Потрібне налаштування</span>`;
+        }
+      }
+    }
+
+    function saveTelegramSettings() {
+      const token = document.getElementById('tg-bot-token').value.trim();
+      const chat = document.getElementById('tg-chat-id').value.trim();
+      
+      BelleStore.saveTelegramConfig({ botToken: token, chatId: chat });
+      loadTelegramSettings();
+    }
+
+    async function testTelegramConnection() {
+      const resultBox = document.getElementById('tg-test-result');
+      resultBox.classList.remove('hidden', 'bg-red-50', 'text-red-700', 'border-red-200', 'bg-emerald-50', 'text-emerald-700', 'border-emerald-200');
+      resultBox.className = 'text-xs p-3 rounded border bg-gray-50 text-gray-700';
+      resultBox.textContent = 'Відправляємо тестове повідомлення в Telegram...';
+
+      const testMsg = `🤖 <b>Belle Atelier • Тест зв'язку</b>\n\nБот успішно підключено до панелі керування сайтом!\n🕒 Час: <i>${new Date().toLocaleString('uk-UA', { timeZone: 'Europe/Kyiv' })}</i>`;
+      const res = await BelleStore.sendTelegramMessage(testMsg);
+
+      if (res.success) {
+        resultBox.className = 'text-xs p-3 rounded border bg-emerald-50 text-emerald-800 border-emerald-200';
+        resultBox.innerHTML = `✅ <b>Тестове повідомлення успішно надіслано в Telegram!</b> Бот готовий до роботи.`;
+      } else {
+        resultBox.className = 'text-xs p-3 rounded border bg-red-50 text-red-800 border-red-200';
+        resultBox.innerHTML = `❌ <b>Помилка відправки:</b> ${res.error || 'Перевірте правильність Bot Token та Chat ID'}`;
+      }
+    }
+
+    // Safe and clear reset actions
+    function confirmResetProducts() {
+      const ok = confirm('⚠️ Ви дійсно бажаєте відновити стандартний каталог товарів за замовчуванням?\n\nЦе поверне всі початкові сукні та вироби бренду.');
+      if (ok) {
+        BelleStore.resetDefaultProducts();
+        renderAdminTable();
+      }
+    }
+
+    function confirmResetCategories() {
+      const ok = confirm('⚠️ Ви дійсно бажаєте відновити початковий список категорій (Жіночий одяг, Чоловічий одяг, Парні комплекти, Аксесуари, Сувеніри, SALE)?');
+      if (ok) {
+        BelleStore.resetDefaultCategories();
+        renderCategoriesTable();
+      }
+    }
+  </script>
+</body>
+</html>

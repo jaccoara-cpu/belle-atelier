@@ -1,0 +1,13 @@
+{
+  "name": "belle-atelier",
+  "version": "1.0.0",
+  "description": "Belle Atelier Ukrainian Haute Couture E-Commerce Platform",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": ["fashion", "e-commerce", "stitch", "ukraine", "couture"],
+  "author": "Belle Atelier",
+  "license": "ISC"
+}

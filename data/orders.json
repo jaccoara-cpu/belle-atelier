@@ -1,0 +1,39 @@
+[
+  {
+    "id": "BA-340023",
+    "createdAt": "2026-09-19T18:42:20.023Z",
+    "status": "Прийнято в обробку (очікує дзвінка майстрині)",
+    "customer": {
+      "name": "Олена Мельник",
+      "phone": "+380671234567",
+      "instagram": "",
+      "telegram": ""
+    },
+    "measurements": {
+      "chest": "88",
+      "waist": "68",
+      "hips": "96",
+      "height": "172",
+      "isBespoke": true
+    },
+    "delivery": {
+      "method": "np-ua",
+      "city": "Київ",
+      "branch": "Відділення №11"
+    },
+    "payment": {
+      "method": "postpay",
+      "totalAmount": 5520,
+      "payNow": 300,
+      "payLater": 5220
+    },
+    "items": [
+      {
+        "id": "beregynya",
+        "name": "Сукня Берегиня",
+        "price": 4800,
+        "quantity": 1
+      }
+    ]
+  }
+]
