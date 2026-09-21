@@ -121,7 +121,12 @@
             <span class="material-symbols-outlined text-[18px] text-secondary absolute right-3.5 top-2.5 pointer-events-none">search</span>
           </div>
 
-          <!-- Categories in small rectangles, 2 per row -->
+          <!-- Full-width top button: Весь каталог -->
+          <div class="max-w-2xl mx-auto" id="catalog-all-category-btn-container">
+            <!-- Rendered by JS -->
+          </div>
+
+          <!-- Categories in neat narrow rectangles, 2 per row -->
           <div class="grid grid-cols-2 gap-2 max-w-2xl mx-auto max-h-48 overflow-y-auto pr-1" id="catalog-category-grid">
             <!-- Dynamically rendered -->
           </div>
@@ -318,35 +323,44 @@
       const statusLabel = document.getElementById('filter-current-status-label');
       const categories = (typeof BelleStore !== 'undefined' && BelleStore.getCategories) ? BelleStore.getCategories() : [];
       const allProds = getAllProducts();
+      const allBtnContainer = document.getElementById('catalog-all-category-btn-container');
 
       const activeCatObj = categories.find(c => c.id === activeCategory);
       if (statusLabel) {
         if (activeCategory === 'all') {
-          statusLabel.textContent = `Всі вироби (${allProds.length})`;
+          statusLabel.textContent = `Весь каталог`;
         } else if (activeCatObj) {
           statusLabel.textContent = `${activeCatObj.name}`;
         }
       }
 
-      if (gridContainer) {
-        let html = '';
-
-        // All categories button (clean rectangle)
+      // 1. Render long elongated top button for "Весь каталог"
+      if (allBtnContainer) {
         const isAllActive = activeCategory === 'all';
-        html += `
-          <button onclick="selectCategory('all')" type="button" class="flex items-center justify-between p-2.5 border ${isAllActive ? 'bg-primary text-white border-primary shadow-xs font-bold' : 'bg-surface-container-lowest border-surface-container-high hover:border-primary/50 text-on-surface'} transition-all rounded-xs text-left">
-            <span class="flex items-center gap-1.5">
-              <span class="material-symbols-outlined text-[16px]">grid_view</span>
-              <span class="text-xs uppercase tracking-wider font-semibold">Всі вироби</span>
+        allBtnContainer.innerHTML = `
+          <button onclick="selectCategory('all')" type="button" class="w-full flex items-center justify-between p-3 border transition-all rounded-xs text-left ${
+            isAllActive 
+              ? 'bg-primary text-white border-primary shadow-xs font-bold' 
+              : 'bg-surface-container-lowest border-surface-container-high hover:border-primary/50 text-on-surface'
+          }">
+            <span class="flex items-center gap-2.5">
+              <span class="material-symbols-outlined text-[18px]">grid_view</span>
+              <span class="text-xs uppercase tracking-wider font-bold">Весь каталог</span>
             </span>
-            <span class="material-symbols-outlined text-[16px] opacity-70">chevron_right</span>
+            <span class="flex items-center gap-1 text-xs opacity-75">
+              <span>${allProds.length}</span>
+              <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+            </span>
           </button>
         `;
+      }
 
-        // Dynamic categories in rectangles (2 per row, without counts inside the catalog grid)
-        categories.forEach(cat => {
+      // 2. Render categories in 2-column neat narrow rectangles
+      if (gridContainer) {
+        gridContainer.innerHTML = categories.map(cat => {
           const isSale = cat.id === 'sale' || cat.isSale || cat.name.toUpperCase().includes('SALE');
           const isActive = activeCategory === cat.id;
+          const count = allProds.filter(p => isSale ? p.sale : (p.cat === cat.id || p.category === cat.id)).length;
 
           let btnClass = '';
           if (isActive) {
@@ -359,18 +373,19 @@
               : 'bg-surface-container-lowest border-surface-container-high hover:border-primary/50 text-on-surface';
           }
 
-          html += `
-            <button onclick="selectCategory('${cat.id}')" type="button" class="flex items-center justify-between p-2.5 border ${btnClass} transition-all rounded-xs text-left">
-              <span class="flex items-center gap-1.5">
-                <span class="material-symbols-outlined text-[16px]">${isSale ? 'local_offer' : (cat.icon || 'folder')}</span>
-                <span class="text-xs uppercase tracking-wider ${isSale && !isActive ? 'text-red-600 font-bold' : ''}">${cat.name}</span>
+          return `
+            <button onclick="selectCategory('${cat.id}')" type="button" class="flex items-center justify-between p-2.5 sm:p-3 border ${btnClass} transition-all rounded-xs text-left">
+              <span class="flex items-center gap-1.5 truncate">
+                <span class="material-symbols-outlined text-[16px] shrink-0">${isSale ? 'local_offer' : (cat.icon || 'folder')}</span>
+                <span class="text-xs uppercase tracking-wider truncate ${isSale && !isActive ? 'text-red-600 font-bold' : ''}">${cat.name}</span>
               </span>
-              <span class="material-symbols-outlined text-[16px] opacity-70">chevron_right</span>
+              <span class="flex items-center gap-0.5 text-[11px] opacity-70 shrink-0 ml-1">
+                <span>(${count})</span>
+                <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+              </span>
             </button>
           `;
-        });
-
-        gridContainer.innerHTML = html;
+        }).join('');
       }
 
       // Also populate mobile top drawer categories

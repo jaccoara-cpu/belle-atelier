@@ -403,10 +403,11 @@
     const bcCatName = document.getElementById('breadcrumb-category-name');
     if (bcCatLink && bcCatName && typeof BelleStore !== 'undefined') {
       const cats = BelleStore.getCategories();
-      const catObj = cats.find(c => c.id === activeProductData.cat);
-      const catTitle = catObj ? catObj.name : (activeProductData.category || 'Колекції');
+      const catId = activeProductData.category || activeProductData.cat || 'all';
+      const catObj = cats.find(c => c.id === catId || c.name === activeProductData.category_name);
+      const catTitle = catObj ? catObj.name : (activeProductData.category_name || 'Каталог');
       bcCatName.textContent = catTitle;
-      bcCatLink.href = `/catalog.html?category=${activeProductData.cat || 'all'}`;
+      bcCatLink.href = `catalog.html?category=${catObj ? catObj.id : catId}`;
     }
 
     // Set Title & Description
