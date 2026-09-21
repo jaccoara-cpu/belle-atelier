@@ -10,8 +10,8 @@
         <span class="material-symbols-outlined text-[26px]">menu</span>
       </button>
 
-      <a class="flex items-center gap-3 group" href="/">
-        <img src="/images/logo.png" alt="Belle Atelier Logo" class="h-10 w-10 sm:h-12 sm:w-12 object-contain rounded-full shadow-xs ring-1 ring-secondary/20 group-hover:scale-105 transition-transform" />
+      <a class="flex items-center gap-3 group" href="index.html">
+        <img src="images/logo.png" alt="Belle Atelier Logo" class="h-10 w-10 sm:h-12 sm:w-12 object-contain rounded-full shadow-xs ring-1 ring-secondary/20 group-hover:scale-105 transition-transform" />
         <div class="flex flex-col">
           <span class="font-headline text-xl sm:text-2xl tracking-wider uppercase text-primary font-bold leading-none">Belle Atelier</span>
         </div>
@@ -26,7 +26,7 @@
         <span class="material-symbols-outlined text-[22px]">favorite</span>
         <span class="wishlist-badge-count absolute top-1 right-1 w-2 h-2 bg-primary rounded-full"></span>
       </button>
-      <a href="/cart" class="relative p-2 text-on-surface hover:text-primary transition-colors flex items-center" aria-label="Кошик">
+      <a href="cart.html" class="relative p-2 text-on-surface hover:text-primary transition-colors flex items-center" aria-label="Кошик">
         <span class="material-symbols-outlined text-[24px]">shopping_bag</span>
         <span class="cart-badge-count absolute top-0 right-0 w-4 h-4 bg-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center">1</span>
       </a>
@@ -35,7 +35,7 @@
 
   <!-- Clean Slide-Down Menu for Mobile & Desktop Drawer -->
   <div id="mobile-nav" class="hidden border-t border-surface-container-high bg-surface px-6 py-5 flex flex-col gap-3 text-xs font-semibold tracking-wider uppercase shadow-xl">
-    <a class="text-primary py-1 border-b border-surface-container-high/60 flex items-center justify-between" href="/catalog">
+    <a class="text-primary py-1 border-b border-surface-container-high/60 flex items-center justify-between" href="catalog.html">
       <span class="flex items-center gap-2">
         <span class="material-symbols-outlined text-[18px]">grid_view</span>
         <span>Весь каталог</span>
@@ -56,7 +56,7 @@
         <span class="material-symbols-outlined text-[18px] text-secondary">star</span>
         <span>Відгуки клієнтів</span>
       </button>
-      <a class="hover:text-primary py-0.5 flex items-center gap-2" href="/#contacts">
+      <a class="hover:text-primary py-0.5 flex items-center gap-2" href="index.html#contacts">
         <span class="material-symbols-outlined text-[18px] text-secondary">location_on</span>
         <span>Контакти</span>
       </a>
@@ -178,7 +178,7 @@
   </div>
 </main>
 
-<script src="/js/cart-store.js"></script>
+<script src="js/cart-store.js"></script>
 <script>
   // Wishlist state handling
   function getWishlist() {
@@ -374,12 +374,12 @@
         topNavList.innerHTML = categories.map(cat => {
           const isSale = cat.id === 'sale' || cat.isSale || cat.name.toUpperCase().includes('SALE');
           if (isSale) {
-            return `<a class="text-red-600 font-bold py-1 hover:text-red-700 flex items-center gap-2" href="/catalog?category=${cat.id}">
+            return `<a class="text-red-600 font-bold py-1 hover:text-red-700 flex items-center gap-2" href="catalog.html?category=${cat.id}">
               <span class="material-symbols-outlined text-[18px]">local_offer</span>
               <span>${cat.name}</span>
             </a>`;
           }
-          return `<a class="text-on-surface py-1 hover:text-primary flex items-center gap-2" href="/catalog?category=${cat.id}">
+          return `<a class="text-on-surface py-1 hover:text-primary flex items-center gap-2" href="catalog.html?category=${cat.id}">
             <span class="material-symbols-outlined text-[18px] text-secondary">${cat.icon || 'folder'}</span>
             <span>${cat.name}</span>
           </a>`;
@@ -458,7 +458,7 @@
           return `
             <article class="group flex flex-col bg-surface-container-lowest transition-all duration-300 hover:shadow-md border border-surface-container-high/70 hover:border-primary/40 rounded-xs overflow-hidden">
               <div class="relative aspect-[3/4] w-full overflow-hidden bg-surface-container">
-                <a href="/product.html?id=${p.id}" class="block w-full h-full">
+                <a href="product.html?id=${p.id}" class="block w-full h-full">
                   <img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" alt="${p.name}" src="${p.img}"/>
                 </a>
                 ${saleTag}
@@ -468,7 +468,7 @@
               </div>
               <div class="flex flex-col flex-1 justify-between p-3 sm:p-3.5">
                 <h2 class="font-headline text-base sm:text-lg font-semibold tracking-tight text-on-surface group-hover:text-primary transition-colors leading-snug line-clamp-2">
-                  <a href="/product.html?id=${p.id}" class="hover:underline">${p.name}</a>
+                  <a href="product.html?id=${p.id}" class="hover:underline">${p.name}</a>
                 </h2>
                 <div class="mt-2.5 flex items-baseline justify-between pt-1 border-t border-surface-container-high/40">
                   <div>
@@ -721,15 +721,15 @@
   <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-xs">
     <div class="flex flex-col items-center md:items-start">
       <div class="flex items-center gap-3 mb-2">
-        <img src="/images/logo.png" alt="Belle Atelier Logo" class="h-9 w-9 object-contain rounded-full shadow-sm ring-1 ring-secondary/30" />
+        <img src="images/logo.png" alt="Belle Atelier Logo" class="h-9 w-9 object-contain rounded-full shadow-sm ring-1 ring-secondary/30" />
         <span class="font-headline text-xl text-primary font-bold">Belle Atelier</span>
       </div>
       <span class="text-[10px] uppercase tracking-widest text-secondary mt-0.5">© 2025 Belle Atelier. Всі права захищено.</span>
     </div>
     <div class="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 uppercase tracking-wider text-[11px]">
-      <a href="/catalog" class="hover:text-primary">Каталог</a>
-      <a href="/cart" class="hover:text-primary">Кошик</a>
-      <a href="/#contacts" class="hover:text-primary">Контакти</a>
+      <a href="catalog.html" class="hover:text-primary">Каталог</a>
+      <a href="cart.html" class="hover:text-primary">Кошик</a>
+      <a href="index.html#contacts" class="hover:text-primary">Контакти</a>
       <button type="button" onclick="openPolicyModal('offer')" class="hover:text-primary uppercase">Договір оферти</button>
       <button type="button" onclick="openPolicyModal('privacy')" class="hover:text-primary uppercase">Політика конфіденційності</button>
       <button type="button" onclick="openPolicyModal('about')" class="hover:text-primary uppercase">Про нас</button>

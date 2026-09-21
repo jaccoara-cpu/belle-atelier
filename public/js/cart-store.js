@@ -14,7 +14,7 @@ const DEFAULT_PRODUCTS = [
     description: "Монохромна борщівська техніка, оздоблена витонченим мереживом ручного плетіння. Вільний автентичний силует з пишними рукавами-бохо.",
     sizes: ['XS', 'S', 'M', 'L', 'XL', 'Індивідуальні мірки'],
     colors: ['Молочний / Сирий льон', 'Глибокий бордо', 'Графіт'],
-    img: '/images/berehynia_dress_1789843600634.jpg'
+    img: 'images/berehynia_dress_1789843600634.jpg'
   },
   {
     id: 'oberig',
@@ -30,7 +30,7 @@ const DEFAULT_PRODUCTS = [
     description: "Класична аристократична сорочка з вишуканою геометричною вишивкою коміра-стійки та манжетів.",
     sizes: ['XS', 'S', 'M', 'L', 'XL'],
     colors: ['Графітово-чорний', 'Молочний льон'],
-    img: '/images/oberig_shirt_1789843615744.jpg'
+    img: 'images/oberig_shirt_1789843615744.jpg'
   },
   {
     id: 'hetmansky',
@@ -46,7 +46,7 @@ const DEFAULT_PRODUCTS = [
     description: "Шляхетний жакет з оксамитовими манжетами та золотавим сутажем за лекалами козацької старшини.",
     sizes: ['XS', 'S', 'M'],
     colors: ['Глибокий чорний', 'Королівський синій'],
-    img: '/images/hetman_jacket_1789843629464.jpg'
+    img: 'images/hetman_jacket_1789843629464.jpg'
   },
   {
     id: 'mavka',
@@ -62,7 +62,7 @@ const DEFAULT_PRODUCTS = [
     description: "Летюча смарагдова сукня з шовковими вставками та золотавою вишивкою лісових мотивів живої природи.",
     sizes: ['S', 'M', 'L'],
     colors: ['Смарагд', 'Шавлія'],
-    img: '/images/mavka_dress_1789843642965.jpg'
+    img: 'images/mavka_dress_1789843642965.jpg'
   },
   {
     id: 'podillya',
@@ -78,7 +78,7 @@ const DEFAULT_PRODUCTS = [
     description: "Ідеальна підтримка стану, регульована шовкова шнурівка та рельєфна гладь подільських квітів.",
     sizes: ['XS', 'S', 'M', 'L'],
     colors: ['Чорний оксамит', 'Бордо'],
-    img: '/images/podillya_corset_1789843684134.jpg'
+    img: 'images/podillya_corset_1789843684134.jpg'
   },
   {
     id: 'dzherelo',
@@ -94,7 +94,7 @@ const DEFAULT_PRODUCTS = [
     description: "Гармонійний дует чоловічої сорочки та вишуканої сукні для весілля, вінчання або родинних свят.",
     sizes: ['S / M', 'M / L', 'Індивідуальні мірки'],
     colors: ['Молочний льон'],
-    img: '/images/dzherelo_set_1789843655280.jpg'
+    img: 'images/dzherelo_set_1789843655280.jpg'
   },
   {
     id: 'zorya',
@@ -110,7 +110,7 @@ const DEFAULT_PRODUCTS = [
     description: "Полегшена літня туніка з контрастною синьо-теракотовою вишивкою та розрізами з боків.",
     sizes: ['One Size (XS-L)'],
     colors: ['Пісочний', 'Волошковий'],
-    img: '/images/zorya_tunic_1789843670230.jpg'
+    img: 'images/zorya_tunic_1789843670230.jpg'
   },
   {
     id: 'polissya',
@@ -126,7 +126,7 @@ const DEFAULT_PRODUCTS = [
     description: "Вишукана сукня глибокого відтінку з поліськими геометричними мотивами.",
     sizes: ['XS', 'S', 'M', 'L'],
     colors: ['Молочний льон', 'Графіт'],
-    img: '/images/berehynia_back_1789843731157.jpg'
+    img: 'images/berehynia_back_1789843731157.jpg'
   }
 ];
 
@@ -176,7 +176,7 @@ const BelleStore = {
       sizes: Array.isArray(productData.sizes) ? productData.sizes : ['XS', 'S', 'M', 'L', 'XL'],
       colors: Array.isArray(productData.colors) && productData.colors.length > 0 ? productData.colors : ['Молочний'],
       variants: Array.isArray(productData.variants) ? productData.variants : [],
-      img: productData.img || '/images/berehynia_dress_1789843600634.jpg'
+      img: productData.img || 'images/berehynia_dress_1789843600634.jpg'
     };
     products.unshift(newProduct);
     this.saveProducts(products);
@@ -319,8 +319,8 @@ const BelleStore = {
       console.error('Error reading size chart images:', e);
     }
     return [
-      '/images/size_chart_1.jpg',
-      '/images/size_chart_2.jpg'
+      'images/size_chart_1.jpg',
+      'images/size_chart_2.jpg'
     ];
   },
 
@@ -345,9 +345,9 @@ const BelleStore = {
       console.error('Error reading customer reviews:', e);
     }
     return [
-      { id: 'rev_1', img: '/images/berehynia_dress_1789843600634.jpg', caption: 'Сукня «Берегиня» на весіллі' },
-      { id: 'rev_2', img: '/images/mavka_dress_1789843642965.jpg', caption: 'Індивідуальний пошив сукні «Мавка»' },
-      { id: 'rev_3', img: '/images/oberig_shirt_1789843615744.jpg', caption: 'Сорочка «Оберіг» — ідеальна посадка' }
+      { id: 'rev_1', img: 'images/berehynia_dress_1789843600634.jpg', caption: 'Сукня «Берегиня» на весіллі' },
+      { id: 'rev_2', img: 'images/mavka_dress_1789843642965.jpg', caption: 'Індивідуальний пошив сукні «Мавка»' },
+      { id: 'rev_3', img: 'images/oberig_shirt_1789843615744.jpg', caption: 'Сорочка «Оберіг» — ідеальна посадка' }
     ];
   },
 
@@ -429,7 +429,7 @@ const BelleStore = {
           size: 'M (EU 38)',
           color: 'Молочний / Сирий льон',
           fabric: '100% органічний льон',
-          image: '/images/berehynia_dress_1789843600634.jpg'
+          image: 'images/berehynia_dress_1789843600634.jpg'
         }
       ];
     } catch(e) {
