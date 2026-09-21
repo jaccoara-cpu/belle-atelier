@@ -5,9 +5,19 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "deploy": "wrangler pages deploy public --project-name=belle-atelier"
   },
-  "keywords": ["fashion", "e-commerce", "stitch", "ukraine", "couture"],
+  "keywords": [
+    "fashion",
+    "e-commerce",
+    "stitch",
+    "ukraine",
+    "couture"
+  ],
   "author": "Belle Atelier",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "wrangler": "^4.136.1"
+  }
 }
