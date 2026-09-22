@@ -427,27 +427,24 @@ const BelleStore = {
   // --- CART MANAGEMENT ---
   getCart() {
     try {
-      return JSON.parse(localStorage.getItem('belle_cart')) || [
-        {
-          id: 'beregynya',
-          name: 'Сукня «Берегиня»',
-          art: 'BL-402',
-          price: 4800,
-          quantity: 1,
-          size: 'M (EU 38)',
-          color: 'Молочний / Сирий льон',
-          fabric: '100% органічний льон',
-          image: 'images/berehynia_dress_1789843600634.jpg'
-        }
-      ];
+      const stored = localStorage.getItem('belle_cart');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) return parsed;
+      }
+      return [];
     } catch(e) {
       return [];
     }
   },
 
   saveCart(cart) {
-    localStorage.setItem('belle_cart', JSON.stringify(cart));
-    this.updateCartBadge();
+    try {
+      localStorage.setItem('belle_cart', JSON.stringify(cart));
+      this.updateCartBadge();
+    } catch (e) {
+      console.error('Error saving cart:', e);
+    }
   },
 
   addToCart(item) {
@@ -983,23 +980,22 @@ const BelleStore = {
 
   updateWishlistBadges() {
     const list = this.getWishlist();
+    const count = list.length;
     const badges = document.querySelectorAll('.wishlist-badge-count');
     badges.forEach(b => {
-      b.style.display = list.length > 0 ? 'flex' : 'none';
-      b.classList.toggle('hidden', list.length === 0);
-      if (b.tagName === 'SPAN' && list.length > 0 && b.classList.contains('wishlist-badge-num')) {
-        b.textContent = list.length;
-      }
+      b.style.display = count > 0 ? 'block' : 'none';
+      b.classList.toggle('hidden', count === 0);
     });
 
     const headerIcons = document.querySelectorAll('#header-wishlist-icon');
     headerIcons.forEach(icon => {
-      if (list.length > 0) {
+      if (count > 0) {
         icon.style.fontVariationSettings = "'FILL' 1";
-        icon.classList.add('text-primary');
+        icon.classList.add('text-red-600');
+        icon.classList.remove('text-on-surface');
       } else {
         icon.style.fontVariationSettings = "'FILL' 0";
-        icon.classList.remove('text-primary');
+        icon.classList.remove('text-red-600');
       }
     });
   },

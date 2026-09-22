@@ -44,7 +44,23 @@
     @layer base {
       html, body { margin: 0; padding: 0; background-color: #fbf9f4; }
     }
-    ::-webkit-scrollbar { display: none; }
+    /* Visible sleek scrollbar for Admin */
+    ::-webkit-scrollbar {
+      width: 10px;
+      height: 10px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f0eee9;
+      border-radius: 5px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #725b38;
+      border-radius: 5px;
+      border: 2px solid #f0eee9;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #5e1020;
+    }
   </style>
 </head>
 <body class="bg-surface text-on-surface font-body antialiased min-h-screen flex flex-col selection:bg-secondary-container selection:text-on-surface">
@@ -154,31 +170,39 @@
         </div>
       </div>
 
-      <!-- Navigation Tabs -->
-      <div class="flex items-center border-b border-surface-container-high gap-3 sm:gap-8 overflow-x-auto">
-        <button id="nav-btn-products" onclick="switchTab('tab-products')" class="tab-btn pb-3 text-xs sm:text-sm font-semibold uppercase tracking-wider text-primary border-b-2 border-primary flex items-center gap-2 whitespace-nowrap">
-          <span class="material-symbols-outlined text-[18px]">styler</span>
-          <span>Керування товарами</span>
+      <!-- Navigation Tabs with Horizontal Scroll Controls -->
+      <div class="relative flex items-center bg-white border border-surface-container-high rounded-xs p-1 shadow-xs">
+        <button type="button" onclick="scrollAdminTabs(-200)" class="p-2 text-secondary hover:text-primary hover:bg-surface-container-low transition-colors rounded-xs shrink-0 flex items-center justify-center" title="Прокрутити вліво">
+          <span class="material-symbols-outlined text-[20px]">chevron_left</span>
         </button>
-        <button id="nav-btn-categories" onclick="switchTab('tab-categories')" class="tab-btn pb-3 text-xs sm:text-sm font-semibold uppercase tracking-wider text-on-surface-variant hover:text-primary transition-colors flex items-center gap-2 whitespace-nowrap">
-          <span class="material-symbols-outlined text-[18px]">category</span>
-          <span>Керування категоріями</span>
-        </button>
-        <button id="nav-btn-sizechart" onclick="switchTab('tab-sizechart')" class="tab-btn pb-3 text-xs sm:text-sm font-semibold uppercase tracking-wider text-on-surface-variant hover:text-primary transition-colors flex items-center gap-2 whitespace-nowrap">
-          <span class="material-symbols-outlined text-[18px]">straighten</span>
-          <span>Розмірна таблиця (Фото)</span>
-        </button>
-        <button id="nav-btn-reviews" onclick="switchTab('tab-reviews')" class="tab-btn pb-3 text-xs sm:text-sm font-semibold uppercase tracking-wider text-on-surface-variant hover:text-primary transition-colors flex items-center gap-2 whitespace-nowrap">
-          <span class="material-symbols-outlined text-[18px]">photo_library</span>
-          <span>Відгуки клієнтів (Фото)</span>
-        </button>
-        <button id="nav-btn-texts" onclick="switchTab('tab-texts')" class="tab-btn pb-3 text-xs sm:text-sm font-semibold uppercase tracking-wider text-on-surface-variant hover:text-primary transition-colors flex items-center gap-2 whitespace-nowrap">
-          <span class="material-symbols-outlined text-[18px]">edit_note</span>
-          <span>Тексти (Про нас / Оферта / Правила)</span>
-        </button>
-        <button id="nav-btn-telegram" onclick="switchTab('tab-telegram')" class="tab-btn pb-3 text-xs sm:text-sm font-semibold uppercase tracking-wider text-on-surface-variant hover:text-primary transition-colors flex items-center gap-2 whitespace-nowrap">
-          <span class="material-symbols-outlined text-[18px]">send</span>
-          <span>Telegram-Бот &amp; 2FA</span>
+        <div id="admin-nav-tabs-bar" class="flex-1 flex items-center gap-2 sm:gap-4 overflow-x-auto py-1 px-2 scroll-smooth">
+          <button id="nav-btn-products" onclick="switchTab('tab-products')" class="tab-btn pb-2 pt-1 text-xs sm:text-sm font-semibold uppercase tracking-wider text-primary border-b-2 border-primary flex items-center gap-2 whitespace-nowrap">
+            <span class="material-symbols-outlined text-[18px]">styler</span>
+            <span>Керування товарами</span>
+          </button>
+          <button id="nav-btn-categories" onclick="switchTab('tab-categories')" class="tab-btn pb-2 pt-1 text-xs sm:text-sm font-semibold uppercase tracking-wider text-on-surface-variant hover:text-primary transition-colors flex items-center gap-2 whitespace-nowrap">
+            <span class="material-symbols-outlined text-[18px]">category</span>
+            <span>Керування категоріями (Меню 3 рисочки)</span>
+          </button>
+          <button id="nav-btn-sizechart" onclick="switchTab('tab-sizechart')" class="tab-btn pb-2 pt-1 text-xs sm:text-sm font-semibold uppercase tracking-wider text-on-surface-variant hover:text-primary transition-colors flex items-center gap-2 whitespace-nowrap">
+            <span class="material-symbols-outlined text-[18px]">straighten</span>
+            <span>Розмірна таблиця (Фото)</span>
+          </button>
+          <button id="nav-btn-reviews" onclick="switchTab('tab-reviews')" class="tab-btn pb-2 pt-1 text-xs sm:text-sm font-semibold uppercase tracking-wider text-on-surface-variant hover:text-primary transition-colors flex items-center gap-2 whitespace-nowrap">
+            <span class="material-symbols-outlined text-[18px]">photo_library</span>
+            <span>Відгуки клієнтів (Фото)</span>
+          </button>
+          <button id="nav-btn-texts" onclick="switchTab('tab-texts')" class="tab-btn pb-2 pt-1 text-xs sm:text-sm font-semibold uppercase tracking-wider text-on-surface-variant hover:text-primary transition-colors flex items-center gap-2 whitespace-nowrap">
+            <span class="material-symbols-outlined text-[18px]">edit_note</span>
+            <span>Тексти (Про нас / Оферта / Правила)</span>
+          </button>
+          <button id="nav-btn-telegram" onclick="switchTab('tab-telegram')" class="tab-btn pb-2 pt-1 text-xs sm:text-sm font-semibold uppercase tracking-wider text-on-surface-variant hover:text-primary transition-colors flex items-center gap-2 whitespace-nowrap">
+            <span class="material-symbols-outlined text-[18px]">send</span>
+            <span>Telegram-Бот &amp; 2FA</span>
+          </button>
+        </div>
+        <button type="button" onclick="scrollAdminTabs(200)" class="p-2 text-secondary hover:text-primary hover:bg-surface-container-low transition-colors rounded-xs shrink-0 flex items-center justify-center" title="Прокрутити вправо">
+          <span class="material-symbols-outlined text-[20px]">chevron_right</span>
         </button>
       </div>
 
@@ -244,7 +268,7 @@
       <div id="tab-categories" class="tab-content space-y-4 hidden">
         <div class="bg-white p-4 border border-surface-container-high rounded-xs flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xs">
           <div>
-            <h3 class="font-headline text-lg font-bold text-primary">Категорії виробів</h3>
+            <h3 class="font-headline text-lg font-bold text-primary">Категорії виробів (Меню «3 рисочки», Головна та Каталог)</h3>
             <p class="text-xs text-secondary font-medium">Редагуйте наявні або додавайте власні нові категорії каталогу</p>
           </div>
           <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
@@ -252,6 +276,13 @@
               <span class="material-symbols-outlined text-[18px]">add_circle</span>
               <span>Додати категорію</span>
             </button>
+          </div>
+        </div>
+
+        <div class="bg-secondary-container/20 border border-secondary/30 p-3.5 rounded-xs flex items-start gap-2.5 text-xs text-on-surface">
+          <span class="material-symbols-outlined text-secondary text-[20px] shrink-0 mt-0.5">info</span>
+          <div class="leading-relaxed">
+            <strong>Як це працює:</strong> Будь-які зміни назв або додавання нових категорій у цій таблиці <b>миттєво оновлюють меню сайту (3 рисочки)</b>, блоки категорій на головній сторінці та панель фільтрів у каталозі. Щоб відредагувати назву категорії, натисніть на іконку олівця ✏️ навпроти потрібного рядка.
           </div>
         </div>
 
@@ -892,24 +923,54 @@
     function switchTab(tabId) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
       document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.remove('text-primary', 'border-b-2', 'border-primary');
+        btn.classList.remove('text-primary', 'border-b-2', 'border-primary', 'font-bold');
         btn.classList.add('text-on-surface-variant');
       });
 
       const activeTab = document.getElementById(tabId);
       if (activeTab) activeTab.classList.remove('hidden');
 
-      if (tabId === 'tab-products') {
-        document.getElementById('nav-btn-products').classList.add('text-primary', 'border-b-2', 'border-primary');
-        document.getElementById('nav-btn-products').classList.remove('text-on-surface-variant');
-      } else if (tabId === 'tab-categories') {
-        document.getElementById('nav-btn-categories').classList.add('text-primary', 'border-b-2', 'border-primary');
-        document.getElementById('nav-btn-categories').classList.remove('text-on-surface-variant');
-        renderCategoriesTable();
-      } else {
-        document.getElementById('nav-btn-telegram').classList.add('text-primary', 'border-b-2', 'border-primary');
-        document.getElementById('nav-btn-telegram').classList.remove('text-on-surface-variant');
+      const btnMap = {
+        'tab-products': 'nav-btn-products',
+        'tab-categories': 'nav-btn-categories',
+        'tab-sizechart': 'nav-btn-sizechart',
+        'tab-reviews': 'nav-btn-reviews',
+        'tab-texts': 'nav-btn-texts',
+        'tab-telegram': 'nav-btn-telegram'
+      };
+
+      const activeBtnId = btnMap[tabId];
+      if (activeBtnId) {
+        const btn = document.getElementById(activeBtnId);
+        if (btn) {
+          btn.classList.add('text-primary', 'border-b-2', 'border-primary', 'font-bold');
+          btn.classList.remove('text-on-surface-variant');
+          btn.scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' });
+        }
       }
+
+      if (tabId === 'tab-categories') renderCategoriesTable();
+      if (tabId === 'tab-sizechart') renderSizeChartManager();
+      if (tabId === 'tab-reviews') renderReviewsManager();
+      if (tabId === 'tab-texts') loadSiteTexts();
+    }
+
+    window.scrollAdminTabs = function(delta) {
+      const bar = document.getElementById('admin-nav-tabs-bar');
+      if (bar) {
+        bar.scrollBy({ left: delta, behavior: 'smooth' });
+      }
+    };
+
+    // Horizontal mouse wheel scrolling for tabs
+    const tabsBarEl = document.getElementById('admin-nav-tabs-bar');
+    if (tabsBarEl) {
+      tabsBarEl.addEventListener('wheel', (e) => {
+        if (e.deltaY !== 0) {
+          e.preventDefault();
+          tabsBarEl.scrollLeft += e.deltaY;
+        }
+      }, { passive: false });
     }
 
     function populateCategorySelects() {
