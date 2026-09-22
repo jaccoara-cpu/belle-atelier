@@ -22,7 +22,7 @@
       <a href="catalog.html" class="p-2 text-on-surface hover:text-primary transition-colors" aria-label="Пошук">
         <span class="material-symbols-outlined text-[22px]">search</span>
       </a>
-      <button onclick="toggleActiveProductWishlist()" class="relative p-2 text-on-surface hover:text-primary transition-colors" aria-label="Обране">
+      <button onclick="openWishlistModal()" class="relative p-2 text-on-surface hover:text-primary transition-colors" aria-label="Обране">
         <span class="material-symbols-outlined text-[22px]" id="header-wishlist-icon">favorite</span>
         <span class="wishlist-badge-count absolute top-1 right-1 w-2 h-2 bg-primary rounded-full hidden"></span>
       </button>
@@ -102,8 +102,8 @@
             </button>
 
             <!-- Wishlist Heart Button -->
-            <button onclick="toggleActiveProductWishlist()" aria-label="Додати в обране" class="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/85 hover:bg-white text-on-surface hover:text-primary flex items-center justify-center transition-colors shadow-xs z-10" type="button">
-              <span class="material-symbols-outlined text-[20px]" id="product-wishlist-icon">favorite</span>
+            <button onclick="toggleActiveProductWishlist()" aria-label="Додати в обране" class="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/95 hover:bg-white flex items-center justify-center transition-all shadow-xs z-10 active:scale-90" type="button">
+              <span class="material-symbols-outlined text-[20px] transition-colors" id="product-wishlist-icon">favorite</span>
             </button>
           </div>
 
@@ -883,48 +883,29 @@
 
   // --- WISHLIST ---
   function toggleActiveProductWishlist() {
-    if (!activeProductData) return;
-    let wishlist = [];
-    try {
-      wishlist = JSON.parse(localStorage.getItem('belle_wishlist')) || [];
-    } catch(e) {}
-
-    const idx = wishlist.findIndex(item => item.name === activeProductData.name);
-    if (idx > -1) {
-      wishlist.splice(idx, 1);
-      BelleStore.showToast(`«${activeProductData.name}» видалено з обраного`);
-    } else {
-      wishlist.push({
-        name: activeProductData.name,
-        img: activeProductData.img,
-        price: activeProductData.price
-      });
-      BelleStore.showToast(`«${activeProductData.name}» збережено в обране ❤️`);
-    }
-    localStorage.setItem('belle_wishlist', JSON.stringify(wishlist));
+    if (!activeProductData || typeof BelleStore === 'undefined') return;
+    BelleStore.toggleWishlist({
+      id: activeProductData.id,
+      name: activeProductData.name,
+      img: (galleryImages && galleryImages[currentSlideIndex]) || activeProductData.img,
+      price: activeProductData.price
+    });
     updateWishlistUI();
   }
 
   function updateWishlistUI() {
-    let wishlist = [];
-    try {
-      wishlist = JSON.parse(localStorage.getItem('belle_wishlist')) || [];
-    } catch(e) {}
-
-    const isFav = activeProductData && wishlist.some(i => i.name === activeProductData.name);
+    if (!activeProductData || typeof BelleStore === 'undefined') return;
+    const isFav = BelleStore.isWishlisted(activeProductData.id) || BelleStore.isWishlisted(activeProductData.name);
     const prodIcon = document.getElementById('product-wishlist-icon');
     if (prodIcon) {
       prodIcon.style.fontVariationSettings = `'FILL' ${isFav ? 1 : 0}`;
       if (isFav) {
-        prodIcon.classList.add('text-primary');
+        prodIcon.classList.add('text-red-600');
+        prodIcon.classList.remove('text-on-surface');
       } else {
-        prodIcon.classList.remove('text-primary');
+        prodIcon.classList.remove('text-red-600');
+        prodIcon.classList.add('text-on-surface');
       }
-    }
-
-    const badge = document.querySelector('.wishlist-badge-count');
-    if (badge) {
-      badge.classList.toggle('hidden', wishlist.length === 0);
     }
   }
 
@@ -1081,6 +1062,11 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     initProductPage();
+
+    window.addEventListener('belle-wishlist-updated', () => {
+      updateWishlistUI();
+      renderRelatedProducts();
+    });
 
     // Populate mobile nav categories
     const navList = document.getElementById('product-nav-categories-list');

@@ -24,10 +24,10 @@
       <a href="catalog.html" class="p-2 text-on-surface hover:text-primary transition-colors" aria-label="Пошук">
         <span class="material-symbols-outlined text-[22px]">search</span>
       </a>
-      <a href="catalog.html" class="relative p-2 text-on-surface hover:text-primary transition-colors" aria-label="Обране">
-        <span class="material-symbols-outlined text-[22px]">favorite</span>
+      <button onclick="openWishlistModal()" type="button" class="relative p-2 text-on-surface hover:text-primary transition-colors" aria-label="Обране">
+        <span class="material-symbols-outlined text-[22px]" id="header-wishlist-icon">favorite</span>
         <span class="wishlist-badge-count absolute top-1 right-1 w-2 h-2 bg-primary rounded-full hidden"></span>
-      </a>
+      </button>
       <a href="cart.html" class="relative p-2 text-primary hover:text-primary transition-colors flex items-center" aria-label="Кошик">
         <span class="material-symbols-outlined text-[24px]">shopping_bag</span>
         <span class="cart-badge-count absolute top-0 right-0 w-4 h-4 bg-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center">1</span>

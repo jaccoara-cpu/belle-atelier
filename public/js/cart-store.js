@@ -882,6 +882,211 @@ const BelleStore = {
     }
   },
 
+  // --- UNIVERSAL WISHLIST STORE & MODAL ---
+  getWishlist() {
+    try {
+      const stored = localStorage.getItem('belle_wishlist');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch(e) {
+      console.error('Error reading wishlist:', e);
+    }
+    return [];
+  },
+
+  saveWishlist(list) {
+    try {
+      localStorage.setItem('belle_wishlist', JSON.stringify(list));
+      this.updateWishlistBadges();
+      window.dispatchEvent(new CustomEvent('belle-wishlist-updated', { detail: list }));
+    } catch(e) {
+      console.error('Error saving wishlist:', e);
+    }
+  },
+
+  isWishlisted(productNameOrId) {
+    if (!productNameOrId) return false;
+    const list = this.getWishlist();
+    const str = String(productNameOrId).trim().toLowerCase();
+    return list.some(item => 
+      (item.id && String(item.id).trim().toLowerCase() === str) || 
+      (item.name && String(item.name).trim().toLowerCase() === str)
+    );
+  },
+
+  toggleWishlist(product) {
+    let list = this.getWishlist();
+    let identifier = '';
+    let productObj = null;
+
+    if (typeof product === 'string') {
+      identifier = product.trim();
+      const allProds = this.getProducts ? this.getProducts() : [];
+      const found = allProds.find(p => p.id === identifier || p.name === identifier);
+      if (found) {
+        productObj = {
+          id: found.id,
+          name: found.name,
+          img: found.img || 'images/berehynia_dress_1789843600634.jpg',
+          price: found.price || 0
+        };
+      } else {
+        productObj = {
+          id: identifier,
+          name: identifier,
+          img: 'images/berehynia_dress_1789843600634.jpg',
+          price: 0
+        };
+      }
+    } else if (product && typeof product === 'object') {
+      productObj = {
+        id: product.id || '',
+        name: product.name || '',
+        img: product.img || product.image || 'images/berehynia_dress_1789843600634.jpg',
+        price: Number(product.price) || 0
+      };
+      identifier = productObj.id || productObj.name;
+    }
+
+    if (!productObj || !productObj.name) return false;
+
+    const idx = list.findIndex(item => 
+      (productObj.id && item.id && item.id === productObj.id) || 
+      (item.name && item.name.toLowerCase() === productObj.name.toLowerCase())
+    );
+
+    let isAdded = false;
+    if (idx > -1) {
+      const removed = list.splice(idx, 1)[0];
+      this.showToast(`«${removed.name}» видалено з обраного`);
+    } else {
+      list.push(productObj);
+      this.showToast(`«${productObj.name}» додано до обраного ❤️`);
+      isAdded = true;
+    }
+
+    this.saveWishlist(list);
+    this.renderWishlistModalItems();
+    return isAdded;
+  },
+
+  toggleWishlistById(productId) {
+    const allProds = this.getProducts ? this.getProducts() : [];
+    const prod = allProds.find(p => p.id === productId);
+    if (prod) {
+      return this.toggleWishlist(prod);
+    }
+    return this.toggleWishlist(productId);
+  },
+
+  updateWishlistBadges() {
+    const list = this.getWishlist();
+    const badges = document.querySelectorAll('.wishlist-badge-count');
+    badges.forEach(b => {
+      b.style.display = list.length > 0 ? 'flex' : 'none';
+      b.classList.toggle('hidden', list.length === 0);
+      if (b.tagName === 'SPAN' && list.length > 0 && b.classList.contains('wishlist-badge-num')) {
+        b.textContent = list.length;
+      }
+    });
+
+    const headerIcons = document.querySelectorAll('#header-wishlist-icon');
+    headerIcons.forEach(icon => {
+      if (list.length > 0) {
+        icon.style.fontVariationSettings = "'FILL' 1";
+        icon.classList.add('text-primary');
+      } else {
+        icon.style.fontVariationSettings = "'FILL' 0";
+        icon.classList.remove('text-primary');
+      }
+    });
+  },
+
+  openWishlistModal() {
+    let modal = document.getElementById('wishlist-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'wishlist-modal';
+      modal.className = 'fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4';
+      modal.innerHTML = `
+        <div class="bg-surface border border-surface-container-high max-w-md w-full p-6 shadow-2xl relative max-h-[85vh] flex flex-col rounded-xs">
+          <div class="flex items-center justify-between pb-3 border-b border-surface-container-high">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-red-600 text-[22px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
+              <h3 class="font-headline text-xl font-bold text-on-surface">Обрані товари</h3>
+            </div>
+            <button onclick="BelleStore.closeWishlistModal()" class="text-outline hover:text-primary transition-colors p-1" aria-label="Закрити">
+              <span class="material-symbols-outlined text-[20px]">close</span>
+            </button>
+          </div>
+
+          <div id="wishlist-modal-items" class="space-y-3 py-4 overflow-y-auto flex-1 max-h-[60vh]"></div>
+
+          <div class="pt-3 border-t border-surface-container-high flex justify-between items-center">
+            <a href="catalog.html" onclick="BelleStore.closeWishlistModal()" class="text-xs text-primary hover:underline uppercase tracking-wider font-semibold">До каталогу →</a>
+            <button onclick="BelleStore.closeWishlistModal()" class="px-5 py-2 bg-primary text-white text-xs uppercase tracking-wider font-semibold hover:bg-tertiary transition-colors rounded-xs">
+              Закрити
+            </button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+    }
+
+    this.renderWishlistModalItems();
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+  },
+
+  closeWishlistModal() {
+    const modal = document.getElementById('wishlist-modal');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.style.display = 'none';
+    }
+  },
+
+  renderWishlistModalItems() {
+    const container = document.getElementById('wishlist-modal-items');
+    if (!container) return;
+
+    const list = this.getWishlist();
+    if (list.length === 0) {
+      container.innerHTML = `
+        <div class="text-center py-10 text-on-surface-variant">
+          <span class="material-symbols-outlined text-4xl text-outline mb-2">favorite_border</span>
+          <p class="font-headline text-base">Список обраного порожній</p>
+          <a href="catalog.html" onclick="BelleStore.closeWishlistModal()" class="inline-block mt-3 px-4 py-2 bg-primary text-white text-xs uppercase font-semibold tracking-wider hover:bg-tertiary transition-colors">
+            Перейти до каталогу
+          </a>
+        </div>
+      `;
+    } else {
+      container.innerHTML = list.map((it) => {
+        const prodId = it.id || '';
+        const prodLink = prodId ? `product.html?id=${prodId}` : 'catalog.html';
+        const priceText = it.price ? `${Number(it.price).toLocaleString('uk-UA')} ₴` : '';
+
+        return `
+          <div class="flex items-center justify-between gap-3 p-2.5 bg-surface-container-low rounded-xs border border-surface-container-high">
+            <a href="${prodLink}" onclick="BelleStore.closeWishlistModal()" class="flex items-center gap-3 flex-1 min-w-0 group">
+              <img src="${it.img || 'images/berehynia_dress_1789843600634.jpg'}" class="w-12 h-14 object-cover rounded-xs shrink-0" alt="${it.name}">
+              <div class="min-w-0">
+                <h4 class="font-headline text-xs font-semibold group-hover:text-primary transition-colors truncate">${it.name}</h4>
+                <span class="text-xs font-bold text-primary block mt-0.5">${priceText}</span>
+              </div>
+            </a>
+            <button onclick="BelleStore.toggleWishlist('${it.name.replace(/'/g, "\\'")}')" class="text-outline hover:text-red-600 p-1.5 shrink-0 transition-colors" title="Видалити з обраного">
+              <span class="material-symbols-outlined text-[18px]">close</span>
+            </button>
+          </div>
+        `;
+      }).join('');
+    }
+  },
+
   showToast(msg) {
     let toast = document.getElementById('belle-toast');
     if (!toast) {
@@ -898,7 +1103,16 @@ const BelleStore = {
   }
 };
 
+// Global helper wrappers for all pages
+window.openWishlistModal = function() {
+  if (typeof BelleStore !== 'undefined') BelleStore.openWishlistModal();
+};
+window.closeWishlistModal = function() {
+  if (typeof BelleStore !== 'undefined') BelleStore.closeWishlistModal();
+};
+
 document.addEventListener('DOMContentLoaded', () => {
   BelleStore.updateCartBadge();
+  BelleStore.updateWishlistBadges();
   BelleStore.setupEasterEgg();
 });
