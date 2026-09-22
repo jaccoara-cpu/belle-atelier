@@ -242,7 +242,15 @@ const BelleStore = {
     try {
       const stored = localStorage.getItem('belle_categories');
       if (stored) {
-        return JSON.parse(stored);
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          parsed.forEach(c => {
+            if (c.id === 'sale' || c.isSale || (c.name && c.name.toLowerCase().includes('sale'))) {
+              c.name = 'SALE';
+            }
+          });
+          return parsed;
+        }
       }
     } catch (e) {
       console.error('Error reading categories:', e);

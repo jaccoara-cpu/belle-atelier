@@ -43,44 +43,23 @@
       <span class="material-symbols-outlined text-[16px] text-outline">chevron_right</span>
     </a>
 
-    <!-- Prominent About Atelier link -->
-    <button type="button" onclick="openPolicyModal('about')" class="text-left text-primary hover:text-tertiary py-1 border-b border-surface-container-high/60 flex items-center justify-between uppercase font-semibold">
-      <span class="flex items-center gap-2">
-        <span class="material-symbols-outlined text-[18px] text-secondary">info</span>
-        <span>Про ательє</span>
-      </span>
-      <span class="material-symbols-outlined text-[16px] text-outline">chevron_right</span>
-    </button>
-
     <!-- Dynamically populated categories from BelleStore.getCategories() -->
     <div id="catalog-nav-categories-list" class="flex flex-col gap-2 py-1"></div>
 
-    <!-- Additional Informational & Policy Links -->
+    <!-- Additional Informational Links (About Atelier, Reviews, Contacts) -->
     <div class="border-t border-surface-container-high/60 pt-3 flex flex-col gap-2.5 text-on-surface-variant font-medium">
+      <button type="button" onclick="openPolicyModal('about')" class="text-left hover:text-primary py-0.5 flex items-center gap-2 uppercase font-semibold text-primary">
+        <span class="material-symbols-outlined text-[18px] text-secondary">info</span>
+        <span>Про ательє</span>
+      </button>
       <button type="button" onclick="openPolicyModal('reviews')" class="text-left hover:text-primary py-0.5 flex items-center gap-2 uppercase">
         <span class="material-symbols-outlined text-[18px] text-secondary">star</span>
         <span>Відгуки клієнтів</span>
       </button>
-      <a class="hover:text-primary py-0.5 flex items-center gap-2" href="index.html#contacts">
+      <a class="hover:text-primary py-0.5 flex items-center gap-2 uppercase" href="index.html#contacts">
         <span class="material-symbols-outlined text-[18px] text-secondary">location_on</span>
         <span>Контакти</span>
       </a>
-      <button type="button" onclick="openPolicyModal('offer')" class="text-left hover:text-primary py-0.5 flex items-center gap-2 uppercase">
-        <span class="material-symbols-outlined text-[18px] text-secondary">description</span>
-        <span>Договір оферти</span>
-      </button>
-      <button type="button" onclick="openPolicyModal('privacy')" class="text-left hover:text-primary py-0.5 flex items-center gap-2 uppercase">
-        <span class="material-symbols-outlined text-[18px] text-secondary">shield</span>
-        <span>Політика конфіденційності</span>
-      </button>
-      <button type="button" onclick="openPolicyModal('rules')" class="text-left hover:text-primary py-0.5 flex items-center gap-2 uppercase">
-        <span class="material-symbols-outlined text-[18px] text-secondary">gavel</span>
-        <span>Правила покупки</span>
-      </button>
-      <button type="button" onclick="openPolicyModal('exchange')" class="text-left hover:text-primary py-0.5 flex items-center gap-2 uppercase">
-        <span class="material-symbols-outlined text-[18px] text-secondary">published_with_changes</span>
-        <span>Обмін / повернення</span>
-      </button>
     </div>
   </div>
 </header>
@@ -92,22 +71,22 @@
       <h1 class="font-headline text-3xl sm:text-4xl text-primary font-bold tracking-tight">Каталог</h1>
     </section>
 
-    <!-- STICKY TOP FILTER PANEL (Search, Categories, Sorting, and Toggle Button) -->
-    <div class="sticky top-16 sm:top-20 z-40 bg-surface/95 backdrop-blur-md border-b border-surface-container-high shadow-xs transition-all">
-      <div class="max-w-4xl mx-auto w-full px-4 sm:px-6 py-2.5">
+    <!-- UNPINNED TOP FILTER PANEL (Search, Categories, Sorting, and Bottom Collapse Button) -->
+    <div class="w-full bg-surface-container-low/60 border-b border-surface-container-high transition-all" id="catalog-filters-main-wrapper">
+      <div class="max-w-4xl mx-auto w-full px-4 sm:px-6 py-3">
         
-        <!-- Toggle Bar Header -->
+        <!-- Toggle Bar Header (Always accessible at top of filter block) -->
         <div class="flex items-center justify-between gap-3">
           <!-- Active Filter indicator / summary -->
           <div class="flex items-center gap-2 overflow-hidden">
             <span class="material-symbols-outlined text-primary text-[18px]">tune</span>
             <span class="text-xs font-semibold uppercase tracking-wider text-primary truncate" id="filter-current-status-label">
-              Фільтри та категорії
+              Весь каталог
             </span>
           </div>
 
-          <!-- Hide / Show Filters Button -->
-          <button id="toggle-filter-panel-btn" onclick="toggleCatalogFilters()" type="button" class="py-1 px-3 bg-surface-container hover:bg-surface-container-high text-on-surface border border-surface-container-high rounded-xs text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5 transition-colors shadow-2xs">
+          <!-- Open Filters Button (Shown when collapsed) -->
+          <button id="toggle-filter-panel-btn" onclick="toggleCatalogFilters()" type="button" class="py-1 px-3 bg-surface hover:bg-surface-container text-on-surface border border-surface-container-high rounded-xs text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5 transition-colors shadow-2xs">
             <span id="toggle-filter-text">Сховати</span>
             <span id="toggle-filter-icon" class="material-symbols-outlined text-[16px] transition-transform">expand_less</span>
           </button>
@@ -127,11 +106,11 @@
           </div>
 
           <!-- Categories in neat narrow rectangles, 2 per row -->
-          <div class="grid grid-cols-2 gap-2 max-w-2xl mx-auto max-h-48 overflow-y-auto pr-1" id="catalog-category-grid">
+          <div class="grid grid-cols-2 gap-2 max-w-2xl mx-auto max-h-56 overflow-y-auto pr-1" id="catalog-category-grid">
             <!-- Dynamically rendered -->
           </div>
 
-          <!-- Sorting Controls Row (without "знайдено X моделей") -->
+          <!-- Sorting Controls Row -->
           <div class="flex items-center justify-end gap-2 pt-1 border-t border-surface-container-high/60 max-w-2xl mx-auto">
             <label class="text-xs text-on-surface-variant font-medium whitespace-nowrap" for="catalog-sort">Сортувати:</label>
             <div class="relative bg-surface-container-lowest border border-surface-container-high rounded-xs w-full sm:w-auto">
@@ -144,6 +123,14 @@
               </select>
               <span class="material-symbols-outlined text-[18px] text-secondary absolute right-2 top-1.5 pointer-events-none">expand_more</span>
             </div>
+          </div>
+
+          <!-- Elongated Bottom Button to Collapse Filters -->
+          <div class="pt-2 max-w-2xl mx-auto">
+            <button onclick="toggleCatalogFilters()" type="button" class="w-full py-2 px-4 bg-surface hover:bg-surface-container-high text-on-surface-variant hover:text-primary border border-surface-container-high rounded-xs text-xs font-semibold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors shadow-2xs">
+              <span>Сховати панель фільтрів</span>
+              <span class="material-symbols-outlined text-[16px]">expand_less</span>
+            </button>
           </div>
         </div>
 
