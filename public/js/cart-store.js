@@ -843,14 +843,17 @@ const BelleStore = {
   // --- TELEGRAM CONFIG & DISPATCH (SERVER-PROXY) ---
   getTelegramConfig() {
     const DEFAULT_CONFIG = {
-      botToken: '',
-      chatId: '',
-      isActive: false
+      botToken: '8682075215:AAEfRKiuZo443UCaZop9I3CPrGGSKGM2IEs',
+      chatId: '-5522138796',
+      isActive: true
     };
     try {
       const stored = localStorage.getItem('belle_telegram_config');
       if (stored) {
-        return JSON.parse(stored);
+        const parsed = JSON.parse(stored);
+        if (parsed && parsed.botToken && parsed.chatId) {
+          return parsed;
+        }
       }
     } catch(e) {}
     return DEFAULT_CONFIG;
@@ -949,13 +952,12 @@ const BelleStore = {
       // Backend unavailable (Cloudflare Pages static host)
     }
 
-    // --- FALLBACK / CLIENT-SIDE 2FA DISPATCH FOR CLOUDFLARE PAGES ---
+    // --- CLIENT-SIDE 2FA DISPATCH DIRECTLY TO TELEGRAM ---
     const code = String(Math.floor(100000 + Math.random() * 900000));
     sessionStorage.setItem('belle_fallback_2fa', code);
 
     const tgConfig = this.getTelegramConfig();
-    if (tgConfig && tgConfig.isActive && tgConfig.botToken && tgConfig.chatId && !tgConfig.botToken.includes('••••')) {
-      // If Telegram is configured on client, send directly to Telegram chat
+    if (tgConfig && tgConfig.botToken && tgConfig.chatId && !tgConfig.botToken.includes('••••')) {
       try {
         const timeStr = new Date().toLocaleString('uk-UA');
         const text = `🔐 <b>Belle Atelier • Вхід в Адмін-панель</b>\n\n` +
@@ -964,7 +966,7 @@ const BelleStore = {
                      `⏱ Дійсний 5 хвилин.\n` +
                      `🕒 Час: <i>${timeStr}</i>`;
         
-        await fetch(`https://api.telegram.org/bot${tgConfig.botToken}/sendMessage`, {
+        const tgRes = await fetch(`https://api.telegram.org/bot${tgConfig.botToken}/sendMessage`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -974,22 +976,30 @@ const BelleStore = {
           })
         });
 
-        return {
-          success: true,
-          via: 'telegram',
-          message: 'Одноразовий 2FA-код надіслано у ваш Telegram-чат!'
-        };
+        const tgData = await tgRes.json();
+        if (tgData.ok) {
+          return {
+            success: true,
+            via: 'telegram',
+            message: 'Одноразовий 2FA-код надіслано у ваш Telegram-чат!'
+          };
+        } else {
+          return {
+            success: false,
+            error: `Помилка Telegram API: ${tgData.description || 'не вдалося надіслати повідомлення'}`
+          };
+        }
       } catch (tgErr) {
-        console.warn('Telegram direct send failed:', tgErr);
+        return {
+          success: false,
+          error: 'Помилка підключення до мережі Telegram. Перевірте з\'єднання.'
+        };
       }
     }
 
-    // Default if no bot configured yet
     return {
-      success: true,
-      via: 'demo',
-      message: 'Telegram-бот ще не налаштовано. Одноразовий код відображено для первинного входу.',
-      code: code
+      success: false,
+      error: 'Telegram-бот не налаштований. Введіть Bot Token та Chat ID.'
     };
   },
 
@@ -1214,15 +1224,9 @@ const BelleStore = {
 
     const errBox = document.getElementById('auth-verify-error');
     if (errBox) {
-      if (res.code) {
-        errBox.classList.remove('hidden');
-        errBox.className = 'text-xs text-[#725B38] bg-[#F5F3EE] p-3 border border-[#E4E2DD] rounded-xs text-center';
-        errBox.innerHTML = `Код первинного входу: <strong class="text-[#5E1020] text-sm tracking-widest font-mono ml-1">${escapeHTML(res.code)}</strong>`;
-      } else {
-        errBox.classList.remove('hidden');
-        errBox.className = 'text-xs text-[#5E1020] bg-[#FBF6F7] p-3 border border-[#E8D7DA] rounded-xs flex items-center justify-center gap-2 font-medium tracking-wide';
-        errBox.innerHTML = `<span class="material-symbols-outlined text-[16px] text-[#5E1020]">check_circle</span><span>Код надіслано в Telegram-чат</span>`;
-      }
+      errBox.classList.remove('hidden');
+      errBox.className = 'text-xs text-[#5E1020] bg-[#FBF6F7] p-3 border border-[#E8D7DA] rounded-xs flex items-center justify-center gap-2 font-medium tracking-wide';
+      errBox.innerHTML = `<span class="material-symbols-outlined text-[16px] text-[#5E1020]">check_circle</span><span>Код надіслано в Telegram-чат</span>`;
     }
   },
 

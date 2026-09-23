@@ -60,9 +60,9 @@ function writeJSON(file, data) {
 function getConfig() {
   return readJSON('config.json', {
     telegram: {
-      botToken: '',
-      chatId: '',
-      isActive: false
+      botToken: '8682075215:AAEfRKiuZo443UCaZop9I3CPrGGSKGM2IEs',
+      chatId: '-5522138796',
+      isActive: true
     }
   });
 }
