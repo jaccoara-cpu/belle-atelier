@@ -73,7 +73,7 @@
         </a>
         <button onclick="openWishlistModal()" type="button" class="relative p-2 text-on-surface hover:text-primary transition-colors" aria-label="Обране">
           <span class="material-symbols-outlined text-[22px]" id="header-wishlist-icon">favorite</span>
-          <span class="wishlist-badge-count absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-600 rounded-full ring-2 ring-white hidden" style="display: none;"></span>
+          <span class="wishlist-badge-count absolute top-0 right-0 w-4 h-4 bg-red-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center ring-1.5 ring-white hidden" style="display: none;">0</span>
         </button>
         <a href="cart.html" class="relative p-2 text-on-surface hover:text-primary transition-colors flex items-center" aria-label="Кошик">
           <span class="material-symbols-outlined text-[24px]">shopping_bag</span>
@@ -295,13 +295,16 @@
       // Render home grid as comfortable rectangles with full text fitting (no truncation)
       grid.innerHTML = categories.map(cat => {
         const isSale = cat.id === 'sale' || cat.isSale || cat.name.toUpperCase().includes('SALE');
+        const safeId = encodeURIComponent(cat.id);
+        const safeName = escapeHTML(cat.name);
+        const safeIcon = escapeHTML(cat.icon || 'folder');
 
         if (isSale) {
           return `
-            <a href="catalog.html?category=${cat.id}" class="flex items-center justify-between min-h-[50px] sm:min-h-[56px] py-2.5 sm:py-3 px-3 sm:px-3.5 bg-red-50/90 hover:bg-red-100 border border-red-200 rounded-xs transition-all duration-200 text-left shadow-2xs">
+            <a href="catalog.html?category=${safeId}" class="flex items-center justify-between min-h-[50px] sm:min-h-[56px] py-2.5 sm:py-3 px-3 sm:px-3.5 bg-red-50/90 hover:bg-red-100 border border-red-200 rounded-xs transition-all duration-200 text-left shadow-2xs">
               <span class="flex items-center gap-2 flex-1 min-w-0">
                 <span class="material-symbols-outlined text-[18px] sm:text-[20px] text-red-600 shrink-0">local_offer</span>
-                <span class="text-[11px] sm:text-xs uppercase tracking-wider font-bold text-red-600 leading-snug break-words">${cat.name}</span>
+                <span class="text-[11px] sm:text-xs uppercase tracking-wider font-bold text-red-600 leading-snug break-words">${safeName}</span>
               </span>
               <span class="material-symbols-outlined text-[16px] text-red-400 shrink-0 ml-1">chevron_right</span>
             </a>
@@ -309,10 +312,10 @@
         }
 
         return `
-          <a href="catalog.html?category=${cat.id}" class="flex items-center justify-between min-h-[50px] sm:min-h-[56px] py-2.5 sm:py-3 px-3 sm:px-3.5 bg-surface-container-lowest hover:bg-surface-container-low border border-surface-container-high/80 hover:border-primary/50 text-on-surface hover:text-primary rounded-xs transition-all duration-200 text-left shadow-2xs">
+          <a href="catalog.html?category=${safeId}" class="flex items-center justify-between min-h-[50px] sm:min-h-[56px] py-2.5 sm:py-3 px-3 sm:px-3.5 bg-surface-container-lowest hover:bg-surface-container-low border border-surface-container-high/80 hover:border-primary/50 text-on-surface hover:text-primary rounded-xs transition-all duration-200 text-left shadow-2xs">
             <span class="flex items-center gap-2 flex-1 min-w-0">
-              <span class="material-symbols-outlined text-[18px] sm:text-[20px] text-secondary shrink-0">${cat.icon || 'folder'}</span>
-              <span class="text-[11px] sm:text-xs uppercase tracking-wider font-semibold leading-snug break-words">${cat.name}</span>
+              <span class="material-symbols-outlined text-[18px] sm:text-[20px] text-secondary shrink-0">${safeIcon}</span>
+              <span class="text-[11px] sm:text-xs uppercase tracking-wider font-semibold leading-snug break-words">${safeName}</span>
             </span>
             <span class="material-symbols-outlined text-[16px] text-outline shrink-0 ml-1">chevron_right</span>
           </a>
@@ -323,15 +326,18 @@
       if (navList) {
         navList.innerHTML = categories.map(cat => {
           const isSale = cat.id === 'sale' || cat.isSale || cat.name.toUpperCase().includes('SALE');
+          const safeId = encodeURIComponent(cat.id);
+          const safeName = escapeHTML(cat.name);
           if (isSale) {
-            return `<a class="text-red-600 font-bold py-1 hover:text-red-700 flex items-center gap-2" href="catalog.html?category=${cat.id}">
+            return `<a class="text-red-600 font-bold py-1 hover:text-red-700 flex items-center gap-2" href="catalog.html?category=${safeId}">
               <span class="material-symbols-outlined text-[18px]">local_offer</span>
-              <span>${cat.name}</span>
+              <span>${safeName}</span>
             </a>`;
           }
-          return `<a class="text-on-surface py-1 hover:text-primary flex items-center gap-2" href="catalog.html?category=${cat.id}">
-            <span class="material-symbols-outlined text-[18px] text-secondary">${cat.icon || 'folder'}</span>
-            <span>${cat.name}</span>
+          const safeIcon = escapeHTML(cat.icon || 'folder');
+          return `<a class="text-on-surface py-1 hover:text-primary flex items-center gap-2" href="catalog.html?category=${safeId}">
+            <span class="material-symbols-outlined text-[18px] text-secondary">${safeIcon}</span>
+            <span>${safeName}</span>
           </a>`;
         }).join('');
       }
@@ -350,7 +356,7 @@
 
       if (type === 'about') {
         const raw = texts.about_text || '';
-        const paragraphs = raw.split('\n').filter(p => p.trim()).map(p => `<p class="leading-relaxed">${p.trim()}</p>`).join('');
+        const paragraphs = raw.split('\n').filter(p => p.trim()).map(p => `<p class="leading-relaxed">${escapeHTML(p.trim())}</p>`).join('');
         content.innerHTML = `
           <div class="flex items-center gap-2 text-primary mb-3">
             <span class="material-symbols-outlined text-2xl">info</span>
@@ -363,6 +369,8 @@
       } else if (type === 'reviews') {
         const reviews = BelleStore.getCustomerReviews();
         reviewSlideIndex = 0;
+        const safeReviewImg = escapeHTML(normalizeImgUrl(reviews[0] ? reviews[0].img : '/images/berehynia_dress_1789843600634.jpg'));
+        const safeReviewCap = escapeHTML(reviews[0] ? (reviews[0].caption || 'Фото відгуку клієнтки') : '');
         content.innerHTML = `
           <div class="flex items-center justify-between gap-2 text-primary mb-4 pb-2 border-b border-surface-container-high">
             <div class="flex items-center gap-2">
@@ -373,7 +381,7 @@
           </div>
           
           <div class="relative w-full aspect-[4/3] bg-surface-container-low rounded-xs overflow-hidden border border-surface-container-high shadow-xs">
-            <img id="review-modal-img" src="${reviews[0] ? reviews[0].img : '/images/berehynia_dress_1789843600634.jpg'}" class="w-full h-full object-contain p-2 transition-opacity duration-300" alt="Відгук" />
+            <img id="review-modal-img" src="${safeReviewImg}" class="w-full h-full object-contain p-2 transition-opacity duration-300" alt="Відгук" />
             
             <button type="button" onclick="prevReviewSlide()" class="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/80 hover:bg-white text-primary flex items-center justify-center shadow-md">
               <span class="material-symbols-outlined text-[20px]">chevron_left</span>
@@ -384,7 +392,7 @@
           </div>
 
           <p id="review-modal-caption" class="text-center text-xs text-secondary mt-3 italic font-medium">
-            ${reviews[0] ? (reviews[0].caption || 'Фото відгуку клієнтки') : ''}
+            ${safeReviewCap}
           </p>
 
           <div class="flex items-center justify-center gap-1.5 mt-2" id="review-dots-container">
@@ -393,7 +401,7 @@
         `;
       } else if (type === 'offer') {
         const raw = texts.offer_text || '';
-        const paragraphs = raw.split('\n').filter(p => p.trim()).map(p => `<p class="leading-relaxed">${p.trim()}</p>`).join('');
+        const paragraphs = raw.split('\n').filter(p => p.trim()).map(p => `<p class="leading-relaxed">${escapeHTML(p.trim())}</p>`).join('');
         content.innerHTML = `
           <div class="flex items-center gap-2 text-primary mb-3">
             <span class="material-symbols-outlined text-2xl">description</span>
@@ -405,7 +413,7 @@
         `;
       } else if (type === 'privacy') {
         const raw = texts.privacy_text || '';
-        const paragraphs = raw.split('\n').filter(p => p.trim()).map(p => `<p class="leading-relaxed">${p.trim()}</p>`).join('');
+        const paragraphs = raw.split('\n').filter(p => p.trim()).map(p => `<p class="leading-relaxed">${escapeHTML(p.trim())}</p>`).join('');
         content.innerHTML = `
           <div class="flex items-center gap-2 text-primary mb-3">
             <span class="material-symbols-outlined text-2xl">shield</span>
@@ -417,7 +425,7 @@
         `;
       } else if (type === 'rules') {
         const rawRules = texts.rules_text || '';
-        const paragraphs = rawRules.split('\n').filter(p => p.trim()).map(p => `<p class="leading-relaxed">${p.trim()}</p>`).join('');
+        const paragraphs = rawRules.split('\n').filter(p => p.trim()).map(p => `<p class="leading-relaxed">${escapeHTML(p.trim())}</p>`).join('');
         content.innerHTML = `
           <div class="flex items-center gap-2 text-primary mb-3">
             <span class="material-symbols-outlined text-2xl">gavel</span>
@@ -429,7 +437,7 @@
         `;
       } else if (type === 'exchange') {
         const rawExchange = texts.exchange_text || '';
-        const paragraphs = rawExchange.split('\n').filter(p => p.trim()).map(p => `<p class="leading-relaxed">${p.trim()}</p>`).join('');
+        const paragraphs = rawExchange.split('\n').filter(p => p.trim()).map(p => `<p class="leading-relaxed">${escapeHTML(p.trim())}</p>`).join('');
         content.innerHTML = `
           <div class="flex items-center gap-2 text-primary mb-3">
             <span class="material-symbols-outlined text-2xl">published_with_changes</span>
@@ -468,7 +476,7 @@
       const capEl = document.getElementById('review-modal-caption');
       const dots = document.getElementById('review-dots-container');
       if (imgEl && reviews[reviewSlideIndex]) {
-        imgEl.src = reviews[reviewSlideIndex].img;
+        imgEl.src = normalizeImgUrl(reviews[reviewSlideIndex].img);
       }
       if (capEl && reviews[reviewSlideIndex]) {
         capEl.textContent = reviews[reviewSlideIndex].caption || 'Фото відгуку клієнтки';

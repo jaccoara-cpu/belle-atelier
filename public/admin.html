@@ -80,10 +80,11 @@
       </p>
       
       <div id="lock-step-request" class="space-y-3">
-        <button onclick="BelleStore.handleSend2FACode(); switchLockStep();" class="w-full bg-primary hover:bg-tertiary text-white py-3.5 px-6 font-semibold text-xs tracking-widest uppercase transition-colors flex items-center justify-center gap-2 shadow-sm">
+        <button id="lock-request-btn" onclick="handleLockScreenRequest2FA()" class="w-full bg-primary hover:bg-tertiary text-white py-3.5 px-6 font-semibold text-xs tracking-widest uppercase transition-colors flex items-center justify-center gap-2 shadow-sm">
           <span class="material-symbols-outlined text-[18px]">send</span>
-          <span>Отримати код у Telegram</span>
+          <span>Отримати код 2FA у Telegram</span>
         </button>
+        <div id="lock-request-status" class="text-xs text-on-surface-variant hidden pt-1"></div>
         <a href="index.html" class="block text-xs text-secondary hover:text-primary underline pt-2">Повернутися на сайт</a>
       </div>
 
@@ -96,6 +97,11 @@
           <span class="material-symbols-outlined text-[18px]">login</span>
           <span>Підтвердити 2FA код</span>
         </button>
+        <div class="text-center pt-2">
+          <button type="button" onclick="handleLockScreenRequest2FA()" class="text-xs text-secondary hover:text-primary underline">
+            Надіслати код повторно
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -923,46 +929,93 @@
 
   <script src="js/cart-store.js"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      checkAuth();
+    document.addEventListener('DOMContentLoaded', async () => {
+      await checkAuth();
       loadTelegramSettings();
       loadSiteTexts();
       populateCategorySelects();
-      renderAdminTable();
-      renderCategoriesTable();
+      window.addEventListener('belle-products-updated', () => {
+        renderAdminTable();
+      });
     });
 
-    function checkAuth() {
-      const isAuth = BelleStore.isAdminAuthenticated();
+    async function checkAuth() {
       const lockScreen = document.getElementById('admin-lock-screen');
       const app = document.getElementById('admin-app');
       
+      const isAuth = await BelleStore.checkServerAuth();
       if (isAuth) {
         lockScreen.classList.add('hidden');
         app.classList.remove('hidden');
+        renderAdminTable();
+        renderCategoriesTable();
       } else {
         lockScreen.classList.remove('hidden');
         app.classList.add('hidden');
       }
     }
 
-    function switchLockStep() {
+    async function handleLockScreenRequest2FA() {
+      const btn = document.getElementById('lock-request-btn');
+      const status = document.getElementById('lock-request-status');
+      if (btn) btn.disabled = true;
+      if (status) {
+        status.classList.remove('hidden');
+        status.textContent = 'Генеруємо код безпеки...';
+      }
+
+      const res = await BelleStore.initiateAdminLogin();
+      if (btn) btn.disabled = false;
+
+      if (!res.success) {
+        if (status) {
+          status.classList.remove('hidden');
+          status.textContent = res.error || 'Помилка отримання коду';
+        }
+        return;
+      }
+
       document.getElementById('lock-step-request').classList.add('hidden');
       document.getElementById('lock-step-verify').classList.remove('hidden');
-      document.getElementById('lock-2fa-input').focus();
+      const input = document.getElementById('lock-2fa-input');
+      if (input) {
+        input.value = '';
+        input.focus();
+      }
+
+      const errBox = document.getElementById('lock-verify-error');
+      if (res.code && errBox) {
+        errBox.classList.remove('hidden');
+        errBox.className = 'text-xs text-[#725B38] bg-[#F5F3EE] p-2.5 border border-[#E4E2DD] rounded';
+        errBox.innerHTML = `ℹ️ Демонстраційний код первинного входу: <strong class="text-[#5E1020] text-sm">${escapeHTML(res.code)}</strong>`;
+      }
     }
 
-    function verifyLockScreenCode() {
+    async function verifyLockScreenCode() {
       const input = document.getElementById('lock-2fa-input');
       const errBox = document.getElementById('lock-verify-error');
-      const res = BelleStore.verify2FACode(input.value.trim());
+      if (!input) return;
 
+      const val = input.value.trim();
+      if (!val || val.length !== 6) {
+        if (errBox) {
+          errBox.classList.remove('hidden');
+          errBox.className = 'text-xs text-red-600 font-medium';
+          errBox.textContent = 'Введіть 6-значний код підтвердження';
+        }
+        return;
+      }
+
+      const res = await BelleStore.verify2FACode(val);
       if (res.success) {
-        checkAuth();
+        await checkAuth();
         BelleStore.showToast('Успішний вхід в панель адміністратора ✨');
       } else {
-        errBox.classList.remove('hidden');
-        errBox.textContent = res.error;
+        if (errBox) {
+          errBox.classList.remove('hidden');
+          errBox.className = 'text-xs text-red-600 font-medium';
+          errBox.textContent = res.error || 'Невірний код';
+        }
       }
     }
 
@@ -1093,11 +1146,18 @@
               <span>+ Знижка</span>
              </button>`;
 
+        const photosCountBadge = (Array.isArray(p.images) && p.images.length > 1)
+          ? `<span class="absolute top-0.5 left-0.5 bg-black/70 text-white text-[8px] font-bold px-1 py-0.2 rounded-2xs flex items-center gap-0.5 pointer-events-none">
+              <span class="material-symbols-outlined text-[10px]">photo_library</span>${p.images.length}
+             </span>`
+          : '';
+
         return `
           <tr class="hover:bg-surface-container-low transition-colors ${p.isArchived ? 'opacity-70 bg-gray-50' : ''}">
             <td class="py-2.5 px-4">
               <div class="relative w-12 h-16 bg-surface-container overflow-hidden rounded-xs border border-surface-container-high group/img cursor-pointer" onclick="openProductModal('${p.id}')" title="Натисніть, щоб змінити фото або виріб">
-                <img src="${p.img}" class="w-full h-full object-cover group-hover/img:scale-105 transition-transform" alt="${p.name}"/>
+                <img src="${normalizeImgUrl(p.img || (p.images && p.images[0]))}" class="w-full h-full object-cover group-hover/img:scale-105 transition-transform" alt="${escapeHTML(p.name)}"/>
+                ${photosCountBadge}
                 ${p.sale ? `<span class="absolute bottom-0 left-0 right-0 bg-primary/90 text-white text-[8px] font-bold py-0.5 text-center uppercase tracking-tighter pointer-events-none">SALE</span>` : ''}
                 <div class="absolute inset-0 bg-black/50 text-white flex flex-col items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity">
                   <span class="material-symbols-outlined text-[16px]">photo_camera</span>
@@ -1106,11 +1166,11 @@
               </div>
             </td>
             <td class="py-2.5 px-4">
-              <div class="font-headline font-semibold text-sm text-on-surface leading-tight">${p.name}</div>
-              <div class="text-[11px] font-mono text-outline mt-0.5">${p.art || '—'}</div>
+              <div class="font-headline font-semibold text-sm text-on-surface leading-tight">${escapeHTML(p.name)}</div>
+              <div class="text-[11px] font-mono text-outline mt-0.5">${escapeHTML(p.art || '—')}</div>
             </td>
             <td class="py-2.5 px-4 text-on-surface-variant font-medium">
-              ${catMap[p.cat] || p.cat}
+              ${escapeHTML(catMap[p.cat] || p.cat)}
             </td>
             <td class="py-2.5 px-4">
               <div class="flex items-center gap-1.5">
@@ -1138,7 +1198,7 @@
                 <button onclick="toggleArchive('${p.id}')" title="${p.isArchived ? 'Повернути з архіву' : 'В архів'}" class="p-1.5 text-secondary hover:text-amber-700 hover:bg-surface-container rounded transition-colors">
                   <span class="material-symbols-outlined text-[18px]">${p.isArchived ? 'unarchive' : 'archive'}</span>
                 </button>
-                <button onclick="confirmDelete('${p.id}', '${p.name.replace(/'/g, "\\'")}')" title="Видалити" class="p-1.5 text-outline hover:text-red-700 hover:bg-red-50 rounded transition-colors">
+                <button onclick="confirmDelete('${p.id}', '${escapeHTML(p.name).replace(/'/g, "\\'")}')" title="Видалити" class="p-1.5 text-outline hover:text-red-700 hover:bg-red-50 rounded transition-colors">
                   <span class="material-symbols-outlined text-[18px]">delete</span>
                 </button>
               </div>
@@ -1432,12 +1492,14 @@
 
     function addPhotoToProductForm(url) {
       if (!url) return;
-      if (!currentProductPhotos.includes(url)) {
-        // If there was only the default placeholder, replace it
-        if (currentProductPhotos.length === 1 && currentProductPhotos[0].includes('berehynia_dress_1789843600634.jpg')) {
-          currentProductPhotos = [url];
+      const cleanUrl = normalizeImgUrl(url);
+      const isNew = !document.getElementById('form-product-id').value;
+
+      if (!currentProductPhotos.includes(cleanUrl)) {
+        if (isNew && currentProductPhotos.length === 1 && currentProductPhotos[0].includes('berehynia_dress_1789843600634.jpg')) {
+          currentProductPhotos = [cleanUrl];
         } else {
-          currentProductPhotos.push(url);
+          currentProductPhotos.push(cleanUrl);
         }
         renderProductPhotosGrid();
         BelleStore.showToast("Фото додано до картки товару! ✨");
@@ -1472,60 +1534,84 @@
       }
     }
 
-    // Process multiple selected files simultaneously with canvas compression
+    // High performance client-side Canvas compressor (640x850px, JPEG 0.65)
+    function compressImageFile(file, maxWidth = 640, maxHeight = 850, quality = 0.65) {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const rawBase64 = e.target.result;
+          const img = new Image();
+          img.onload = function() {
+            try {
+              let width = img.width;
+              let height = img.height;
+
+              // Proportional scale to fit maxWidth x maxHeight
+              if (width > maxWidth || height > maxHeight) {
+                const ratio = Math.min(maxWidth / width, maxHeight / height);
+                width = Math.round(width * ratio);
+                height = Math.round(height * ratio);
+              }
+
+              const canvas = document.createElement('canvas');
+              canvas.width = width;
+              canvas.height = height;
+              const ctx = canvas.getContext('2d');
+              ctx.imageSmoothingEnabled = true;
+              ctx.imageSmoothingQuality = 'high';
+              ctx.drawImage(img, 0, 0, width, height);
+
+              const compressed = canvas.toDataURL('image/jpeg', quality);
+              resolve(compressed);
+            } catch (err) {
+              resolve(rawBase64);
+            }
+          };
+          img.onerror = () => resolve(rawBase64);
+          img.src = rawBase64;
+        };
+        reader.onerror = () => resolve(null);
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // Save directly to server disk if online, fallback to ultra-light base64
+    async function uploadOrCompressImage(file) {
+      const compressed = await compressImageFile(file);
+      if (!compressed) return null;
+
+      const token = BelleStore.getAdminToken();
+      if (token) {
+        try {
+          const res = await fetch('/api/upload', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ image: compressed })
+          });
+          const data = await res.json();
+          if (res.ok && data.success && data.url) {
+            return data.url;
+          }
+        } catch (e) {}
+      }
+      return compressed;
+    }
+
+    // Process multiple selected files simultaneously
     async function handleProductMultipleImageUpload(input) {
       if (!input.files || input.files.length === 0) return;
       const files = Array.from(input.files);
-      
-      const readAndCompress = file => {
-        return new Promise(resolve => {
-          const reader = new FileReader();
-          reader.onload = function(e) {
-            const rawBase64 = e.target.result;
-            const img = new Image();
-            img.onload = function() {
-              try {
-                const canvas = document.createElement('canvas');
-                let width = img.width;
-                let height = img.height;
-                const maxDim = 1200;
 
-                if (width > maxDim || height > maxDim) {
-                  if (width > height) {
-                    height = Math.round((height * maxDim) / width);
-                    width = maxDim;
-                  } else {
-                    width = Math.round((width * maxDim) / height);
-                    height = maxDim;
-                  }
-                }
-
-                canvas.width = width;
-                canvas.height = height;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, width, height);
-
-                const compressed = canvas.toDataURL('image/jpeg', 0.82);
-                resolve(compressed);
-              } catch (err) {
-                resolve(rawBase64);
-              }
-            };
-            img.onerror = () => resolve(rawBase64);
-            img.src = rawBase64;
-          };
-          reader.onerror = () => resolve(null);
-          reader.readAsDataURL(file);
-        });
-      };
-
-      BelleStore.showToast("Обробка фото...");
-      const results = await Promise.all(files.map(readAndCompress));
+      BelleStore.showToast(`Оптимізація та стиснення ${files.length} фото...`);
+      const results = await Promise.all(files.map(uploadOrCompressImage));
       const validImages = results.filter(Boolean);
 
       if (validImages.length > 0) {
-        // If current photos only had the placeholder, remove it
-        if (currentProductPhotos.length === 1 && currentProductPhotos[0].includes('berehynia_dress_1789843600634.jpg')) {
+        const isNew = !document.getElementById('form-product-id').value;
+        if (isNew && currentProductPhotos.length === 1 && currentProductPhotos[0].includes('berehynia_dress_1789843600634.jpg')) {
           currentProductPhotos = [];
         }
 
@@ -1536,7 +1622,7 @@
         });
 
         renderProductPhotosGrid();
-        BelleStore.showToast(`Успішно додано ${validImages.length} фото! ✨`);
+        BelleStore.showToast(`Успішно збережено ${validImages.length} фото! ✨`);
       }
 
       input.value = '';
@@ -2185,9 +2271,9 @@
           
           // Populate multi photos
           if (Array.isArray(p.images) && p.images.length > 0) {
-            currentProductPhotos = [...p.images];
+            currentProductPhotos = p.images.map(normalizeImgUrl);
           } else if (p.img) {
-            currentProductPhotos = [p.img];
+            currentProductPhotos = [normalizeImgUrl(p.img)];
           } else {
             currentProductPhotos = ['/images/berehynia_dress_1789843600634.jpg'];
           }
@@ -2233,7 +2319,7 @@
     function handleProductFormSubmit(e) {
       e.preventDefault();
       const id = document.getElementById('form-product-id').value;
-      const validPhotos = currentProductPhotos.filter(Boolean);
+      const validPhotos = currentProductPhotos.filter(Boolean).map(normalizeImgUrl);
       const primaryPhoto = validPhotos[0] || '/images/berehynia_dress_1789843600634.jpg';
 
       const productData = {
@@ -2281,11 +2367,11 @@
       }
     }
 
-    function saveTelegramSettings() {
+    async function saveTelegramSettings() {
       const token = document.getElementById('tg-bot-token').value.trim();
       const chat = document.getElementById('tg-chat-id').value.trim();
       
-      BelleStore.saveTelegramConfig({ botToken: token, chatId: chat });
+      await BelleStore.saveTelegramConfig({ botToken: token, chatId: chat });
       loadTelegramSettings();
     }
 
@@ -2293,17 +2379,16 @@
       const resultBox = document.getElementById('tg-test-result');
       resultBox.classList.remove('hidden', 'bg-red-50', 'text-red-700', 'border-red-200', 'bg-emerald-50', 'text-emerald-700', 'border-emerald-200');
       resultBox.className = 'text-xs p-3 rounded border bg-gray-50 text-gray-700';
-      resultBox.textContent = 'Відправляємо тестове повідомлення в Telegram...';
+      resultBox.textContent = 'Відправляємо тестове повідомлення через сервер в Telegram...';
 
-      const testMsg = `🤖 <b>Belle Atelier • Тест зв'язку</b>\n\nБот успішно підключено до панелі керування сайтом!\n🕒 Час: <i>${new Date().toLocaleString('uk-UA', { timeZone: 'Europe/Kyiv' })}</i>`;
-      const res = await BelleStore.sendTelegramMessage(testMsg);
+      const res = await BelleStore.sendTelegramTest();
 
       if (res.success) {
         resultBox.className = 'text-xs p-3 rounded border bg-emerald-50 text-emerald-800 border-emerald-200';
         resultBox.innerHTML = `✅ <b>Тестове повідомлення успішно надіслано в Telegram!</b> Бот готовий до роботи.`;
       } else {
         resultBox.className = 'text-xs p-3 rounded border bg-red-50 text-red-800 border-red-200';
-        resultBox.innerHTML = `❌ <b>Помилка відправки:</b> ${res.error || 'Перевірте правильність Bot Token та Chat ID'}`;
+        resultBox.innerHTML = `❌ <b>Помилка:</b> ${escapeHTML(res.error || 'Перевірте правильність Bot Token та Chat ID')}`;
       }
     }
 

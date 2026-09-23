@@ -1,10 +1,94 @@
 // Belle Atelier - Core Client Store & Admin Management
+// Security-hardened & Multi-Photo IndexedDB Storage Engine
+
+// --- XSS ESCAPING UTILITY ---
+function escapeHTML(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+window.escapeHTML = escapeHTML;
+
+// --- ROOT IMAGE URL NORMALIZER ---
+function normalizeImgUrl(url) {
+  if (!url) return '/images/berehynia_dress_1789843600634.jpg';
+  if (url.startsWith('data:image/') || url.startsWith('http://') || url.startsWith('https://')) return url;
+  if (!url.startsWith('/')) return '/' + url;
+  return url;
+}
+window.normalizeImgUrl = normalizeImgUrl;
+
+// --- INDEXED DB RESILIENT STORAGE (Unlimited MB for HD Photos) ---
+const BelleDB = {
+  dbName: 'BelleAtelierDB',
+  dbVersion: 1,
+  _db: null,
+  async getDB() {
+    if (this._db) return this._db;
+    if (!window.indexedDB) return null;
+    return new Promise((resolve) => {
+      try {
+        const req = indexedDB.open(this.dbName, this.dbVersion);
+        req.onupgradeneeded = (e) => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains('keyval')) {
+            db.createObjectStore('keyval');
+          }
+        };
+        req.onsuccess = () => {
+          this._db = req.result;
+          resolve(this._db);
+        };
+        req.onerror = () => resolve(null);
+      } catch (err) {
+        resolve(null);
+      }
+    });
+  },
+  async get(key) {
+    try {
+      const db = await this.getDB();
+      if (!db) return null;
+      return new Promise((resolve) => {
+        const tx = db.transaction('keyval', 'readonly');
+        const store = tx.objectStore('keyval');
+        const req = store.get(key);
+        req.onsuccess = () => resolve(req.result || null);
+        req.onerror = () => resolve(null);
+      });
+    } catch (e) {
+      return null;
+    }
+  },
+  async set(key, val) {
+    try {
+      const db = await this.getDB();
+      if (!db) return false;
+      return new Promise((resolve) => {
+        const tx = db.transaction('keyval', 'readwrite');
+        const store = tx.objectStore('keyval');
+        const req = store.put(val, key);
+        req.onsuccess = () => resolve(true);
+        req.onerror = () => resolve(false);
+      });
+    } catch (e) {
+      return false;
+    }
+  }
+};
+
 const DEFAULT_PRODUCTS = [
   {
     id: 'beregynya',
     art: 'BL-402',
     name: 'Сукня «Берегиня»',
     cat: 'women',
+    category: 'dresses',
+    category_name: 'Плаття та сукні',
     price: 4800,
     oldPrice: null,
     sale: null,
@@ -14,29 +98,43 @@ const DEFAULT_PRODUCTS = [
     description: "Монохромна борщівська техніка, оздоблена витонченим мереживом ручного плетіння. Вільний автентичний силует з пишними рукавами-бохо.",
     sizes: ['XS', 'S', 'M', 'L', 'XL', 'Індивідуальні мірки'],
     colors: ['Молочний / Сирий льон', 'Глибокий бордо', 'Графіт'],
-    img: 'images/berehynia_dress_1789843600634.jpg'
+    img: '/images/berehynia_dress_1789843600634.jpg',
+    images: [
+      '/images/berehynia_dress_1789843600634.jpg',
+      '/images/berehynia_detail_1789843714868.jpg',
+      '/images/berehynia_back_1789843731157.jpg',
+      '/images/berehynia_motion_1789843747467.jpg'
+    ]
   },
   {
     id: 'oberig',
     art: 'BL-108',
     name: 'Сорочка «Оберіг»',
     cat: 'men',
+    category: 'vyshyvanky',
+    category_name: 'Вишиванки',
     price: 3950,
     oldPrice: 4800,
     sale: 'SALE −22%',
     inStock: true,
     isArchived: false,
     fabric: "Органічний преміум-льон",
-    description: "Класична аристократична сорочка з вишуканою геометричною вишивкою коміра-стійки та манжетів.",
+    description: "Класична аристократична сорочка з вишуканою геометричною вишивкою коміра-стійки та манжетів. Вільний крій, що пасує до будь-якого образу.",
     sizes: ['XS', 'S', 'M', 'L', 'XL'],
     colors: ['Графітово-чорний', 'Молочний льон'],
-    img: 'images/oberig_shirt_1789843615744.jpg'
+    img: '/images/oberig_shirt_1789843615744.jpg',
+    images: [
+      '/images/oberig_shirt_1789843615744.jpg',
+      '/images/berehynia_back_1789843731157.jpg'
+    ]
   },
   {
     id: 'hetmansky',
     art: 'BL-512',
     name: 'Жакет «Гетьманський»',
     cat: 'women',
+    category: 'jackets',
+    category_name: 'Жакети та пальта',
     price: 5400,
     oldPrice: null,
     sale: null,
@@ -46,13 +144,19 @@ const DEFAULT_PRODUCTS = [
     description: "Шляхетний жакет з оксамитовими манжетами та золотавим сутажем за лекалами козацької старшини.",
     sizes: ['XS', 'S', 'M'],
     colors: ['Глибокий чорний', 'Королівський синій'],
-    img: 'images/hetman_jacket_1789843629464.jpg'
+    img: '/images/hetman_jacket_1789843629464.jpg',
+    images: [
+      '/images/hetman_jacket_1789843629464.jpg',
+      '/images/atelier_workshop.jpg'
+    ]
   },
   {
     id: 'mavka',
     art: 'BL-304',
     name: 'Сукня «Мавка»',
     cat: 'women',
+    category: 'dresses',
+    category_name: 'Плаття та сукні',
     price: 4500,
     oldPrice: 5800,
     sale: 'SALE −22%',
@@ -62,13 +166,19 @@ const DEFAULT_PRODUCTS = [
     description: "Летюча смарагдова сукня з шовковими вставками та золотавою вишивкою лісових мотивів живої природи.",
     sizes: ['S', 'M', 'L'],
     colors: ['Смарагд', 'Шавлія'],
-    img: 'images/mavka_dress_1789843642965.jpg'
+    img: '/images/mavka_dress_1789843642965.jpg',
+    images: [
+      '/images/mavka_dress_1789843642965.jpg',
+      '/images/berehynia_motion_1789843747467.jpg'
+    ]
   },
   {
     id: 'podillya',
     art: 'BL-210',
     name: 'Корсет «Поділля»',
     cat: 'accessories',
+    category: 'accessories',
+    category_name: 'Корсети & Крайки',
     price: 3900,
     oldPrice: null,
     sale: null,
@@ -78,13 +188,19 @@ const DEFAULT_PRODUCTS = [
     description: "Ідеальна підтримка стану, регульована шовкова шнурівка та рельєфна гладь подільських квітів.",
     sizes: ['XS', 'S', 'M', 'L'],
     colors: ['Чорний оксамит', 'Бордо'],
-    img: 'images/podillya_corset_1789843684134.jpg'
+    img: '/images/podillya_corset_1789843684134.jpg',
+    images: [
+      '/images/podillya_corset_1789843684134.jpg',
+      '/images/berehynia_detail_1789843714868.jpg'
+    ]
   },
   {
     id: 'dzherelo',
     art: 'BL-770',
     name: 'Сет «Джерело Життя»',
     cat: 'sets',
+    category: 'sets',
+    category_name: 'Парні комплекти',
     price: 8900,
     oldPrice: null,
     sale: null,
@@ -94,13 +210,19 @@ const DEFAULT_PRODUCTS = [
     description: "Гармонійний дует чоловічої сорочки та вишуканої сукні для весілля, вінчання або родинних свят.",
     sizes: ['S / M', 'M / L', 'Індивідуальні мірки'],
     colors: ['Молочний льон'],
-    img: 'images/dzherelo_set_1789843655280.jpg'
+    img: '/images/dzherelo_set_1789843655280.jpg',
+    images: [
+      '/images/dzherelo_set_1789843655280.jpg',
+      '/images/marusya_shirt.jpg'
+    ]
   },
   {
     id: 'zorya',
     art: 'BL-215',
     name: 'Туніка «Зоря»',
     cat: 'women',
+    category: 'vyshyvanky',
+    category_name: 'Вишиванки',
     price: 3600,
     oldPrice: null,
     sale: null,
@@ -110,94 +232,256 @@ const DEFAULT_PRODUCTS = [
     description: "Полегшена літня туніка з контрастною синьо-теракотовою вишивкою та розрізами з боків.",
     sizes: ['One Size (XS-L)'],
     colors: ['Пісочний', 'Волошковий'],
-    img: 'images/zorya_tunic_1789843670230.jpg'
-  },
-  {
-    id: 'polissya',
-    art: 'BL-408',
-    name: 'Сукня «Полісся»',
-    cat: 'women',
-    price: 5200,
-    oldPrice: null,
-    sale: null,
-    inStock: true,
-    isArchived: false,
-    fabric: "100% пом'якшений льон",
-    description: "Вишукана сукня глибокого відтінку з поліськими геометричними мотивами.",
-    sizes: ['XS', 'S', 'M', 'L'],
-    colors: ['Молочний льон', 'Графіт'],
-    img: 'images/berehynia_back_1789843731157.jpg'
+    img: '/images/zorya_tunic_1789843670230.jpg',
+    images: [
+      '/images/zorya_tunic_1789843670230.jpg',
+      '/images/berehynia_back_1789843731157.jpg'
+    ]
   }
 ];
 
 const BelleStore = {
-  // --- PRODUCTS CRUD ---
+  _cachedProducts: null,
+  escapeHTML,
+  normalizeImgUrl,
+
+  // --- PRODUCTS CRUD WITH INDEXEDDB & SERVER SYNC ---
   getProducts() {
+    if (this._cachedProducts && Array.isArray(this._cachedProducts) && this._cachedProducts.length > 0) {
+      return this._cachedProducts;
+    }
+
     try {
       const stored = localStorage.getItem('belle_products');
       if (stored) {
-        return JSON.parse(stored);
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          this._cachedProducts = parsed.map(p => this._normalizeProduct(p));
+          return this._cachedProducts;
+        }
       }
     } catch (e) {
-      console.error('Error reading products:', e);
+      console.error('Error reading localStorage products:', e);
     }
-    // Initialize if first time
-    this.saveProducts(DEFAULT_PRODUCTS);
-    return DEFAULT_PRODUCTS;
+
+    // Initialize with defaults if empty
+    this._cachedProducts = DEFAULT_PRODUCTS.map(p => this._normalizeProduct(p));
+    this.saveProducts(this._cachedProducts);
+    return this._cachedProducts;
+  },
+
+  _normalizeProduct(p) {
+    if (!p) return null;
+    const rawImages = Array.isArray(p.images) && p.images.length > 0
+      ? p.images.filter(Boolean).map(normalizeImgUrl)
+      : (p.img ? [normalizeImgUrl(p.img)] : ['/images/berehynia_dress_1789843600634.jpg']);
+
+    return {
+      ...p,
+      id: String(p.id || ''),
+      name: String(p.name || ''),
+      art: String(p.art || 'BL-000'),
+      cat: p.cat || p.category || 'women',
+      category: p.category || p.cat || 'women',
+      price: Math.max(0, Math.round(Number(p.price) || 0)),
+      oldPrice: p.oldPrice ? Math.max(0, Math.round(Number(p.oldPrice))) : null,
+      sale: p.sale || null,
+      inStock: p.inStock !== false,
+      isArchived: Boolean(p.isArchived),
+      fabric: p.fabric || "100% пом'якшений льон",
+      description: p.description || "",
+      sizes: Array.isArray(p.sizes) && p.sizes.length > 0 ? p.sizes : ['XS', 'S', 'M', 'L', 'XL'],
+      colors: Array.isArray(p.colors) && p.colors.length > 0 ? p.colors : ['Молочний'],
+      variants: Array.isArray(p.variants) ? p.variants : [],
+      img: rawImages[0],
+      images: rawImages,
+      updatedAt: p.updatedAt || 0
+    };
   },
 
   getActiveProducts() {
-    return this.getProducts().filter(p => !p.isArchived);
+    return this.getProducts().filter(p => p && !p.isArchived);
   },
 
+  // Save products locally (IndexedDB + localStorage) and notify listeners
   saveProducts(products) {
+    const normalized = products.map(p => this._normalizeProduct(p)).filter(Boolean);
+    this._cachedProducts = normalized;
+
+    // 1. Save full data with all HD photos to IndexedDB (virtually unlimited quota)
+    BelleDB.set('belle_products', normalized).catch(err => {
+      console.warn('Could not save to IndexedDB:', err);
+    });
+
+    // 2. Mirror to localStorage for fast initial paint
     try {
-      localStorage.setItem('belle_products', JSON.stringify(products));
-      window.dispatchEvent(new Event('belle-products-updated'));
+      localStorage.setItem('belle_products', JSON.stringify(normalized));
     } catch (e) {
-      console.error('Error saving products:', e);
+      if (e.name === 'QuotaExceededError' || e.code === 22) {
+        console.warn('localStorage quota reached. Optimizing cache while preserving IndexedDB full data.');
+        try {
+          // If quota reached, keep first 2 photos per product so user gallery always works
+          const trimmed = normalized.map(p => ({
+            ...p,
+            images: (Array.isArray(p.images) && p.images.length > 0) ? p.images.slice(0, 3) : [p.img],
+            img: p.img || (p.images && p.images[0])
+          }));
+          localStorage.setItem('belle_products', JSON.stringify(trimmed));
+        } catch (_) {
+          // If still fails, clear old keys and try again
+          try {
+            localStorage.removeItem('belle_debug');
+            localStorage.removeItem('belle_temp');
+          } catch(__) {}
+        }
+      }
+    }
+
+    window.dispatchEvent(new Event('belle-products-updated'));
+    return true;
+  },
+
+  // Async store initialization: loads from IndexedDB and syncs with server API
+  async initStore() {
+    // 1. Try to load from IndexedDB (may have HD photos that exceed localStorage)
+    try {
+      const idbData = await BelleDB.get('belle_products');
+      if (Array.isArray(idbData) && idbData.length > 0) {
+        this._cachedProducts = idbData.map(p => this._normalizeProduct(p));
+        window.dispatchEvent(new Event('belle-products-updated'));
+      }
+    } catch(e) {}
+
+    // 2. Fetch authoritative catalog from server
+    try {
+      const res = await fetch('/api/products');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && Array.isArray(data.products) && data.products.length > 0) {
+          const serverProducts = data.products.map(p => this._normalizeProduct(p));
+          const currentLocal = this.getProducts();
+          const localMap = new Map(currentLocal.map(p => [p.id, p]));
+
+          // Smart merge: preserve locally updated products if modified by user
+          const merged = serverProducts.map(serverProd => {
+            const localProd = localMap.get(serverProd.id);
+            if (!localProd) return serverProd;
+            const localTime = Number(localProd.updatedAt) || 0;
+            const serverTime = Number(serverProd.updatedAt) || 0;
+            if (localTime > serverTime) {
+              return localProd;
+            }
+            // If local product has custom/different images, keep local
+            if (JSON.stringify(localProd.images) !== JSON.stringify(serverProd.images) && localTime >= serverTime) {
+              return localProd;
+            }
+            return serverProd;
+          });
+
+          // Also include any local custom products not present on server
+          const serverIds = new Set(serverProducts.map(p => p.id));
+          currentLocal.forEach(p => {
+            if (!serverIds.has(p.id)) {
+              merged.push(p);
+            }
+          });
+
+          this.saveProducts(merged);
+        }
+      }
+    } catch (err) {
+      // Offline / standalone fallback
+      console.info('Server sync not available, operating in local offline mode.');
     }
   },
 
+  // Add Product (Local + Server Sync)
   addProduct(productData) {
     const products = this.getProducts();
-    const newProduct = {
+    const rawImages = Array.isArray(productData.images) && productData.images.length > 0
+      ? productData.images.filter(Boolean).map(normalizeImgUrl)
+      : (productData.img ? [normalizeImgUrl(productData.img)] : ['/images/berehynia_dress_1789843600634.jpg']);
+
+    const newProduct = this._normalizeProduct({
       id: productData.id || 'prod_' + Date.now(),
       art: productData.art || 'BL-' + Math.floor(100 + Math.random() * 900),
       name: productData.name,
-      cat: productData.cat || 'dresses',
+      cat: productData.cat || 'women',
       price: Number(productData.price) || 0,
       oldPrice: productData.oldPrice ? Number(productData.oldPrice) : null,
-      sale: productData.sale || (productData.oldPrice ? `SALE −${Math.round((1 - productData.price/productData.oldPrice)*100)}%` : null),
+      sale: productData.sale || (productData.oldPrice && productData.oldPrice > productData.price ? `SALE −${Math.round((1 - productData.price/productData.oldPrice)*100)}%` : null),
       inStock: productData.inStock !== false,
       isArchived: false,
       fabric: productData.fabric || "100% пом'якшений льон",
       description: productData.description || "",
-      sizes: Array.isArray(productData.sizes) ? productData.sizes : ['XS', 'S', 'M', 'L', 'XL'],
+      sizes: Array.isArray(productData.sizes) && productData.sizes.length > 0 ? productData.sizes : ['XS', 'S', 'M', 'L', 'XL'],
       colors: Array.isArray(productData.colors) && productData.colors.length > 0 ? productData.colors : ['Молочний'],
       variants: Array.isArray(productData.variants) ? productData.variants : [],
-      img: productData.img || 'images/berehynia_dress_1789843600634.jpg'
-    };
+      img: rawImages[0],
+      images: rawImages,
+      updatedAt: Date.now()
+    });
+
     products.unshift(newProduct);
     this.saveProducts(products);
-    this.showToast(`Виріб «${newProduct.name}» успішно додано! ✨`);
+    this.showToast(`Виріб «${escapeHTML(newProduct.name)}» збережено (${newProduct.images.length} фото)! ✨`);
+
+    // Sync with backend
+    const token = this.getAdminToken();
+    fetch('/api/products', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      },
+      body: JSON.stringify(newProduct)
+    }).catch(e => console.warn('Could not sync product to server:', e));
+
     return newProduct;
   },
 
+  // Update Product (Local + Server Sync)
   updateProduct(id, updatedFields) {
     const products = this.getProducts();
     const index = products.findIndex(p => p.id === id);
+
     if (index > -1) {
-      products[index] = { ...products[index], ...updatedFields };
+      if (updatedFields.images && Array.isArray(updatedFields.images)) {
+        const cleanImages = updatedFields.images.filter(Boolean).map(normalizeImgUrl);
+        updatedFields.images = cleanImages.length > 0 ? cleanImages : [normalizeImgUrl(updatedFields.img || products[index].img)];
+        updatedFields.img = updatedFields.images[0];
+      } else if (updatedFields.img) {
+        updatedFields.img = normalizeImgUrl(updatedFields.img);
+        updatedFields.images = [updatedFields.img];
+      }
+
       if (updatedFields.price !== undefined || updatedFields.oldPrice !== undefined) {
-        if (products[index].oldPrice && products[index].oldPrice > products[index].price) {
-          products[index].sale = `SALE −${Math.round((1 - products[index].price/products[index].oldPrice)*100)}%`;
+        const newPrice = updatedFields.price !== undefined ? Number(updatedFields.price) : products[index].price;
+        const newOldPrice = updatedFields.oldPrice !== undefined ? Number(updatedFields.oldPrice) : products[index].oldPrice;
+        if (newOldPrice && newOldPrice > newPrice) {
+          updatedFields.sale = `SALE −${Math.round((1 - newPrice/newOldPrice)*100)}%`;
         } else {
-          products[index].sale = null;
+          updatedFields.sale = null;
         }
       }
+
+      updatedFields.updatedAt = Date.now();
+
+      products[index] = this._normalizeProduct({ ...products[index], ...updatedFields });
       this.saveProducts(products);
-      this.showToast(`Виріб «${products[index].name}» оновлено!`);
+      this.showToast(`Виріб «${escapeHTML(products[index].name)}» успішно оновлено!`);
+
+      // Sync with backend
+      const token = this.getAdminToken();
+      fetch(`/api/products/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify(products[index])
+      }).catch(e => console.warn('Could not sync update to server:', e));
+
       return products[index];
     }
     return null;
@@ -209,7 +493,19 @@ const BelleStore = {
     if (item) {
       item.isArchived = !item.isArchived;
       this.saveProducts(products);
-      this.showToast(item.isArchived ? `«${item.name}» переміщено в архів` : `«${item.name}» повернено з архіву`);
+      this.showToast(item.isArchived ? `«${escapeHTML(item.name)}» переміщено в архів` : `«${escapeHTML(item.name)}» повернено з архіву`);
+
+      const token = this.getAdminToken();
+      if (token) {
+        fetch(`/api/products/${id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ isArchived: item.isArchived })
+        }).catch(() => {});
+      }
       return item;
     }
     return null;
@@ -221,6 +517,14 @@ const BelleStore = {
     products = products.filter(p => p.id !== id);
     this.saveProducts(products);
     this.showToast(`Виріб видалено`);
+
+    const token = this.getAdminToken();
+    if (token) {
+      fetch(`/api/products/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      }).catch(() => {});
+    }
     return item;
   },
 
@@ -243,7 +547,7 @@ const BelleStore = {
       const stored = localStorage.getItem('belle_categories');
       if (stored) {
         const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed)) {
+        if (Array.isArray(parsed) && parsed.length > 0) {
           parsed.forEach(c => {
             if (c.id === 'sale' || c.isSale || (c.name && c.name.toLowerCase().includes('sale'))) {
               c.name = 'SALE';
@@ -270,7 +574,6 @@ const BelleStore = {
 
   addCategory(data) {
     const categories = this.getCategories();
-    // Generate id slug from name or custom id
     let id = (data.id || data.name.toLowerCase().replace(/[^a-z0-9а-яіїєґ]/gi, '-')).toLowerCase().trim();
     if (!id || categories.some(c => c.id === id)) {
       id = 'cat_' + Date.now();
@@ -283,7 +586,7 @@ const BelleStore = {
     };
     categories.push(newCat);
     this.saveCategories(categories);
-    this.showToast(`Категорію «${newCat.name}» додано! ✨`);
+    this.showToast(`Категорію «${escapeHTML(newCat.name)}» додано! ✨`);
     return newCat;
   },
 
@@ -293,7 +596,7 @@ const BelleStore = {
     if (index > -1) {
       categories[index] = { ...categories[index], ...updatedFields };
       this.saveCategories(categories);
-      this.showToast(`Категорію «${categories[index].name}» оновлено!`);
+      this.showToast(`Категорію «${escapeHTML(categories[index].name)}» оновлено!`);
       return categories[index];
     }
     return null;
@@ -304,7 +607,7 @@ const BelleStore = {
     const item = categories.find(c => c.id === id);
     categories = categories.filter(c => c.id !== id);
     this.saveCategories(categories);
-    this.showToast(`Категорію «${item ? item.name : id}» видалено`);
+    this.showToast(`Категорію видалено`);
     return item;
   },
 
@@ -321,14 +624,14 @@ const BelleStore = {
       const stored = localStorage.getItem('belle_size_chart_images');
       if (stored) {
         const arr = JSON.parse(stored);
-        if (Array.isArray(arr) && arr.length > 0) return arr;
+        if (Array.isArray(arr) && arr.length > 0) return arr.map(normalizeImgUrl);
       }
     } catch (e) {
       console.error('Error reading size chart images:', e);
     }
     return [
-      'images/size_chart_1.jpg',
-      'images/size_chart_2.jpg'
+      '/images/size_chart_1.jpg',
+      '/images/size_chart_2.jpg'
     ];
   },
 
@@ -347,15 +650,17 @@ const BelleStore = {
       const stored = localStorage.getItem('belle_customer_reviews');
       if (stored) {
         const arr = JSON.parse(stored);
-        if (Array.isArray(arr) && arr.length > 0) return arr;
+        if (Array.isArray(arr) && arr.length > 0) {
+          return arr.map(r => ({ ...r, img: normalizeImgUrl(r.img) }));
+        }
       }
     } catch (e) {
       console.error('Error reading customer reviews:', e);
     }
     return [
-      { id: 'rev_1', img: 'images/berehynia_dress_1789843600634.jpg', caption: 'Сукня «Берегиня» на весіллі' },
-      { id: 'rev_2', img: 'images/mavka_dress_1789843642965.jpg', caption: 'Індивідуальний пошив сукні «Мавка»' },
-      { id: 'rev_3', img: 'images/oberig_shirt_1789843615744.jpg', caption: 'Сорочка «Оберіг» — ідеальна посадка' }
+      { id: 'rev_1', img: '/images/berehynia_dress_1789843600634.jpg', caption: 'Сукня «Берегиня» на весіллі' },
+      { id: 'rev_2', img: '/images/mavka_dress_1789843642965.jpg', caption: 'Індивідуальний пошив сукні «Мавка»' },
+      { id: 'rev_3', img: '/images/oberig_shirt_1789843615744.jpg', caption: 'Сорочка «Оберіг» — ідеальна посадка' }
     ];
   },
 
@@ -368,10 +673,10 @@ const BelleStore = {
     }
   },
 
-  // --- EDITABLE SITE TEXTS (POLICIES, OFFER, PRIVACY, ABOUT & CONTACTS) ---
+  // --- EDITABLE SITE TEXTS ---
   getDefaultSiteTexts() {
     return {
-      hero_img: 'images/belle_hero_banner_1789843699753.jpg',
+      hero_img: '/images/belle_hero_banner_1789843699753.jpg',
       hero_title: 'Ексклюзивний одяг для всієї родини!',
       hero_subtitle: 'Обирай свій образ',
       contacts_title: 'Ательє та шоурум',
@@ -383,25 +688,10 @@ const BelleStore = {
       contacts_telegram_channel: '',
       contacts_salon_city: 'м. Київ, просп. Європейського Союзу, 45Б',
       about_text: `Belle Atelier & Boutique — простір українського кутюру, де поєднуються автентичні традиції вишивки та сучасний преміальний крій. Ми створюємо вироби з натурального льону, шовку та оксамиту, вкладаючи душу в кожен стібок. Кожна сукня, сорочка чи жакет — це витвір мистецтва, створений підкреслити вашу неповторність. Завітайте до нашого київського салону або замовляйте індивідуальний пошив за вашими особистими мірками.`,
-      offer_text: `ПУБЛІЧНИЙ ДОГОВІР ОФЕРТИ
-1. Загальні положення: Цей Договір є публічною офертою інтернет-магазину та ательє «Belle Atelier» щодо продажу товарів та надання послуг індивідуального пошиття.
-2. Оформлення замовлення: Покупець оформлює замовлення самостійно на сайті або через менеджера.
-3. Оплата та доставка: Оплата здійснюється онлайн через платіжні сервіси, за реквізитами IBAN або післяплатою відповідно до обраного способу. Доставка здійснюється перевізником «Нова Пошта» або самовивозом.
-4. Права та обов'язки: Продавець зобов'язується передати якісний товар Покупцеві у встановлені строки.
-(Текст договору може бути доповнений або змінений адміністратором в панелі керування).`,
-      privacy_text: `ПОЛІТИКА КОНФІДЕНЦІЙНОСТІ
-1. Збір даних: Ми збираємо персональні дані (ім'я, номер телефону, параметри фігури, адресу доставки) виключно для якісного виконання замовлення та індивідуального пошиття.
-2. Захист інформації: Всі персональні дані клієнтів є суворо конфіденційними та не передаються третім особам, окрім служб доставки.
-3. Зберігання: Інформація зберігається відповідно до вимог чинного законодавства України.
-(Текст політики конфіденційності може бути доповнений або змінений в панелі керування).`,
-      rules_text: `1. Оформлення замовлення: Оберіть виріб, вкажіть потрібний розмір, колір та заповніть контактні дані у кошику. Наш стиліст зв’яжеться з вами у Telegram або по телефону для підтвердження.
-2. Індивідуальний пошив: Якщо потрібна корекція за вашими мірками або пошиття унікального виробу, менеджер уточнить параметри (ОГ, ОТ, ОБ, зріст).
-3. Оплата: Передоплата 50% або повна оплата на рахунок ФОП / банківською картою. Для готових виробів можлива післяплата з мінімальним авансом за доставку.
-4. Доставка: Доставка по Україні службою «Нова Пошта» (1-3 дні) або самовивіз із нашого салону в Києві (просп. Європейського Союзу, 45Б).`,
-      exchange_text: `1. Термін: Ви можете обміняти або повернути товар належної якості протягом 14 днів з моменту отримання згідно із Законом України «Про захист прав споживачів».
-2. Умови повернення: Виріб не повинен мати слідів носіння, прання чи пошкоджень, зі збереженням усіх оригінальних бірок, пломб та фірмового пакування.
-3. Індивідуальні замовлення: Вироби, пошиті за індивідуальними нестандартними параметрами клієнта, підлягають гарантійній безкоштовній підгонці в нашому ательє.
-4. Процедура: Для оформлення обміну або повернення зверніться до нашого менеджера у Telegram або завітайте до салону в Києві.`
+      offer_text: `ПУБЛІЧНИЙ ДОГОВІР ОФЕРТИ\n1. Загальні положення: Цей Договір є публічною офертою інтернет-магазину та ательє «Belle Atelier» щодо продажу товарів та надання послуг індивідуального пошиття.\n2. Оформлення замовлення: Покупець оформлює замовлення самостійно на сайті або через менеджера.\n3. Оплата та доставка: Оплата здійснюється онлайн через платіжні сервіси, за реквізитами IBAN або післяплатою відповідно до обраного способу. Доставка здійснюється перевізником «Нова Пошта» або самовивозом.\n4. Права та обов'язки: Продавець зобов'язується передати якісний товар Покупцеві у встановлені строки.`,
+      privacy_text: `ПОЛІТИКА КОНФІДЕНЦІЙНОСТІ\n1. Збір даних: Ми збираємо персональні дані (ім'я, номер телефону, параметри фігури, адресу доставки) виключно для якісного виконання замовлення та індивідуального пошиття.\n2. Захист інформації: Всі персональні дані клієнтів є суворо конфіденційними та не передаються третім особам, окрім служб доставки.\n3. Зберігання: Інформація зберігається відповідно до вимог чинного законодавства України.`,
+      rules_text: `1. Оформлення замовлення: Оберіть виріб, вкажіть потрібний розмір, колір та заповніть контактні дані у кошику. Наш стиліст зв’яжеться з вами у Telegram або по телефону для підтвердження.\n2. Індивідуальний пошив: Якщо потрібна корекція за вашими мірками або пошиття унікального виробу, менеджер уточнить параметри (ОГ, ОТ, ОБ, зріст).\n3. Оплата: Передоплата 50% або повна оплата на рахунок ФОП / банківською картою. Для готових виробів можлива післяплата з мінімальним авансом за доставку.\n4. Доставка: Доставка по Україні службою «Нова Пошта» (1-3 дні) або самовивіз із нашого салону в Києві (просп. Європейського Союзу, 45Б).`,
+      exchange_text: `1. Термін: Ви можете обміняти або повернути товар належної якості протягом 14 днів з моменту отримання згідно із Законом України «Про захист прав споживачів».\n2. Умови повернення: Виріб не повинен мати слідів носіння, прання чи пошкоджень, зі збереженням усіх оригінальних бірок, пломб та фірмового пакування.`
     };
   },
 
@@ -411,40 +701,44 @@ const BelleStore = {
       if (stored) {
         return { ...this.getDefaultSiteTexts(), ...JSON.parse(stored) };
       }
-    } catch (e) {
-      console.error('Error reading site texts:', e);
-    }
+    } catch(e) {}
     return this.getDefaultSiteTexts();
   },
 
   saveSiteTexts(texts) {
     try {
       localStorage.setItem('belle_site_texts', JSON.stringify(texts));
-      window.dispatchEvent(new Event('belle-site-texts-updated'));
+      window.dispatchEvent(new Event('belle-texts-updated'));
       this.showToast('Тексти сайту успішно оновлено! ✨');
-    } catch (e) {
-      console.error('Error saving site texts:', e);
+    } catch(e) {
+      console.error(e);
     }
   },
 
-  // --- CART MANAGEMENT ---
+  // --- SHOPPING CART MANAGEMENT ---
   getCart() {
     try {
       const stored = localStorage.getItem('belle_cart');
       if (stored) {
         const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed)) return parsed;
+        if (Array.isArray(parsed)) {
+          return parsed.map(it => ({
+            ...it,
+            img: normalizeImgUrl(it.img || it.image)
+          }));
+        }
       }
-      return [];
-    } catch(e) {
-      return [];
+    } catch (e) {
+      console.error('Error reading cart:', e);
     }
+    return [];
   },
 
   saveCart(cart) {
     try {
       localStorage.setItem('belle_cart', JSON.stringify(cart));
       this.updateCartBadge();
+      window.dispatchEvent(new CustomEvent('belle-cart-updated', { detail: cart }));
     } catch (e) {
       console.error('Error saving cart:', e);
     }
@@ -452,265 +746,233 @@ const BelleStore = {
 
   addToCart(item) {
     const cart = this.getCart();
-    const existing = cart.find(i => i.id === item.id && i.size === item.size);
-    if (existing) {
-      existing.quantity += (item.quantity || 1);
+    const existingIndex = cart.findIndex(it => 
+      it.id === item.id && 
+      it.size === item.size && 
+      it.color === item.color &&
+      Boolean(it.isBespoke) === Boolean(item.isBespoke)
+    );
+
+    if (existingIndex > -1) {
+      cart[existingIndex].quantity = (Number(cart[existingIndex].quantity) || 1) + (Number(item.quantity) || 1);
     } else {
       cart.push({
         id: item.id,
-        name: item.name,
         art: item.art || 'BL-000',
-        price: item.price,
-        quantity: item.quantity || 1,
-        size: item.size || 'M',
+        name: item.name,
+        price: Number(item.price) || 0,
+        img: normalizeImgUrl(item.img || item.image),
+        size: item.size || 'S',
         color: item.color || 'Молочний',
-        fabric: item.fabric || '100% льон',
-        image: item.image || ''
+        quantity: Math.max(1, Number(item.quantity) || 1),
+        isBespoke: Boolean(item.isBespoke)
       });
     }
+
     this.saveCart(cart);
-    this.showToast(`«${item.name}» додано до вашого кошика ✨`);
+    this.showToast(`«${escapeHTML(item.name)}» додано у ваш кошик! 🛍️`);
+  },
+
+  updateQuantity(index, newQty) {
+    const cart = this.getCart();
+    if (cart[index]) {
+      const qty = parseInt(newQty, 10);
+      if (qty <= 0) {
+        cart.splice(index, 1);
+      } else {
+        cart[index].quantity = Math.min(20, qty);
+      }
+      this.saveCart(cart);
+    }
   },
 
   removeFromCart(index) {
     const cart = this.getCart();
-    cart.splice(index, 1);
-    this.saveCart(cart);
+    if (cart[index]) {
+      const removed = cart.splice(index, 1);
+      this.saveCart(cart);
+      if (removed[0]) {
+        this.showToast(`«${escapeHTML(removed[0].name)}» видалено з кошика`);
+      }
+    }
   },
 
   clearCart() {
     localStorage.setItem('belle_cart', JSON.stringify([]));
     this.updateCartBadge();
+    window.dispatchEvent(new CustomEvent('belle-cart-updated', { detail: [] }));
   },
 
   updateCartBadge() {
     const cart = this.getCart();
-    const totalCount = cart.reduce((sum, item) => sum + item.quantity, 0);
-    const badges = document.querySelectorAll('.cart-badge-count');
+    const totalCount = cart.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
+    const badges = document.querySelectorAll('.cart-badge-count, #cart-badge');
     badges.forEach(b => {
       b.textContent = totalCount;
       b.style.display = totalCount > 0 ? 'flex' : 'none';
+      b.classList.toggle('hidden', totalCount === 0);
     });
   },
 
-  // --- TELEGRAM BOT CONFIG & NOTIFICATIONS ---
+  // --- ORDER SUBMISSION VIA SECURE BACKEND (/api/orders) ---
+  async submitOrder(orderData) {
+    const response = await fetch('/api/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(orderData)
+    });
+
+    const data = await response.json();
+    if (!response.ok || !data.success) {
+      throw new Error(data.error || 'Помилка оформлення замовлення');
+    }
+
+    return data;
+  },
+
+  async sendOrderNotification(orderData) {
+    return this.submitOrder(orderData);
+  },
+
+  async sendAbandonedOrderNotification(orderData, reason) {
+    // Optionally logged or handled on server without exposing secrets
+    console.warn('Abandoned or failed order attempt:', reason, orderData?.orderId);
+    return true;
+  },
+
+  // --- TELEGRAM CONFIG & DISPATCH (SERVER-PROXY) ---
   getTelegramConfig() {
     const DEFAULT_CONFIG = {
-      botToken: '8682075215:AAEfRKiuZo443UCaZop9I3CPrGGSKGM2IEs',
-      chatId: '-5522138796',
-      isActive: true
+      botToken: '',
+      chatId: '',
+      isActive: false
     };
     try {
       const stored = localStorage.getItem('belle_telegram_config');
       if (stored) {
-        const parsed = JSON.parse(stored);
-        if (parsed.botToken && parsed.chatId) return parsed;
+        return JSON.parse(stored);
       }
-      return DEFAULT_CONFIG;
-    } catch(e) {
-      return DEFAULT_CONFIG;
-    }
+    } catch(e) {}
+    return DEFAULT_CONFIG;
   },
 
-  saveTelegramConfig(config) {
-    localStorage.setItem('belle_telegram_config', JSON.stringify({
-      botToken: (config.botToken || '').trim(),
-      chatId: (config.chatId || '').trim(),
-      isActive: Boolean(config.botToken && config.chatId)
-    }));
-    this.showToast('Налаштування Telegram-бота збережено! 🤖');
+  async saveTelegramConfig(config) {
+    const token = this.getAdminToken();
+    if (token) {
+      try {
+        const res = await fetch('/api/admin/telegram-config', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(config)
+        });
+        const d = await res.json();
+        if (d.success) {
+          localStorage.setItem('belle_telegram_config', JSON.stringify({
+            isActive: d.isActive,
+            botToken: config.botToken ? '••••••••' : '',
+            chatId: config.chatId
+          }));
+          this.showToast('Налаштування Telegram-бота безпечно збережено на сервері! 🤖');
+          return true;
+        }
+      } catch(e) {}
+    }
+
+    localStorage.setItem('belle_telegram_config', JSON.stringify(config));
+    this.showToast('Налаштування збережено');
+    return true;
   },
 
-  async sendTelegramMessage(text) {
-    const config = this.getTelegramConfig();
-    if (!config.botToken || !config.chatId) {
-      console.warn('Telegram Bot Token or Chat ID not configured.');
-      return { success: false, error: 'Telegram не налаштовано' };
-    }
+  async sendTelegramTest() {
+    const token = this.getAdminToken();
+    if (!token) return { success: false, error: 'Потрібна авторизація' };
 
     try {
-      const url = `https://api.telegram.org/bot${config.botToken}/sendMessage`;
-      const response = await fetch(url, {
+      const res = await fetch('/api/admin/telegram-test', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          chat_id: config.chatId,
-          text: text,
-          parse_mode: 'HTML'
-        })
+        headers: { 'Authorization': `Bearer ${token}` }
       });
-      const data = await response.json();
-      return { success: data.ok, data: data };
+      return await res.json();
     } catch (err) {
-      console.error('Failed to send Telegram message:', err);
       return { success: false, error: err.message };
     }
   },
 
-  async sendOrderNotification(orderData) {
-    const items = orderData.items || [];
-    const itemsSum = items.reduce((sum, it) => sum + ((Number(it.price) || 0) * (Number(it.quantity) || 1)), 0);
-    const bespokeFee = orderData.isBespoke ? Math.round(itemsSum * 0.15) : 0;
-    const finalTotal = orderData.totalAmount ? Number(orderData.totalAmount) : (itemsSum + bespokeFee);
-
-    const itemsList = items.map((it, idx) => {
-      const p = Number(it.price) || 0;
-      const q = Number(it.quantity) || 1;
-      const rowTotal = p * q;
-      return `  <b>${idx + 1}. ${it.name}</b> (Арт. ${it.art || '—'})\n     • Розмір: <code>${it.size}</code> | Колір: ${it.color || 'Базовий'}\n     • Кількість: ${q} шт. × ${p.toLocaleString('uk-UA')} ₴ = <b>${rowTotal.toLocaleString('uk-UA')} ₴</b>`;
-    }).join('\n\n');
-
-    let deliveryText = orderData.deliveryMethod || 'Нова Пошта';
-    const locParts = [orderData.city, orderData.address].filter(Boolean);
-    if (locParts.length > 0) {
-      deliveryText += ` (${locParts.join(', ')})`;
-    }
-
-    const measurementsText = [
-      orderData.chest ? `ОГ: ${orderData.chest} см` : null,
-      orderData.waist ? `ОТ: ${orderData.waist} см` : null,
-      orderData.hips ? `ОБ: ${orderData.hips} см` : null,
-      orderData.height ? `Зріст: ${orderData.height} см` : null
-    ].filter(Boolean).join(' | ');
-
-    const message = `🛍 <b>НОВЕ ЗАМОВЛЕННЯ #${orderData.orderId || ('BA-' + Math.floor(1000 + Math.random() * 9000))}</b>\n` +
-      `━━━━━━━━━━━━━━━━━━━━\n` +
-      `👤 <b>Клієнт:</b> ${orderData.customerName || 'Гість'}\n` +
-      `📞 <b>Телефон:</b> <code>${orderData.phone || 'Не вказано'}</code>\n` +
-      `✉️ <b>Instagram:</b> ${orderData.customerInstagram || 'Не вказано'}\n` +
-      `💬 <b>Telegram:</b> ${orderData.customerTelegram || 'Не вказано'}\n` +
-      (measurementsText ? `📏 <b>Мірки клієнта:</b> ${measurementsText}\n` : '') +
-      `📍 <b>Доставка:</b> ${deliveryText}\n` +
-      `💳 <b>Оплата:</b> ${orderData.paymentMethod || 'Повна онлайн-оплата'}\n` +
-      `📝 <b>Коментар:</b> ${orderData.comment || 'Немає'}\n` +
-      `━━━━━━━━━━━━━━━━━━━━\n` +
-      `📦 <b>Склад замовлення:</b>\n\n${itemsList || '  (Порожній кошик)'}\n\n` +
-      (orderData.isBespoke ? `🧵 <i>Індивідуальний пошив за мірками (+15%): +${bespokeFee.toLocaleString('uk-UA')} ₴</i>\n` : '') +
-      `━━━━━━━━━━━━━━━━━━━━\n` +
-      `💰 <b>РАЗОМ ДО СПЛАТИ: ${finalTotal.toLocaleString('uk-UA')} ₴</b>\n` +
-      `🕒 <i>${new Date().toLocaleString('uk-UA', { timeZone: 'Europe/Kyiv' })}</i>`;
-
-    return await this.sendTelegramMessage(message);
-  },
-
-  async sendAbandonedOrderNotification(orderData, reason = 'Оплата не завершена / відхилена') {
-    const items = orderData.items || [];
-    const itemsSum = items.reduce((sum, it) => sum + ((Number(it.price) || 0) * (Number(it.quantity) || 1)), 0);
-    const finalTotal = orderData.totalAmount ? Number(orderData.totalAmount) : itemsSum;
-
-    const itemsList = items.map((it, idx) => {
-      const p = Number(it.price) || 0;
-      const q = Number(it.quantity) || 1;
-      return `  <b>${idx + 1}. ${it.name}</b> (${it.size}, ${it.color || 'Базовий'}) — ${q} шт.`;
-    }).join('\n');
-
-    let deliveryText = orderData.deliveryMethod || 'Нова Пошта';
-    const locParts = [orderData.city, orderData.address].filter(Boolean);
-    if (locParts.length > 0) {
-      deliveryText += ` (${locParts.join(', ')})`;
-    }
-
-    const measurementsText = [
-      orderData.chest ? `ОГ: ${orderData.chest} см` : null,
-      orderData.waist ? `ОТ: ${orderData.waist} см` : null,
-      orderData.hips ? `ОБ: ${orderData.hips} см` : null,
-      orderData.height ? `Зріст: ${orderData.height} см` : null
-    ].filter(Boolean).join(' | ');
-
-    const message = `⚠️ <b>НЕЗАВЕРШЕНЕ ЗАМОВЛЕННЯ (Потрібен дзвінок / зв'язок)</b>\n` +
-      `━━━━━━━━━━━━━━━━━━━━\n` +
-      `❗ <b>Статус:</b> ${reason}\n` +
-      `👤 <b>Клієнт:</b> ${orderData.customerName || 'Гість'}\n` +
-      `📞 <b>Телефон:</b> <code>${orderData.phone || 'Не вказано'}</code>\n` +
-      `✉️ <b>Instagram:</b> ${orderData.customerInstagram || 'Не вказано'}\n` +
-      `💬 <b>Telegram:</b> ${orderData.customerTelegram || 'Не вказано'}\n` +
-      (measurementsText ? `📏 <b>Мірки:</b> ${measurementsText}\n` : '') +
-      `📍 <b>Доставка:</b> ${deliveryText}\n` +
-      `💳 <b>Спроба оплати:</b> ${orderData.paymentMethod || 'Онлайн'}\n` +
-      `📝 <b>Коментар:</b> ${orderData.comment || 'Немає'}\n` +
-      `━━━━━━━━━━━━━━━━━━━━\n` +
-      `📦 <b>Товари в кошику:</b>\n${itemsList || '  (Порожній)'}\n\n` +
-      `💰 <b>Сума: ${finalTotal.toLocaleString('uk-UA')} ₴</b>\n` +
-      `🕒 <i>${new Date().toLocaleString('uk-UA', { timeZone: 'Europe/Kyiv' })}</i>\n` +
-      `👉 <i>Зв'яжіться з клієнтом для допомоги в оформленні або надання реквізитів!</i>`;
-
-    return await this.sendTelegramMessage(message);
-  },
-
-  // --- 2FA & AUTHENTICATION ---
-  generate2FACode() {
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = Date.now() + 5 * 60 * 1000; // 5 mins
-    const sessionData = { code, expiresAt };
-    sessionStorage.setItem('belle_2fa_pending', JSON.stringify(sessionData));
-    return code;
+  // --- SECURE SERVER-BACKED 2FA & AUTHENTICATION ---
+  getAdminToken() {
+    return sessionStorage.getItem('belle_admin_token') || '';
   },
 
   async initiateAdminLogin() {
-    const code = this.generate2FACode();
-    const config = this.getTelegramConfig();
-
-    const timeStr = new Date().toLocaleString('uk-UA', { timeZone: 'Europe/Kyiv' });
-    const message = `🔐 <b>Belle Atelier • Вхід в Адмін-панель</b>\n\n` +
-      `Одноразовий код підтвердження (2FA):\n` +
-      `👉 <code>${code}</code> 👈\n\n` +
-      `⏱ Код дійсний 5 хвилин.\n` +
-      `🕒 Час запиту: <i>${timeStr}</i>\n` +
-      `⚠️ Якщо це були не ви, проігноруйте повідомлення.`;
-
-    if (config.isActive) {
-      await this.sendTelegramMessage(message);
-    } else {
-      console.info(`[Demo Mode 2FA Code]: ${code} (Telegram bot not yet configured in admin)`);
+    try {
+      const res = await fetch('/api/admin/login/request', { method: 'POST' });
+      const data = await res.json();
+      return data;
+    } catch (err) {
+      return { success: false, error: 'Помилка підключення до сервера' };
     }
-
-    return { code, hasTelegram: config.isActive };
   },
 
-  verify2FACode(inputCode) {
+  async verify2FACode(inputCode) {
     try {
-      const raw = sessionStorage.getItem('belle_2fa_pending');
-      if (!raw) return { success: false, error: 'Код не знайдено або термін дії вичерпано. Запитайте новий.' };
-      const { code, expiresAt } = JSON.parse(raw);
-      if (Date.now() > expiresAt) {
-        sessionStorage.removeItem('belle_2fa_pending');
-        return { success: false, error: 'Термін дії коду (5 хв) закінчився. Запитайте новий.' };
-      }
-      if (inputCode.trim() === code) {
-        sessionStorage.removeItem('belle_2fa_pending');
-        // Set authenticated session
-        const authSession = {
-          authenticated: true,
-          timestamp: Date.now(),
-          token: 'auth_' + Math.random().toString(36).substring(2)
-        };
-        sessionStorage.setItem('belle_admin_session', JSON.stringify(authSession));
+      const res = await fetch('/api/admin/login/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: inputCode.trim() })
+      });
+      const data = await res.json();
+
+      if (res.ok && data.success && data.token) {
+        sessionStorage.setItem('belle_admin_token', data.token);
         return { success: true };
       } else {
-        return { success: false, error: 'Невірний код підтвердження.' };
+        return { success: false, error: data.error || 'Невірний код підтвердження' };
       }
-    } catch(e) {
-      return { success: false, error: 'Помилка перевірки.' };
+    } catch(err) {
+      return { success: false, error: 'Помилка верифікації коду' };
     }
+  },
+
+  async checkServerAuth() {
+    const token = this.getAdminToken();
+    if (!token) return false;
+
+    try {
+      const res = await fetch('/api/admin/check-auth', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (res.ok && data.authenticated) {
+        return true;
+      }
+    } catch(e) {}
+
+    sessionStorage.removeItem('belle_admin_token');
+    return false;
   },
 
   isAdminAuthenticated() {
-    try {
-      const raw = sessionStorage.getItem('belle_admin_session');
-      if (!raw) return false;
-      const session = JSON.parse(raw);
-      return Boolean(session && session.authenticated);
-    } catch(e) {
-      return false;
-    }
+    return Boolean(this.getAdminToken());
   },
 
-  logoutAdmin() {
-    sessionStorage.removeItem('belle_admin_session');
+  async logoutAdmin() {
+    const token = this.getAdminToken();
+    if (token) {
+      try {
+        await fetch('/api/admin/logout', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+      } catch(e) {}
+    }
+    sessionStorage.removeItem('belle_admin_token');
     window.location.href = '/';
   },
 
-  // --- 5-CLICK EASTER EGG LISTENER ---
+  // --- 5-CLICK EASTER EGG (Quick Admin Access) ---
   setupEasterEgg() {
     let clickCount = 0;
     let clickTimer = null;
@@ -719,13 +981,11 @@ const BelleStore = {
     const handleLogoClick = (e) => {
       e.preventDefault();
       e.stopPropagation();
-      
       clickCount++;
       clearTimeout(clickTimer);
       clearTimeout(navTimer);
 
       const target = e.currentTarget;
-      // Visual feedback pulse
       if (target) {
         target.style.transform = `scale(${1 + clickCount * 0.05})`;
         target.style.transition = 'transform 0.15s ease';
@@ -740,12 +1000,10 @@ const BelleStore = {
         return;
       }
 
-      // Reset count after 2.5 seconds of inactivity
       clickTimer = setTimeout(() => {
         clickCount = 0;
       }, 2500);
 
-      // If only 1 click and no further clicks within 400ms, navigate to home (normal behavior)
       navTimer = setTimeout(() => {
         if (clickCount === 1) {
           clickCount = 0;
@@ -756,15 +1014,10 @@ const BelleStore = {
       }, 400);
     };
 
-    // Attach to all logo avatars and header logo links
     const logoImgs = document.querySelectorAll('header img[alt*="Logo"], header .group img, .belle-logo-avatar');
     logoImgs.forEach(img => {
       img.style.cursor = 'pointer';
       img.addEventListener('click', handleLogoClick, { passive: false });
-      img.addEventListener('touchstart', (e) => {
-        // Handle mobile fast-tap
-        handleLogoClick(e);
-      }, { passive: false });
     });
   },
 
@@ -780,8 +1033,8 @@ const BelleStore = {
       modal.id = 'belle-admin-auth-modal';
       modal.className = 'fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 transition-all duration-300';
       modal.innerHTML = `
-        <div class="bg-[#FBF9F4] text-[#1B1C19] w-full max-w-md border border-[#E4E2DD] shadow-2xl p-6 sm:p-8 relative rounded-xs transform transition-transform">
-          <button onclick="document.getElementById('belle-admin-auth-modal').remove()" class="absolute top-4 right-4 text-[#887273] hover:text-[#5E1020] p-1">
+        <div class="bg-[#FBF9F4] text-[#1B1C19] w-full max-w-md border border-[#E4E2DD] shadow-2xl p-6 sm:p-8 relative rounded-xs">
+          <button onclick="document.getElementById('belle-admin-auth-modal').remove()" class="absolute top-4 right-4 text-[#887273] hover:text-[#5E1020] p-1" aria-label="Закрити">
             <span class="material-symbols-outlined text-[20px]">close</span>
           </button>
           
@@ -791,24 +1044,24 @@ const BelleStore = {
             </div>
             <div>
               <h3 class="font-headline text-xl text-[#5E1020] font-semibold">Belle Atelier • Панель</h3>
-              <p class="text-[11px] text-[#725B38] tracking-widest uppercase font-medium">Двофакторна авторизація 2FA</p>
+              <p class="text-[11px] text-[#725B38] tracking-widest uppercase font-medium">Серверна автентифікація 2FA</p>
             </div>
           </div>
 
           <div id="auth-step-request" class="space-y-4">
             <p class="text-xs text-[#554243] leading-relaxed">
-              Вхід у панель адміністратора захищено одноразовим кодом, який надсилається у ваш робочий <b>Telegram-чат</b>.
+              Вхід у панель адміністратора захищено одноразовим 6-значним кодом, який надсилається у ваш робочий <b>Telegram-чат</b>.
             </p>
             <div id="auth-status-msg" class="text-xs p-2.5 bg-[#F0EEE9] rounded border border-[#E4E2DD] hidden"></div>
             <button id="btn-request-2fa" onclick="BelleStore.handleSend2FACode()" class="w-full bg-[#5E1020] hover:bg-[#2F2F2E] text-white py-3 font-semibold text-xs tracking-widest uppercase transition-colors flex items-center justify-center gap-2">
               <span class="material-symbols-outlined text-[18px]">send</span>
-              <span>Надіслати код у Telegram</span>
+              <span>Надіслати код 2FA</span>
             </button>
           </div>
 
           <div id="auth-step-verify" class="space-y-4 hidden">
             <p class="text-xs text-[#554243]">
-              Введіть 6-значний код, отриманий у Telegram:
+              Введіть 6-значний код:
             </p>
             <div>
               <input type="text" id="admin-2fa-input" maxlength="6" placeholder="000000" class="w-full text-center tracking-[0.4em] font-headline text-2xl font-bold py-2.5 bg-white border border-[#887273] focus:border-[#5E1020] focus:outline-none" />
@@ -836,53 +1089,70 @@ const BelleStore = {
     if (btn) btn.disabled = true;
     if (statusMsg) {
       statusMsg.classList.remove('hidden');
-      statusMsg.innerHTML = 'Генеруємо код та відправляємо в Telegram...';
+      statusMsg.textContent = 'Генеруємо код та надсилаємо...';
     }
 
     const res = await this.initiateAdminLogin();
-    
+    if (btn) btn.disabled = false;
+
+    if (!res.success) {
+      if (statusMsg) {
+        statusMsg.classList.remove('hidden');
+        statusMsg.textContent = res.error || 'Помилка генерації коду';
+      }
+      return;
+    }
+
     document.getElementById('auth-step-request').classList.add('hidden');
     document.getElementById('auth-step-verify').classList.remove('hidden');
-    
+
     const input = document.getElementById('admin-2fa-input');
     if (input) {
       input.value = '';
       input.focus();
     }
 
-    if (!res.hasTelegram) {
+    if (res.code) {
       const errBox = document.getElementById('auth-verify-error');
       if (errBox) {
         errBox.classList.remove('hidden');
         errBox.className = 'text-xs text-[#725B38] bg-[#F5F3EE] p-2.5 border border-[#E4E2DD] rounded';
-        errBox.innerHTML = `ℹ️ Telegram-бот ще не підключено в налаштуваннях. Ваш код для першого входу: <strong class="text-[#5E1020] text-sm">${res.code}</strong>`;
+        errBox.innerHTML = `ℹ️ Демонстраційний код первинного входу: <strong class="text-[#5E1020] text-sm">${escapeHTML(res.code)}</strong>`;
       }
     }
   },
 
-  handleVerify2FACode() {
+  async handleVerify2FACode() {
     const input = document.getElementById('admin-2fa-input');
     const errBox = document.getElementById('auth-verify-error');
     if (!input) return;
 
     const val = input.value.trim();
-    const result = this.verify2FACode(val);
+    if (!val || val.length !== 6) {
+      if (errBox) {
+        errBox.classList.remove('hidden');
+        errBox.className = 'text-xs text-red-600 font-medium';
+        errBox.textContent = 'Введіть 6-значний код';
+      }
+      return;
+    }
 
+    const result = await this.verify2FACode(val);
     if (result.success) {
       this.showToast('Авторизація успішна! Ласкаво просимо ✨');
       setTimeout(() => {
         window.location.href = '/admin.html';
-      }, 500);
+      }, 300);
     } else {
       if (errBox) {
         errBox.classList.remove('hidden');
         errBox.className = 'text-xs text-red-600 font-medium';
-        errBox.textContent = result.error;
+        errBox.textContent = result.error || 'Невірний код';
       }
     }
   },
 
-  // --- UNIVERSAL WISHLIST STORE & MODAL ---
+  // --- UNIVERSAL WISHLIST ---
   getWishlist() {
     try {
       const stored = localStorage.getItem('belle_wishlist');
@@ -890,9 +1160,7 @@ const BelleStore = {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed)) return parsed;
       }
-    } catch(e) {
-      console.error('Error reading wishlist:', e);
-    }
+    } catch(e) {}
     return [];
   },
 
@@ -901,9 +1169,7 @@ const BelleStore = {
       localStorage.setItem('belle_wishlist', JSON.stringify(list));
       this.updateWishlistBadges();
       window.dispatchEvent(new CustomEvent('belle-wishlist-updated', { detail: list }));
-    } catch(e) {
-      console.error('Error saving wishlist:', e);
-    }
+    } catch(e) {}
   },
 
   isWishlisted(productNameOrId) {
@@ -918,25 +1184,24 @@ const BelleStore = {
 
   toggleWishlist(product) {
     let list = this.getWishlist();
-    let identifier = '';
     let productObj = null;
 
     if (typeof product === 'string') {
-      identifier = product.trim();
+      const identifier = product.trim();
       const allProds = this.getProducts ? this.getProducts() : [];
       const found = allProds.find(p => p.id === identifier || p.name === identifier);
       if (found) {
         productObj = {
           id: found.id,
           name: found.name,
-          img: found.img || 'images/berehynia_dress_1789843600634.jpg',
+          img: normalizeImgUrl(found.img || (found.images && found.images[0])),
           price: found.price || 0
         };
       } else {
         productObj = {
           id: identifier,
           name: identifier,
-          img: 'images/berehynia_dress_1789843600634.jpg',
+          img: '/images/berehynia_dress_1789843600634.jpg',
           price: 0
         };
       }
@@ -944,10 +1209,9 @@ const BelleStore = {
       productObj = {
         id: product.id || '',
         name: product.name || '',
-        img: product.img || product.image || 'images/berehynia_dress_1789843600634.jpg',
+        img: normalizeImgUrl(product.img || product.image || (product.images && product.images[0])),
         price: Number(product.price) || 0
       };
-      identifier = productObj.id || productObj.name;
     }
 
     if (!productObj || !productObj.name) return false;
@@ -960,10 +1224,10 @@ const BelleStore = {
     let isAdded = false;
     if (idx > -1) {
       const removed = list.splice(idx, 1)[0];
-      this.showToast(`«${removed.name}» видалено з обраного`);
+      this.showToast(`«${escapeHTML(removed.name)}» видалено з обраного`);
     } else {
       list.push(productObj);
-      this.showToast(`«${productObj.name}» додано до обраного ❤️`);
+      this.showToast(`«${escapeHTML(productObj.name)}» додано до обраного ❤️`);
       isAdded = true;
     }
 
@@ -986,7 +1250,8 @@ const BelleStore = {
     const count = list.length;
     const badges = document.querySelectorAll('.wishlist-badge-count');
     badges.forEach(b => {
-      b.style.display = count > 0 ? 'block' : 'none';
+      b.textContent = count;
+      b.style.display = count > 0 ? 'flex' : 'none';
       b.classList.toggle('hidden', count === 0);
     });
 
@@ -1065,19 +1330,21 @@ const BelleStore = {
     } else {
       container.innerHTML = list.map((it) => {
         const prodId = it.id || '';
-        const prodLink = prodId ? `product.html?id=${prodId}` : 'catalog.html';
+        const prodLink = prodId ? `product.html?id=${encodeURIComponent(prodId)}` : 'catalog.html';
         const priceText = it.price ? `${Number(it.price).toLocaleString('uk-UA')} ₴` : '';
+        const safeName = escapeHTML(it.name);
+        const safeImg = escapeHTML(normalizeImgUrl(it.img));
 
         return `
           <div class="flex items-center justify-between gap-3 p-2.5 bg-surface-container-low rounded-xs border border-surface-container-high">
             <a href="${prodLink}" onclick="BelleStore.closeWishlistModal()" class="flex items-center gap-3 flex-1 min-w-0 group">
-              <img src="${it.img || 'images/berehynia_dress_1789843600634.jpg'}" class="w-12 h-14 object-cover rounded-xs shrink-0" alt="${it.name}">
+              <img src="${safeImg}" class="w-12 h-14 object-cover rounded-xs shrink-0" alt="${safeName}">
               <div class="min-w-0">
-                <h4 class="font-headline text-xs font-semibold group-hover:text-primary transition-colors truncate">${it.name}</h4>
-                <span class="text-xs font-bold text-primary block mt-0.5">${priceText}</span>
+                <h4 class="font-headline text-xs font-semibold group-hover:text-primary transition-colors truncate">${safeName}</h4>
+                <span class="text-xs font-bold text-primary block mt-0.5">${escapeHTML(priceText)}</span>
               </div>
             </a>
-            <button onclick="BelleStore.toggleWishlist('${it.name.replace(/'/g, "\\'")}')" class="text-outline hover:text-red-600 p-1.5 shrink-0 transition-colors" title="Видалити з обраного">
+            <button onclick="BelleStore.toggleWishlist('${escapeHTML(it.name).replace(/'/g, "\\'")}')" class="text-outline hover:text-red-600 p-1.5 shrink-0 transition-colors" title="Видалити з обраного">
               <span class="material-symbols-outlined text-[18px]">close</span>
             </button>
           </div>
@@ -1094,7 +1361,7 @@ const BelleStore = {
       toast.className = 'fixed bottom-6 right-6 z-[200] bg-[#5E1020] text-white px-6 py-3 rounded shadow-2xl font-medium tracking-wide flex items-center gap-3 transition-all duration-300 transform translate-y-20 opacity-0';
       document.body.appendChild(toast);
     }
-    toast.innerHTML = `<span class="material-symbols-outlined text-[20px]">check_circle</span><span>${msg}</span>`;
+    toast.innerHTML = `<span class="material-symbols-outlined text-[20px]">check_circle</span><span>${escapeHTML(msg)}</span>`;
     toast.classList.remove('translate-y-20', 'opacity-0');
     setTimeout(() => {
       toast.classList.add('translate-y-20', 'opacity-0');
@@ -1111,6 +1378,7 @@ window.closeWishlistModal = function() {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
+  BelleStore.initStore();
   BelleStore.updateCartBadge();
   BelleStore.updateWishlistBadges();
   BelleStore.setupEasterEgg();

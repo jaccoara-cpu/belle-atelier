@@ -4,10 +4,12 @@
     "art": "BL-402",
     "name": "Сукня «Берегиня»",
     "category": "dresses",
+    "cat": "women",
     "category_name": "Плаття та сукні",
     "price": 4800,
-    "original_price": null,
-    "discount": null,
+    "oldPrice": null,
+    "sale": null,
+    "inStock": true,
     "fabric": "100% пом'якшений льон",
     "badge": "Ручна вишивка",
     "sub_badge": "Лімітована серія",
@@ -34,11 +36,12 @@
       "XL",
       "Індивідуальні мірки"
     ],
+    "img": "/images/berehynia_dress_1789843600634.jpg",
     "images": [
-      "images/berehynia_dress_1789843600634.jpg",
-      "images/berehynia_detail_1789843714868.jpg",
-      "images/berehynia_back_1789843731157.jpg",
-      "images/berehynia_motion_1789843747467.jpg"
+      "/images/berehynia_dress_1789843600634.jpg",
+      "/images/berehynia_detail_1789843714868.jpg",
+      "/images/berehynia_back_1789843731157.jpg",
+      "/images/berehynia_motion_1789843747467.jpg"
     ],
     "features": [
       "100% пом'якшений натуральний льон вищого ґатунку",
@@ -52,10 +55,12 @@
     "art": "BL-108",
     "name": "Сорочка «Оберіг»",
     "category": "vyshyvanky",
+    "cat": "men",
     "category_name": "Вишиванки",
     "price": 3950,
-    "original_price": 4800,
-    "discount": "-22%",
+    "oldPrice": 4800,
+    "sale": "SALE −22%",
+    "inStock": true,
     "fabric": "Органічний преміум-льон",
     "badge": "SALE −22%",
     "sub_badge": "Бестселер",
@@ -77,8 +82,10 @@
       "L",
       "XL"
     ],
+    "img": "/images/oberig_shirt_1789843615744.jpg",
     "images": [
-      "images/oberig_shirt_1789843615744.jpg"
+      "/images/oberig_shirt_1789843615744.jpg",
+      "/images/berehynia_back_1789843731157.jpg"
     ],
     "features": [
       "Приємний до тіла натуральний дихаючий льон",
@@ -91,10 +98,12 @@
     "art": "BL-512",
     "name": "Жакет «Гетьманський»",
     "category": "jackets",
+    "cat": "women",
     "category_name": "Жакети та пальта",
     "price": 5400,
-    "original_price": null,
-    "discount": null,
+    "oldPrice": null,
+    "sale": null,
+    "inStock": true,
     "fabric": "Шляхетна шерсть та оксамит",
     "badge": "Ательє Кутюр",
     "sub_badge": "Ексклюзив салону",
@@ -114,24 +123,31 @@
       "S",
       "M"
     ],
+    "img": "/images/uploads/prod_1790173202601_4a13e7f0.jpg",
     "images": [
-      "images/hetman_jacket_1789843629464.jpg"
+      "/images/uploads/prod_1790173202601_4a13e7f0.jpg",
+      "/images/uploads/prod_1790173202603_890df299.jpg"
     ],
     "features": [
       "Преміальна тонка вовна з натуральним оксамитом",
       "Приталений архітектурний силует",
       "Підкладка з натурального шовку"
-    ]
+    ],
+    "isArchived": false,
+    "variants": [],
+    "updatedAt": 1790173205843
   },
   {
     "id": "mavka",
     "art": "BL-304",
     "name": "Сукня «Мавка»",
     "category": "dresses",
+    "cat": "women",
     "category_name": "Плаття та сукні",
     "price": 4500,
-    "original_price": 5800,
-    "discount": "-22%",
+    "oldPrice": 5800,
+    "sale": "SALE −22%",
+    "inStock": true,
     "fabric": "Шовк та льон",
     "badge": "Ручна вишивка",
     "sub_badge": "Лімітована серія",
@@ -151,8 +167,10 @@
       "M",
       "L"
     ],
+    "img": "/images/mavka_dress_1789843642965.jpg",
     "images": [
-      "images/mavka_dress_1789843642965.jpg"
+      "/images/mavka_dress_1789843642965.jpg",
+      "/images/berehynia_motion_1789843747467.jpg"
     ],
     "features": [
       "Поєднання пом'якшеного льону та натурального шовку",
@@ -161,14 +179,16 @@
     ]
   },
   {
-    "id": "podillya-corset",
+    "id": "podillya",
     "art": "BL-210",
     "name": "Корсет «Поділля»",
     "category": "accessories",
+    "cat": "accessories",
     "category_name": "Корсети & Крайки",
     "price": 3900,
-    "original_price": null,
-    "discount": null,
+    "oldPrice": null,
+    "sale": null,
+    "inStock": true,
     "fabric": "Оксамит & Металеві кісточки",
     "badge": "Скульптурний крій",
     "sub_badge": "Авторська серія",
@@ -189,8 +209,10 @@
       "M",
       "L"
     ],
+    "img": "/images/podillya_corset_1789843684134.jpg",
     "images": [
-      "images/podillya_corset_1789843684134.jpg"
+      "/images/podillya_corset_1789843684134.jpg",
+      "/images/berehynia_detail_1789843714868.jpg"
     ],
     "features": [
       "Анатомічні металеві кісточки з німецької сталі",
@@ -199,14 +221,16 @@
     ]
   },
   {
-    "id": "dzherelo-pair",
+    "id": "dzherelo",
     "art": "BL-770",
     "name": "Парний сет «Джерело Життя»",
     "category": "sets",
+    "cat": "sets",
     "category_name": "Парні комплекти",
     "price": 8900,
-    "original_price": null,
-    "discount": null,
+    "oldPrice": null,
+    "sale": null,
+    "inStock": true,
     "fabric": "100% пом'якшений льон",
     "badge": "Весільний сет",
     "sub_badge": "Парний образ",
@@ -222,8 +246,10 @@
       "M / L",
       "Індивідуальні мірки"
     ],
+    "img": "/images/dzherelo_set_1789843655280.jpg",
     "images": [
-      "images/dzherelo_set_1789843655280.jpg"
+      "/images/dzherelo_set_1789843655280.jpg",
+      "/images/marusya_shirt.jpg"
     ],
     "features": [
       "Ідеальна колористична та орнаментальна узгодженість",
@@ -232,14 +258,16 @@
     ]
   },
   {
-    "id": "zorya-tunic",
+    "id": "zorya",
     "art": "BL-215",
     "name": "Льонна туніка «Зоря»",
     "category": "vyshyvanky",
+    "cat": "women",
     "category_name": "Вишиванки",
     "price": 3600,
-    "original_price": null,
-    "discount": null,
+    "oldPrice": null,
+    "sale": null,
+    "inStock": true,
     "fabric": "Пом'якшений варений льон",
     "badge": "Літній реліз",
     "sub_badge": "Легкий крій",
@@ -257,8 +285,10 @@
     "sizes": [
       "One Size (XS-L)"
     ],
+    "img": "/images/zorya_tunic_1789843670230.jpg",
     "images": [
-      "images/zorya_tunic_1789843670230.jpg"
+      "/images/zorya_tunic_1789843670230.jpg",
+      "/images/berehynia_back_1789843731157.jpg"
     ],
     "features": [
       "Вільний розслаблений силует оверсайз",

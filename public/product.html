@@ -25,7 +25,7 @@
       </a>
       <button onclick="openWishlistModal()" class="relative p-2 text-on-surface hover:text-primary transition-colors" aria-label="Обране">
         <span class="material-symbols-outlined text-[22px]" id="header-wishlist-icon">favorite</span>
-        <span class="wishlist-badge-count absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-600 rounded-full ring-2 ring-white hidden" style="display: none;"></span>
+        <span class="wishlist-badge-count absolute top-0 right-0 w-4 h-4 bg-red-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center ring-1.5 ring-white hidden" style="display: none;">0</span>
       </button>
       <a href="cart.html" class="relative p-2 text-on-surface hover:text-primary transition-colors flex items-center" aria-label="Кошик">
         <span class="material-symbols-outlined text-[24px]">shopping_bag</span>
@@ -111,6 +111,11 @@
           <!-- Carousel Dots Navigation -->
           <div class="flex items-center justify-center gap-2 mt-3" id="gallery-dots-container">
             <!-- Injected via JavaScript -->
+          </div>
+
+          <!-- Clickable Multi-Photo Thumbnails Strip -->
+          <div class="flex items-center justify-center gap-2 sm:gap-2.5 mt-3.5 overflow-x-auto py-1 px-1 max-w-full" id="gallery-thumbnails-container">
+            <!-- Injected via JavaScript if > 1 image -->
           </div>
         </div>
 
@@ -401,30 +406,17 @@
     galleryImages = [];
     if (Array.isArray(activeProductData.images) && activeProductData.images.length > 0) {
       activeProductData.images.forEach(imgUrl => {
-        if (imgUrl && !galleryImages.includes(imgUrl)) {
-          galleryImages.push(imgUrl);
+        const clean = normalizeImgUrl(imgUrl);
+        if (clean && !galleryImages.includes(clean)) {
+          galleryImages.push(clean);
         }
       });
     } else if (activeProductData.img) {
-      galleryImages.push(activeProductData.img);
-    }
-    
-    // Only for default demo beregynya if untouched
-    if (activeProductData.id === 'beregynya' && activeProductData.img === '/images/berehynia_dress_1789843600634.jpg' && (!activeProductData.images || activeProductData.images.length <= 1)) {
-      const extraBeregynyaShots = [
-        '/images/berehynia_detail_1789843714868.jpg',
-        '/images/berehynia_back_1789843731157.jpg',
-        '/images/berehynia_motion_1789843747467.jpg'
-      ];
-      extraBeregynyaShots.forEach(imgUrl => {
-        if (!galleryImages.includes(imgUrl)) {
-          galleryImages.push(imgUrl);
-        }
-      });
+      galleryImages.push(normalizeImgUrl(activeProductData.img));
     }
 
     if (galleryImages.length === 0) {
-      galleryImages.push(activeProductData.img || '/images/berehynia_dress_1789843600634.jpg');
+      galleryImages.push('/images/berehynia_dress_1789843600634.jpg');
     }
 
     currentSlideIndex = 0;
@@ -491,17 +483,19 @@
 
     if (mainImg) {
       mainImg.style.opacity = '0.4';
-      mainImg.src = galleryImages[currentSlideIndex];
+      mainImg.src = normalizeImgUrl(galleryImages[currentSlideIndex]);
       setTimeout(() => {
         mainImg.style.opacity = '1';
       }, 150);
     }
 
-    // Hide arrows if only 1 image
+    // Hide arrows and thumbnails if only 1 image
+    const thumbContainer = document.getElementById('gallery-thumbnails-container');
     if (galleryImages.length <= 1) {
       if (prevBtn) prevBtn.style.display = 'none';
       if (nextBtn) nextBtn.style.display = 'none';
       if (dotsContainer) dotsContainer.innerHTML = '';
+      if (thumbContainer) thumbContainer.innerHTML = '';
       return;
     } else {
       if (prevBtn) prevBtn.style.display = 'flex';
@@ -513,6 +507,19 @@
       dotsContainer.innerHTML = galleryImages.map((_, idx) => `
         <button type="button" onclick="goToSlide(${idx})" aria-label="Перейти до фото ${idx + 1}" class="h-2 transition-all rounded-full ${idx === currentSlideIndex ? 'w-6 bg-primary' : 'w-2 bg-outline/40 hover:bg-outline'}"></button>
       `).join('');
+    }
+
+    // Render clickable thumbnails
+    if (thumbContainer) {
+      thumbContainer.innerHTML = galleryImages.map((imgUrl, idx) => {
+        const isCurrent = idx === currentSlideIndex;
+        const safeImg = escapeHTML(normalizeImgUrl(imgUrl));
+        return `
+          <button type="button" onclick="goToSlide(${idx})" class="w-14 h-18 sm:w-16 sm:h-20 aspect-[3/4] rounded-xs overflow-hidden border-2 transition-all shrink-0 cursor-pointer ${isCurrent ? 'border-primary ring-2 ring-primary/30 shadow-sm scale-102' : 'border-surface-container-high opacity-70 hover:opacity-100 hover:border-outline'}" aria-label="Переглянути фото ${idx + 1}">
+            <img src="${safeImg}" class="w-full h-full object-cover" alt="Фото ${idx + 1}" />
+          </button>
+        `;
+      }).join('');
     }
   }
 
@@ -580,21 +587,22 @@
 
     grid.innerHTML = colors.map(color => {
       const isSelected = color === selectedColor;
+      const safeColor = escapeHTML(color);
       return `
-        <button type="button" onclick="selectProductColor('${color}', this)" class="color-btn py-2 px-3.5 text-center text-xs font-semibold uppercase tracking-wider transition-all rounded-xs border flex items-center gap-1.5 ${
+        <button type="button" data-color="${safeColor}" onclick="selectProductColor(this.getAttribute('data-color'), this)" class="color-btn py-2 px-3.5 text-center text-xs font-semibold uppercase tracking-wider transition-all rounded-xs border flex items-center gap-1.5 ${
           isSelected 
             ? 'bg-primary text-white border-primary shadow-xs font-bold' 
             : 'bg-surface text-on-surface border-surface-container-high hover:border-primary'
         }">
           <span class="w-2.5 h-2.5 rounded-full border border-black/20 ${getColorDotClass(color)}"></span>
-          <span>${color}</span>
+          <span>${safeColor}</span>
         </button>
       `;
     }).join('');
   }
 
   function getColorDotClass(color) {
-    const c = color.toLowerCase();
+    const c = String(color || '').toLowerCase();
     if (c.includes('біл') || c.includes('молоч')) return 'bg-[#fdfbf7]';
     if (c.includes('чорн') || c.includes('графіт')) return 'bg-[#222222]';
     if (c.includes('бордо') || c.includes('вин')) return 'bg-[#722F37]';
@@ -628,7 +636,7 @@
         v.img && v.color && v.color.trim().toLowerCase() === color.trim().toLowerCase()
       );
       if (match && match.img) {
-        variantPhoto = match.img;
+        variantPhoto = normalizeImgUrl(match.img);
       }
     }
 
@@ -663,13 +671,14 @@
 
     grid.innerHTML = sizes.map(size => {
       const isSelected = size === selectedSize;
+      const safeSize = escapeHTML(size);
       return `
-        <button type="button" onclick="selectProductSize('${size}', this)" class="size-btn py-2.5 px-4 text-center text-xs font-semibold uppercase tracking-wider transition-all rounded-xs border ${
+        <button type="button" data-size="${safeSize}" onclick="selectProductSize(this.getAttribute('data-size'), this)" class="size-btn py-2.5 px-4 text-center text-xs font-semibold uppercase tracking-wider transition-all rounded-xs border ${
           isSelected 
             ? 'bg-primary text-white border-primary shadow-xs font-bold' 
             : 'bg-surface text-on-surface border-surface-container-high hover:border-primary'
         }">
-          ${size}
+          ${safeSize}
         </button>
       `;
     }).join('');
@@ -791,7 +800,7 @@
       size: selectedSize,
       color: selectedColor,
       fabric: activeProductData ? activeProductData.fabric : "100% пом'якшений льон",
-      image: galleryImages[currentSlideIndex] || galleryImages[0] || (activeProductData ? activeProductData.img : '/images/berehynia_dress_1789843600634.jpg')
+      image: galleryImages[currentSlideIndex] || galleryImages[0] || (activeProductData ? normalizeImgUrl(activeProductData.img) : '/images/berehynia_dress_1789843600634.jpg')
     });
 
     const originalHtml = btn.innerHTML;
@@ -815,25 +824,33 @@
     const curId = activeProductData ? activeProductData.id : '';
     const otherProducts = allProducts.filter(p => p.id !== curId).slice(0, 4);
 
-    container.innerHTML = otherProducts.map(p => `
+    container.innerHTML = otherProducts.map(p => {
+      const safeId = encodeURIComponent(p.id);
+      const safeName = escapeHTML(p.name);
+      const safeImg = escapeHTML(normalizeImgUrl(p.img || (p.images && p.images[0]) || '/images/berehynia_dress_1789843600634.jpg'));
+      const safeSale = p.sale ? escapeHTML(p.sale) : '';
+      const formattedPrice = Number(p.price || 0).toLocaleString('uk-UA');
+
+      return `
       <article class="group flex flex-col bg-surface-container-lowest transition-all duration-300 hover:shadow-md border border-surface-container-high/70 hover:border-primary/40 rounded-xs overflow-hidden">
         <div class="relative aspect-[3/4] w-full overflow-hidden bg-surface-container">
-          <a href="product.html?id=${p.id}" class="block w-full h-full">
-            <img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" alt="${p.name}" src="${p.img}"/>
+          <a href="product.html?id=${safeId}" class="block w-full h-full">
+            <img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" alt="${safeName}" src="${safeImg}"/>
           </a>
-          ${p.sale ? `<span class="absolute top-2 left-2 bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-xs uppercase tracking-wider">${p.sale}</span>` : ''}
+          ${safeSale ? `<span class="absolute top-2 left-2 bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-xs uppercase tracking-wider">${safeSale}</span>` : ''}
         </div>
         <div class="flex flex-col flex-1 justify-between p-3">
           <h3 class="font-headline text-sm sm:text-base font-semibold text-on-surface group-hover:text-primary transition-colors leading-snug line-clamp-2">
-            <a href="product.html?id=${p.id}">${p.name}</a>
+            <a href="product.html?id=${safeId}">${safeName}</a>
           </h3>
           <div class="mt-2 flex items-baseline justify-between pt-1 border-t border-surface-container-high/40">
-            <span class="font-headline text-sm sm:text-base font-bold text-primary">${p.price.toLocaleString('uk-UA')} ₴</span>
+            <span class="font-headline text-sm sm:text-base font-bold text-primary">${formattedPrice} ₴</span>
             <span class="text-[10px] text-outline font-medium uppercase">${p.inStock ? 'В наявності' : 'Під замовлення'}</span>
           </div>
         </div>
       </article>
-    `).join('');
+    `;
+    }).join('');
   }
 
   // --- SIZE GUIDE MODAL (PHOTO-BASED) ---
@@ -852,11 +869,14 @@
       return;
     }
 
-    container.innerHTML = images.map((imgUrl, idx) => `
+    container.innerHTML = images.map((imgUrl, idx) => {
+      const safeSrc = escapeHTML(normalizeImgUrl(imgUrl));
+      return `
       <div class="w-full border border-surface-container-high rounded-xs overflow-hidden bg-white shadow-xs">
-        <img src="${imgUrl}" alt="Розмірна таблиця ${idx + 1}" class="w-full h-auto object-contain" />
+        <img src="${safeSrc}" alt="Розмірна таблиця ${idx + 1}" class="w-full h-auto object-contain" />
       </div>
-    `).join('');
+      `;
+    }).join('');
   }
 
   function openSizeModal() {
@@ -918,7 +938,7 @@
 
     if (type === 'about') {
       const rawAbout = texts.about_text || 'Belle Atelier створює сучасний український одяг із душею.';
-      const paragraphs = rawAbout.split('\n').filter(p => p.trim()).map(p => `<p class="leading-relaxed">${p.trim()}</p>`).join('');
+      const paragraphs = rawAbout.split('\n').filter(p => p.trim()).map(p => `<p class="leading-relaxed">${escapeHTML(p.trim())}</p>`).join('');
       content.innerHTML = `
         <div class="flex items-center gap-2 text-primary mb-3">
           <span class="material-symbols-outlined text-2xl">auto_awesome</span>
@@ -930,7 +950,7 @@
       `;
     } else if (type === 'offer') {
       const rawOffer = texts.offer_text || 'Текст публічного договору оферти оновлюється.';
-      const paragraphs = rawOffer.split('\n').filter(p => p.trim()).map(p => `<p class="leading-relaxed">${p.trim()}</p>`).join('');
+      const paragraphs = rawOffer.split('\n').filter(p => p.trim()).map(p => `<p class="leading-relaxed">${escapeHTML(p.trim())}</p>`).join('');
       content.innerHTML = `
         <div class="flex items-center gap-2 text-primary mb-3">
           <span class="material-symbols-outlined text-2xl">description</span>
@@ -942,7 +962,7 @@
       `;
     } else if (type === 'privacy') {
       const rawPrivacy = texts.privacy_text || 'Текст політики конфіденційності оновлюється.';
-      const paragraphs = rawPrivacy.split('\n').filter(p => p.trim()).map(p => `<p class="leading-relaxed">${p.trim()}</p>`).join('');
+      const paragraphs = rawPrivacy.split('\n').filter(p => p.trim()).map(p => `<p class="leading-relaxed">${escapeHTML(p.trim())}</p>`).join('');
       content.innerHTML = `
         <div class="flex items-center gap-2 text-primary mb-3">
           <span class="material-symbols-outlined text-2xl">shield</span>
@@ -964,6 +984,8 @@
           <p class="text-xs text-outline py-8 text-center">Галерея відгуків оновлюється нашими клієнтками.</p>
         `;
       } else {
+        const safeReviewImg = escapeHTML(normalizeImgUrl(reviews[0].img));
+        const safeReviewCap = escapeHTML(reviews[0].caption || 'Фото відгуку клієнтки');
         content.innerHTML = `
           <div class="flex items-center justify-between mb-4">
             <div class="flex items-center gap-2 text-primary">
@@ -973,7 +995,7 @@
           </div>
           <div class="relative bg-surface-container-low border border-surface-container-high rounded-xs overflow-hidden">
             <div class="aspect-[4/5] sm:aspect-[3/4] max-h-[55vh] flex items-center justify-center p-2 bg-black/5">
-              <img id="review-modal-img" src="${reviews[0].img}" alt="Відгук" class="max-h-full max-w-full object-contain mx-auto transition-all" />
+              <img id="review-modal-img" src="${safeReviewImg}" alt="Відгук" class="max-h-full max-w-full object-contain mx-auto transition-all" />
             </div>
             ${reviews.length > 1 ? `
               <button onclick="prevReviewSlide()" class="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/90 shadow text-primary flex items-center justify-center hover:bg-white">
@@ -984,7 +1006,7 @@
               </button>
             ` : ''}
           </div>
-          <p id="review-modal-caption" class="text-xs text-center text-on-surface-variant font-medium mt-3">${reviews[0].caption || 'Фото відгуку клієнтки'}</p>
+          <p id="review-modal-caption" class="text-xs text-center text-on-surface-variant font-medium mt-3">${safeReviewCap}</p>
           <div id="review-dots-container" class="flex justify-center gap-1.5 mt-2">
             ${reviews.map((_, i) => `<span class="w-2 h-2 rounded-full ${i === 0 ? 'bg-primary' : 'bg-outline/30'}"></span>`).join('')}
           </div>
@@ -992,7 +1014,7 @@
       }
     } else if (type === 'rules') {
       const rawRules = texts.rules_text || '';
-      const paragraphs = rawRules.split('\n').filter(p => p.trim()).map(p => `<p class="leading-relaxed">${p.trim()}</p>`).join('');
+      const paragraphs = rawRules.split('\n').filter(p => p.trim()).map(p => `<p class="leading-relaxed">${escapeHTML(p.trim())}</p>`).join('');
       content.innerHTML = `
         <div class="flex items-center gap-2 text-primary mb-3">
           <span class="material-symbols-outlined text-2xl">gavel</span>
@@ -1004,7 +1026,7 @@
       `;
     } else if (type === 'exchange') {
       const rawExchange = texts.exchange_text || '';
-      const paragraphs = rawExchange.split('\n').filter(p => p.trim()).map(p => `<p class="leading-relaxed">${p.trim()}</p>`).join('');
+      const paragraphs = rawExchange.split('\n').filter(p => p.trim()).map(p => `<p class="leading-relaxed">${escapeHTML(p.trim())}</p>`).join('');
       content.innerHTML = `
         <div class="flex items-center gap-2 text-primary mb-3">
           <span class="material-symbols-outlined text-2xl">published_with_changes</span>
@@ -1047,7 +1069,7 @@
     const capEl = document.getElementById('review-modal-caption');
     const dots = document.getElementById('review-dots-container');
     if (imgEl && reviews[reviewSlideIndex]) {
-      imgEl.src = reviews[reviewSlideIndex].img;
+      imgEl.src = normalizeImgUrl(reviews[reviewSlideIndex].img);
     }
     if (capEl && reviews[reviewSlideIndex]) {
       capEl.textContent = reviews[reviewSlideIndex].caption || 'Фото відгуку клієнтки';
@@ -1060,6 +1082,10 @@
   document.addEventListener('DOMContentLoaded', () => {
     initProductPage();
 
+    window.addEventListener('belle-products-updated', () => {
+      initProductPage();
+    });
+
     window.addEventListener('belle-wishlist-updated', () => {
       updateWishlistUI();
       renderRelatedProducts();
@@ -1071,10 +1097,13 @@
       const cats = BelleStore.getCategories();
       navList.innerHTML = cats.map(c => {
         const isSale = c.id === 'sale' || c.isSale || c.name.toUpperCase().includes('SALE');
+        const safeId = encodeURIComponent(c.id);
+        const safeName = escapeHTML(c.name);
         if (isSale) {
-          return `<a class="text-red-600 font-bold py-1 hover:text-red-700 flex items-center gap-2" href="catalog.html?category=${c.id}"><span class="material-symbols-outlined text-[18px]">local_offer</span><span>${c.name}</span></a>`;
+          return `<a class="text-red-600 font-bold py-1 hover:text-red-700 flex items-center gap-2" href="catalog.html?category=${safeId}"><span class="material-symbols-outlined text-[18px]">local_offer</span><span>${safeName}</span></a>`;
         }
-        return `<a class="text-on-surface py-1 hover:text-primary flex items-center gap-2" href="catalog.html?category=${c.id}"><span class="material-symbols-outlined text-[18px] text-secondary">${c.icon || 'folder'}</span><span>${c.name}</span></a>`;
+        const safeIcon = escapeHTML(c.icon || 'folder');
+        return `<a class="text-on-surface py-1 hover:text-primary flex items-center gap-2" href="catalog.html?category=${safeId}"><span class="material-symbols-outlined text-[18px] text-secondary">${safeIcon}</span><span>${safeName}</span></a>`;
       }).join('');
     }
 

@@ -24,7 +24,7 @@
       </button>
       <button onclick="openWishlistModal()" class="relative p-2 text-on-surface hover:text-primary transition-colors" aria-label="Обране">
         <span class="material-symbols-outlined text-[22px]" id="header-wishlist-icon">favorite</span>
-        <span class="wishlist-badge-count absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-600 rounded-full ring-2 ring-white hidden" style="display: none;"></span>
+        <span class="wishlist-badge-count absolute top-0 right-0 w-4 h-4 bg-red-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center ring-1.5 ring-white hidden" style="display: none;">0</span>
       </button>
       <a href="cart.html" class="relative p-2 text-on-surface hover:text-primary transition-colors flex items-center" aria-label="Кошик">
         <span class="material-symbols-outlined text-[24px]">shopping_bag</span>
@@ -286,6 +286,9 @@
           const isSale = cat.id === 'sale' || cat.isSale || cat.name.toUpperCase().includes('SALE');
           const isActive = activeCategory === cat.id;
           const count = allProds.filter(p => isSale ? p.sale : (p.cat === cat.id || p.category === cat.id)).length;
+          const safeId = escapeHTML(cat.id);
+          const safeName = escapeHTML(cat.name);
+          const safeIcon = escapeHTML(cat.icon || 'folder');
 
           let btnClass = '';
           if (isActive) {
@@ -299,10 +302,10 @@
           }
 
           return `
-            <button onclick="selectCategory('${cat.id}')" type="button" class="flex items-center justify-between min-h-[50px] sm:min-h-[56px] py-2.5 sm:py-3 px-2.5 sm:px-3.5 border ${btnClass} transition-all rounded-xs text-left shadow-2xs">
+            <button data-cat="${safeId}" onclick="selectCategory(this.getAttribute('data-cat'))" type="button" class="flex items-center justify-between min-h-[50px] sm:min-h-[56px] py-2.5 sm:py-3 px-2.5 sm:px-3.5 border ${btnClass} transition-all rounded-xs text-left shadow-2xs">
               <span class="flex items-center gap-1.5 sm:gap-2 flex-1 min-w-0">
-                <span class="material-symbols-outlined text-[18px] sm:text-[20px] shrink-0">${isSale ? 'local_offer' : (cat.icon || 'folder')}</span>
-                <span class="text-[11px] sm:text-xs uppercase tracking-wider leading-snug break-words flex-1 ${isSale && !isActive ? 'text-red-600 font-bold' : ''}">${cat.name}</span>
+                <span class="material-symbols-outlined text-[18px] sm:text-[20px] shrink-0">${isSale ? 'local_offer' : safeIcon}</span>
+                <span class="text-[11px] sm:text-xs uppercase tracking-wider leading-snug break-words flex-1 ${isSale && !isActive ? 'text-red-600 font-bold' : ''}">${safeName}</span>
               </span>
               <span class="flex items-center gap-0.5 text-[11px] opacity-75 shrink-0 ml-1">
                 <span>(${count})</span>
@@ -318,15 +321,18 @@
       if (topNavList) {
         topNavList.innerHTML = categories.map(cat => {
           const isSale = cat.id === 'sale' || cat.isSale || cat.name.toUpperCase().includes('SALE');
+          const safeId = encodeURIComponent(cat.id);
+          const safeName = escapeHTML(cat.name);
           if (isSale) {
-            return `<a class="text-red-600 font-bold py-1 hover:text-red-700 flex items-center gap-2" href="catalog.html?category=${cat.id}">
+            return `<a class="text-red-600 font-bold py-1 hover:text-red-700 flex items-center gap-2" href="catalog.html?category=${safeId}">
               <span class="material-symbols-outlined text-[18px]">local_offer</span>
-              <span>${cat.name}</span>
+              <span>${safeName}</span>
             </a>`;
           }
-          return `<a class="text-on-surface py-1 hover:text-primary flex items-center gap-2" href="catalog.html?category=${cat.id}">
-            <span class="material-symbols-outlined text-[18px] text-secondary">${cat.icon || 'folder'}</span>
-            <span>${cat.name}</span>
+          const safeIcon = escapeHTML(cat.icon || 'folder');
+          return `<a class="text-on-surface py-1 hover:text-primary flex items-center gap-2" href="catalog.html?category=${safeId}">
+            <span class="material-symbols-outlined text-[18px] text-secondary">${safeIcon}</span>
+            <span>${safeName}</span>
           </a>`;
         }).join('');
       }
@@ -394,31 +400,52 @@
           const isWishlisted = (typeof BelleStore !== 'undefined') 
             ? (BelleStore.isWishlisted(p.id) || BelleStore.isWishlisted(p.name)) 
             : false;
-          const saleTag = p.sale ? `
+          const safeSale = p.sale ? escapeHTML(p.sale) : '';
+          const saleTag = safeSale ? `
             <div class="absolute top-2 left-2 z-10 pointer-events-none">
-              <span class="bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 uppercase tracking-wider rounded-xs shadow-xs">${p.sale}</span>
+              <span class="bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 uppercase tracking-wider rounded-xs shadow-xs">${safeSale}</span>
             </div>
           ` : '';
-          const oldPriceHtml = p.oldPrice ? `<span class="text-[11px] text-outline line-through ml-1.5">${p.oldPrice.toLocaleString('uk-UA')} ₴</span>` : '';
+          const oldPriceHtml = p.oldPrice ? `<span class="text-[11px] text-outline line-through ml-1.5">${Number(p.oldPrice).toLocaleString('uk-UA')} ₴</span>` : '';
+
+          const hasMultiplePhotos = Array.isArray(p.images) && p.images.length > 1;
+          const rawMain = p.img || (hasMultiplePhotos ? p.images[0] : '/images/berehynia_dress_1789843600634.jpg');
+          const mainPhoto = escapeHTML(normalizeImgUrl(rawMain));
+          const secondPhoto = hasMultiplePhotos ? escapeHTML(normalizeImgUrl(p.images[1])) : null;
+
+          const photoBadge = hasMultiplePhotos ? `
+            <div class="absolute bottom-2 right-2 z-10 pointer-events-none">
+              <span class="bg-black/60 backdrop-blur-xs text-white text-[9px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1 shadow-xs">
+                <span class="material-symbols-outlined text-[12px]">photo_library</span>
+                <span>${p.images.length} фото</span>
+              </span>
+            </div>
+          ` : '';
+
+          const safeId = encodeURIComponent(p.id);
+          const safeName = escapeHTML(p.name);
+          const formattedPrice = Number(p.price || 0).toLocaleString('uk-UA');
 
           return `
             <article class="group flex flex-col bg-surface-container-lowest transition-all duration-300 hover:shadow-md border border-surface-container-high/70 hover:border-primary/40 rounded-xs overflow-hidden">
               <div class="relative aspect-[3/4] w-full overflow-hidden bg-surface-container">
-                <a href="product.html?id=${p.id}" class="block w-full h-full">
-                  <img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" alt="${p.name}" src="${p.img}"/>
+                <a href="product.html?id=${safeId}" class="block w-full h-full relative overflow-hidden">
+                  <img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${secondPhoto ? 'group-hover:opacity-0 transition-opacity duration-300' : ''}" alt="${safeName}" src="${mainPhoto}"/>
+                  ${secondPhoto ? `<img class="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none group-hover:scale-105 transition-transform duration-500" alt="${safeName} - друге фото" src="${secondPhoto}"/>` : ''}
                 </a>
                 ${saleTag}
-                <button onclick="event.preventDefault(); event.stopPropagation(); toggleWishlist('${p.id}')" aria-label="Додати в обране" class="absolute top-2 right-2 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/95 hover:bg-white flex items-center justify-center transition-all shadow-xs z-10 active:scale-90" type="button">
+                ${photoBadge}
+                <button data-id="${safeId}" onclick="event.preventDefault(); event.stopPropagation(); toggleWishlist(this.getAttribute('data-id'))" aria-label="Додати в обране" class="absolute top-2 right-2 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/95 hover:bg-white flex items-center justify-center transition-all shadow-xs z-10 active:scale-90" type="button">
                   <span class="material-symbols-outlined text-[16px] sm:text-[18px] transition-colors ${isWishlisted ? 'text-red-600' : 'text-on-surface hover:text-red-600'}" style="font-variation-settings: 'FILL' ${isWishlisted ? 1 : 0};">favorite</span>
                 </button>
               </div>
               <div class="flex flex-col flex-1 justify-between p-3 sm:p-3.5">
                 <h2 class="font-headline text-base sm:text-lg font-semibold tracking-tight text-on-surface group-hover:text-primary transition-colors leading-snug line-clamp-2">
-                  <a href="product.html?id=${p.id}" class="hover:underline">${p.name}</a>
+                  <a href="product.html?id=${safeId}" class="hover:underline">${safeName}</a>
                 </h2>
                 <div class="mt-2.5 flex items-baseline justify-between pt-1 border-t border-surface-container-high/40">
                   <div>
-                    <span class="font-headline text-base sm:text-lg font-bold tracking-tight text-primary">${p.price.toLocaleString('uk-UA')} ₴</span>
+                    <span class="font-headline text-base sm:text-lg font-bold tracking-tight text-primary">${formattedPrice} ₴</span>
                     ${oldPriceHtml}
                   </div>
                   <span class="text-[10px] text-outline font-body font-medium uppercase tracking-wider">${p.inStock ? 'В наявності' : 'Під замовлення'}</span>
@@ -533,7 +560,7 @@
 
     if (type === 'about') {
       const raw = texts.about_text || '';
-      const paragraphs = raw.split('\n').filter(p => p.trim()).map(p => `<p class="leading-relaxed">${p.trim()}</p>`).join('');
+      const paragraphs = raw.split('\n').filter(p => p.trim()).map(p => `<p class="leading-relaxed">${escapeHTML(p.trim())}</p>`).join('');
       content.innerHTML = `
         <div class="flex items-center gap-2 text-primary mb-3">
           <span class="material-symbols-outlined text-2xl">info</span>
@@ -546,6 +573,8 @@
     } else if (type === 'reviews') {
       const reviews = BelleStore.getCustomerReviews();
       reviewSlideIndex = 0;
+      const safeReviewImg = escapeHTML(normalizeImgUrl(reviews[0] ? reviews[0].img : '/images/berehynia_dress_1789843600634.jpg'));
+      const safeReviewCap = escapeHTML(reviews[0] ? (reviews[0].caption || 'Фото відгуку клієнтки') : '');
       content.innerHTML = `
         <div class="flex items-center justify-between gap-2 text-primary mb-4 pb-2 border-b border-surface-container-high">
           <div class="flex items-center gap-2">
@@ -556,7 +585,7 @@
         </div>
         
         <div class="relative w-full aspect-[4/3] bg-surface-container-low rounded-xs overflow-hidden border border-surface-container-high shadow-xs">
-          <img id="review-modal-img" src="${reviews[0] ? reviews[0].img : '/images/berehynia_dress_1789843600634.jpg'}" class="w-full h-full object-contain p-2 transition-opacity duration-300" alt="Відгук" />
+          <img id="review-modal-img" src="${safeReviewImg}" class="w-full h-full object-contain p-2 transition-opacity duration-300" alt="Відгук" />
           
           <button type="button" onclick="prevReviewSlide()" class="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/80 hover:bg-white text-primary flex items-center justify-center shadow-md">
             <span class="material-symbols-outlined text-[20px]">chevron_left</span>
@@ -567,7 +596,7 @@
         </div>
 
         <p id="review-modal-caption" class="text-center text-xs text-secondary mt-3 italic font-medium">
-          ${reviews[0] ? (reviews[0].caption || 'Фото відгуку клієнтки') : ''}
+          ${safeReviewCap}
         </p>
 
         <div class="flex items-center justify-center gap-1.5 mt-2" id="review-dots-container">
@@ -576,7 +605,7 @@
       `;
     } else if (type === 'offer') {
       const raw = texts.offer_text || '';
-      const paragraphs = raw.split('\n').filter(p => p.trim()).map(p => `<p class="leading-relaxed">${p.trim()}</p>`).join('');
+      const paragraphs = raw.split('\n').filter(p => p.trim()).map(p => `<p class="leading-relaxed">${escapeHTML(p.trim())}</p>`).join('');
       content.innerHTML = `
         <div class="flex items-center gap-2 text-primary mb-3">
           <span class="material-symbols-outlined text-2xl">description</span>
@@ -588,7 +617,7 @@
       `;
     } else if (type === 'privacy') {
       const raw = texts.privacy_text || '';
-      const paragraphs = raw.split('\n').filter(p => p.trim()).map(p => `<p class="leading-relaxed">${p.trim()}</p>`).join('');
+      const paragraphs = raw.split('\n').filter(p => p.trim()).map(p => `<p class="leading-relaxed">${escapeHTML(p.trim())}</p>`).join('');
       content.innerHTML = `
         <div class="flex items-center gap-2 text-primary mb-3">
           <span class="material-symbols-outlined text-2xl">shield</span>
@@ -600,7 +629,7 @@
       `;
     } else if (type === 'rules') {
       const rawRules = texts.rules_text || '';
-      const paragraphs = rawRules.split('\n').filter(p => p.trim()).map(p => `<p class="leading-relaxed">${p.trim()}</p>`).join('');
+      const paragraphs = rawRules.split('\n').filter(p => p.trim()).map(p => `<p class="leading-relaxed">${escapeHTML(p.trim())}</p>`).join('');
       content.innerHTML = `
         <div class="flex items-center gap-2 text-primary mb-3">
           <span class="material-symbols-outlined text-2xl">gavel</span>
@@ -612,7 +641,7 @@
       `;
     } else if (type === 'exchange') {
       const rawExchange = texts.exchange_text || '';
-      const paragraphs = rawExchange.split('\n').filter(p => p.trim()).map(p => `<p class="leading-relaxed">${p.trim()}</p>`).join('');
+      const paragraphs = rawExchange.split('\n').filter(p => p.trim()).map(p => `<p class="leading-relaxed">${escapeHTML(p.trim())}</p>`).join('');
       content.innerHTML = `
         <div class="flex items-center gap-2 text-primary mb-3">
           <span class="material-symbols-outlined text-2xl">published_with_changes</span>
@@ -651,7 +680,7 @@
     const capEl = document.getElementById('review-modal-caption');
     const dots = document.getElementById('review-dots-container');
     if (imgEl && reviews[reviewSlideIndex]) {
-      imgEl.src = reviews[reviewSlideIndex].img;
+      imgEl.src = normalizeImgUrl(reviews[reviewSlideIndex].img);
     }
     if (capEl && reviews[reviewSlideIndex]) {
       capEl.textContent = reviews[reviewSlideIndex].caption || 'Фото відгуку клієнтки';

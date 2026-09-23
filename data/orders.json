@@ -1,5 +1,48 @@
 [
   {
+    "id": "BA-216749",
+    "createdAt": "2026-09-23T14:04:26.247Z",
+    "status": "Прийнято в обробку (очікує дзвінка майстрині)",
+    "customer": {
+      "name": "Катерина",
+      "phone": "+380509998877",
+      "instagram": "",
+      "telegram": ""
+    },
+    "measurements": {
+      "chest": "",
+      "waist": "",
+      "hips": "",
+      "height": "",
+      "isBespoke": false
+    },
+    "delivery": {
+      "method": "Нова Пошта",
+      "city": "Київ",
+      "branch": ""
+    },
+    "payment": {
+      "method": "postpay",
+      "totalAmount": 4800,
+      "payNow": 300,
+      "payLater": 4500
+    },
+    "comment": "",
+    "items": [
+      {
+        "id": "beregynya",
+        "art": "BL-402",
+        "name": "Сукня «Берегиня»",
+        "size": "M",
+        "color": "Базовий",
+        "quantity": 1,
+        "price": 4800,
+        "total": 4800
+      }
+    ],
+    "clientIP": "::1"
+  },
+  {
     "id": "BA-340023",
     "createdAt": "2026-09-19T18:42:20.023Z",
     "status": "Прийнято в обробку (очікує дзвінка майстрині)",
