@@ -371,6 +371,9 @@ const BelleStore = {
   // --- EDITABLE SITE TEXTS (POLICIES, OFFER, PRIVACY, ABOUT & CONTACTS) ---
   getDefaultSiteTexts() {
     return {
+      hero_img: 'images/belle_hero_banner_1789843699753.jpg',
+      hero_title: 'Ексклюзивний одяг для всієї родини!',
+      hero_subtitle: 'Обирай свій образ',
       contacts_title: 'Ательє та шоурум',
       contacts_badge: 'Київ • Belle Atelier',
       contacts_address: 'м. Київ, просп. Європейського Союзу, 45Б',

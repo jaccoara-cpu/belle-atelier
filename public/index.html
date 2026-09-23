@@ -119,13 +119,13 @@
     <!-- Hero Section (Clean & Impactful) -->
     <section class="relative w-full min-h-[70vh] sm:min-h-[80vh] flex items-center justify-center bg-[#F4EFE6] overflow-hidden">
       <div class="absolute inset-0 z-0 opacity-40">
-        <img class="w-full h-full object-cover" src="images/belle_hero_banner_1789843699753.jpg" alt="Belle Atelier Hero"/>
+        <img id="home-hero-bg-img" class="w-full h-full object-cover" src="images/belle_hero_banner_1789843699753.jpg" alt="Belle Atelier Hero"/>
       </div>
       <div class="relative z-10 max-w-3xl mx-auto px-5 py-12 text-center flex flex-col items-center">
-        <h1 class="font-headline text-3xl sm:text-5xl lg:text-6xl text-primary font-bold leading-tight tracking-tight mb-4">
+        <h1 id="home-hero-title" class="font-headline text-3xl sm:text-5xl lg:text-6xl text-primary font-bold leading-tight tracking-tight mb-4">
           Ексклюзивний одяг для всієї родини!
         </h1>
-        <p class="font-headline text-lg sm:text-2xl text-secondary font-medium italic mb-8 max-w-xl">
+        <p id="home-hero-subtitle" class="font-headline text-lg sm:text-2xl text-secondary font-medium italic mb-8 max-w-xl">
           Обирай свій образ
         </p>
         <div class="flex flex-row items-center justify-center">
@@ -275,6 +275,14 @@
           instaText.textContent = texts.contacts_instagram_handle;
         }
       }
+
+      // Update Hero Banner
+      const heroBg = document.getElementById('home-hero-bg-img');
+      const heroTitle = document.getElementById('home-hero-title');
+      const heroSub = document.getElementById('home-hero-subtitle');
+      if (heroBg && texts.hero_img) heroBg.src = texts.hero_img;
+      if (heroTitle && texts.hero_title) heroTitle.textContent = texts.hero_title;
+      if (heroSub && texts.hero_subtitle) heroSub.textContent = texts.hero_subtitle;
     }
 
     function renderHomeCategories() {

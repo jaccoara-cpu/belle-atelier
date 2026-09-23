@@ -397,6 +397,47 @@
           </div>
 
           <form onsubmit="handleSiteTextsSubmit(event)" class="space-y-6 text-xs">
+            <!-- SECTION 0: Hero Banner (Main Page First Screen) -->
+            <div class="space-y-4 bg-surface-container-low p-4 sm:p-5 rounded-xs border border-surface-container-high">
+              <div class="flex items-center gap-2 text-primary font-bold uppercase tracking-wider text-xs border-b border-surface-container-high/60 pb-2">
+                <span class="material-symbols-outlined text-[18px]">panorama</span>
+                <span>Головний банер (Перший екран головної сторінки)</span>
+              </div>
+
+              <div class="flex flex-col sm:flex-row items-start gap-4">
+                <!-- Hero Image Preview -->
+                <div class="relative w-full sm:w-48 h-32 bg-surface-container rounded-xs overflow-hidden border border-surface-container-high shrink-0 shadow-xs group">
+                  <img id="text-hero-img-preview" src="images/belle_hero_banner_1789843699753.jpg" class="w-full h-full object-cover" alt="Головний банер" />
+                  <input type="file" id="text-hero-img-file-input" accept="image/*" class="hidden" onchange="handleHeroBannerFileUpload(this)" />
+                  <button type="button" onclick="document.getElementById('text-hero-img-file-input').click()" class="absolute inset-0 bg-black/60 text-white text-[11px] font-semibold opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-1 transition-opacity">
+                    <span class="material-symbols-outlined text-[22px]">photo_camera</span>
+                    <span>Змінити фото банера</span>
+                  </button>
+                </div>
+
+                <div class="flex-1 space-y-3 w-full">
+                  <input type="hidden" id="text-hero-img" value="images/belle_hero_banner_1789843699753.jpg" />
+                  <div class="flex flex-wrap items-center gap-2">
+                    <button type="button" onclick="document.getElementById('text-hero-img-file-input').click()" class="py-2 px-3.5 bg-primary hover:bg-tertiary text-white font-semibold text-xs rounded-xs flex items-center gap-1.5 transition-colors shadow-xs">
+                      <span class="material-symbols-outlined text-[16px]">upload</span>
+                      <span>Завантажити нове фото головного банера</span>
+                    </button>
+                  </div>
+
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label class="block font-semibold text-on-surface mb-1">Головний заголовок банера:</label>
+                      <input type="text" id="text-hero-title" placeholder="Ексклюзивний одяг для всієї родини!" class="w-full py-2 px-3 bg-white border border-surface-container-high focus:outline-none focus:border-primary font-medium" />
+                    </div>
+                    <div>
+                      <label class="block font-semibold text-on-surface mb-1">Підзаголовок / Слоган:</label>
+                      <input type="text" id="text-hero-subtitle" placeholder="Обирай свій образ" class="w-full py-2 px-3 bg-white border border-surface-container-high focus:outline-none focus:border-primary font-medium" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <!-- SECTION 1: About Us -->
             <div class="space-y-3 bg-surface-container-low p-4 sm:p-5 rounded-xs border border-surface-container-high">
               <div class="flex items-center gap-2 text-primary font-bold uppercase tracking-wider text-xs border-b border-surface-container-high/60 pb-2">
@@ -603,7 +644,13 @@
 
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
-            <label class="block font-semibold text-on-surface mb-1">Категорія *</label>
+            <div class="flex items-center justify-between mb-1">
+              <label class="block font-semibold text-on-surface">Категорія *</label>
+              <button type="button" onclick="openCategoryModal()" class="text-[10px] text-primary hover:underline font-semibold flex items-center gap-0.5">
+                <span class="material-symbols-outlined text-[14px]">add</span>
+                <span>Створити</span>
+              </button>
+            </div>
             <select id="form-cat" required class="w-full py-2 px-3 bg-surface border border-surface-container-high focus:outline-none focus:border-primary">
               <!-- Dynamically populated from categories -->
             </select>
@@ -654,69 +701,68 @@
           <textarea id="form-desc" rows="3" placeholder="Опишіть особливості крою, вишивки та стилю..." class="w-full py-2 px-3 bg-surface border border-surface-container-high focus:outline-none focus:border-primary"></textarea>
         </div>
 
-        <!-- Product Photo Section -->
-        <div class="space-y-2">
-          <label class="block font-semibold text-on-surface">Фотографія виробу *</label>
-          <div class="flex flex-col sm:flex-row items-start gap-4 p-3.5 bg-surface-container-lowest border border-surface-container-high rounded-xs">
-            <!-- Thumbnail Preview -->
-            <div class="relative w-24 h-32 bg-surface-container rounded-xs overflow-hidden border border-surface-container-high shrink-0 shadow-xs group">
-              <img id="form-img-preview" src="images/berehynia_dress_1789843600634.jpg" class="w-full h-full object-cover" alt="Попередній перегляд" />
-              <button type="button" onclick="document.getElementById('form-img-file-input').click()" class="absolute inset-0 bg-black/50 text-white text-[11px] font-medium opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-1 transition-opacity">
-                <span class="material-symbols-outlined text-[20px]">photo_camera</span>
-                <span>Змінити</span>
+        <!-- Product Photo Gallery Section (Multi-photo upload supported) -->
+        <div class="space-y-3 p-4 bg-surface-container-lowest border border-surface-container-high rounded-xs">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-surface-container-high/60 pb-2">
+            <div>
+              <label class="block font-semibold text-primary text-xs uppercase tracking-wider">
+                Фотографії виробу (Можна вибрати 2-3 фото одразу) *
+              </label>
+              <p class="text-[11px] text-secondary font-medium mt-0.5">Перше фото буде головною обкладинкою товару в каталозі</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <input type="file" id="form-img-file-input" accept="image/*" multiple class="hidden" onchange="handleProductMultipleImageUpload(this)" />
+              <button type="button" onclick="document.getElementById('form-img-file-input').click()" class="py-2 px-3.5 bg-primary hover:bg-tertiary text-white font-semibold text-xs rounded-xs flex items-center gap-1.5 transition-colors shadow-xs">
+                <span class="material-symbols-outlined text-[16px]">add_photo_alternate</span>
+                <span>+ Завантажити фото (одне або кілька)</span>
               </button>
             </div>
+          </div>
 
-            <!-- Upload / Select Controls -->
-            <div class="flex-1 space-y-3 w-full">
-              <div class="flex flex-wrap items-center gap-2">
-                <input type="file" id="form-img-file-input" accept="image/*" class="hidden" onchange="handleProductImageFileUpload(this)" />
-                <button type="button" onclick="document.getElementById('form-img-file-input').click()" class="py-2 px-3.5 bg-primary hover:bg-tertiary text-white font-semibold text-xs rounded-xs flex items-center gap-1.5 transition-colors shadow-xs">
-                  <span class="material-symbols-outlined text-[16px]">upload</span>
-                  <span>Завантажити фото з комп'ютера / телефону</span>
-                </button>
-              </div>
+          <!-- Multi-photo Thumbnails List -->
+          <div id="form-photos-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3 pt-1">
+            <!-- Dynamically populated photos with remove / set-cover buttons -->
+          </div>
 
-              <!-- Quick Presets -->
-              <div>
-                <span class="text-[11px] font-semibold text-secondary block mb-1.5">Або оберіть зі студійної галереї ательє:</span>
-                <div class="grid grid-cols-4 sm:grid-cols-7 gap-1.5" id="gallery-preset-thumbnails">
-                  <!-- Dynamically rendered or presets -->
-                  <button type="button" onclick="setProductFormImg('/images/berehynia_dress_1789843600634.jpg')" class="h-14 rounded-xs overflow-hidden border border-surface-container-high hover:border-primary transition-all focus:ring-2 focus:ring-primary" title="Сукня «Берегиня»">
-                    <img src="images/berehynia_dress_1789843600634.jpg" class="w-full h-full object-cover" alt="Берегиня" />
-                  </button>
-                  <button type="button" onclick="setProductFormImg('/images/mavka_dress_1789843642965.jpg')" class="h-14 rounded-xs overflow-hidden border border-surface-container-high hover:border-primary transition-all focus:ring-2 focus:ring-primary" title="Сукня «Мавка»">
-                    <img src="images/mavka_dress_1789843642965.jpg" class="w-full h-full object-cover" alt="Мавка" />
-                  </button>
-                  <button type="button" onclick="setProductFormImg('/images/oberig_shirt_1789843615744.jpg')" class="h-14 rounded-xs border border-surface-container-high hover:border-primary transition-all focus:ring-2 focus:ring-primary" title="Сорочка «Оберіг»">
-                    <img src="images/oberig_shirt_1789843615744.jpg" class="w-full h-full object-cover" alt="Оберіг" />
-                  </button>
-                  <button type="button" onclick="setProductFormImg('/images/hetman_jacket_1789843629464.jpg')" class="h-14 rounded-xs border border-surface-container-high hover:border-primary transition-all focus:ring-2 focus:ring-primary" title="Жакет «Гетьманський»">
-                    <img src="images/hetman_jacket_1789843629464.jpg" class="w-full h-full object-cover" alt="Гетьманський" />
-                  </button>
-                  <button type="button" onclick="setProductFormImg('/images/dzherelo_set_1789843655280.jpg')" class="h-14 rounded-xs border border-surface-container-high hover:border-primary transition-all focus:ring-2 focus:ring-primary" title="Сет «Джерело»">
-                    <img src="images/dzherelo_set_1789843655280.jpg" class="w-full h-full object-cover" alt="Джерело" />
-                  </button>
-                  <button type="button" onclick="setProductFormImg('/images/podillya_corset_1789843684134.jpg')" class="h-14 rounded-xs border border-surface-container-high hover:border-primary transition-all focus:ring-2 focus:ring-primary" title="Корсет «Поділля»">
-                    <img src="images/podillya_corset_1789843684134.jpg" class="w-full h-full object-cover" alt="Поділля" />
-                  </button>
-                  <button type="button" onclick="setProductFormImg('/images/zorya_tunic_1789843670230.jpg')" class="h-14 rounded-xs border border-surface-container-high hover:border-primary transition-all focus:ring-2 focus:ring-primary" title="Туніка «Зоря»">
-                    <img src="images/zorya_tunic_1789843670230.jpg" class="w-full h-full object-cover" alt="Зоря" />
-                  </button>
-                </div>
-              </div>
-
-              <!-- Direct Image URL / Custom Path (collapsed by default, neat) -->
-              <details class="text-[11px] text-secondary">
-                <summary class="cursor-pointer font-medium hover:text-primary select-none flex items-center gap-1">
-                  <span>Ввести пряме посилання на фото (URL)</span>
-                </summary>
-                <div class="mt-2">
-                  <input type="text" id="form-img" oninput="onFormImgUrlChange(this.value)" placeholder="https://... або /images/photo.jpg" class="w-full py-1.5 px-2.5 bg-surface border border-surface-container-high focus:outline-none focus:border-primary font-mono text-[11px]" />
-                </div>
-              </details>
+          <!-- Quick Presets -->
+          <div class="pt-2 border-t border-surface-container-high/40">
+            <span class="text-[11px] font-semibold text-secondary block mb-1.5">Або додайте зі студійної галереї ательє:</span>
+            <div class="grid grid-cols-4 sm:grid-cols-7 gap-1.5" id="gallery-preset-thumbnails">
+              <button type="button" onclick="addPhotoToProductForm('/images/berehynia_dress_1789843600634.jpg')" class="h-14 rounded-xs overflow-hidden border border-surface-container-high hover:border-primary transition-all focus:ring-2 focus:ring-primary" title="Сукня «Берегиня»">
+                <img src="images/berehynia_dress_1789843600634.jpg" class="w-full h-full object-cover" alt="Берегиня" />
+              </button>
+              <button type="button" onclick="addPhotoToProductForm('/images/mavka_dress_1789843642965.jpg')" class="h-14 rounded-xs overflow-hidden border border-surface-container-high hover:border-primary transition-all focus:ring-2 focus:ring-primary" title="Сукня «Мавка»">
+                <img src="images/mavka_dress_1789843642965.jpg" class="w-full h-full object-cover" alt="Мавка" />
+              </button>
+              <button type="button" onclick="addPhotoToProductForm('/images/oberig_shirt_1789843615744.jpg')" class="h-14 rounded-xs border border-surface-container-high hover:border-primary transition-all focus:ring-2 focus:ring-primary" title="Сорочка «Оберіг»">
+                <img src="images/oberig_shirt_1789843615744.jpg" class="w-full h-full object-cover" alt="Оберіг" />
+              </button>
+              <button type="button" onclick="addPhotoToProductForm('/images/hetman_jacket_1789843629464.jpg')" class="h-14 rounded-xs border border-surface-container-high hover:border-primary transition-all focus:ring-2 focus:ring-primary" title="Жакет «Гетьманський»">
+                <img src="images/hetman_jacket_1789843629464.jpg" class="w-full h-full object-cover" alt="Гетьманський" />
+              </button>
+              <button type="button" onclick="addPhotoToProductForm('/images/dzherelo_set_1789843655280.jpg')" class="h-14 rounded-xs border border-surface-container-high hover:border-primary transition-all focus:ring-2 focus:ring-primary" title="Сет «Джерело»">
+                <img src="images/dzherelo_set_1789843655280.jpg" class="w-full h-full object-cover" alt="Джерело" />
+              </button>
+              <button type="button" onclick="addPhotoToProductForm('/images/podillya_corset_1789843684134.jpg')" class="h-14 rounded-xs border border-surface-container-high hover:border-primary transition-all focus:ring-2 focus:ring-primary" title="Корсет «Поділля»">
+                <img src="images/podillya_corset_1789843684134.jpg" class="w-full h-full object-cover" alt="Поділля" />
+              </button>
+              <button type="button" onclick="addPhotoToProductForm('/images/zorya_tunic_1789843670230.jpg')" class="h-14 rounded-xs border border-surface-container-high hover:border-primary transition-all focus:ring-2 focus:ring-primary" title="Туніка «Зоря»">
+                <img src="images/zorya_tunic_1789843670230.jpg" class="w-full h-full object-cover" alt="Зоря" />
+              </button>
             </div>
           </div>
+
+          <!-- Hidden legacy input for fallback & Direct Image URL -->
+          <input type="hidden" id="form-img" value="" />
+          <details class="text-[11px] text-secondary pt-1">
+            <summary class="cursor-pointer font-medium hover:text-primary select-none flex items-center gap-1">
+              <span>Додати пряме посилання на фото (URL)</span>
+            </summary>
+            <div class="mt-2 flex items-center gap-2">
+              <input type="text" id="form-custom-url-photo" placeholder="https://... або /images/photo.jpg" class="flex-1 py-1.5 px-2.5 bg-surface border border-surface-container-high focus:outline-none focus:border-primary font-mono text-[11px]" />
+              <button type="button" onclick="addUrlPhotoToForm()" class="py-1.5 px-3 bg-secondary text-white rounded-xs text-xs font-semibold hover:bg-primary transition-colors">Додати</button>
+            </div>
+          </details>
         </div>
 
         <!-- Colors configuration -->
@@ -1341,31 +1387,104 @@
       renderAdminTable();
     }
 
-    // Photo Picker & Upload Helpers
-    function setProductFormImg(url) {
-      const imgInput = document.getElementById('form-img');
-      const preview = document.getElementById('form-img-preview');
-      if (imgInput) imgInput.value = url;
-      if (preview) preview.src = url;
+    // --- PRODUCT MULTI-PHOTO GALLERY MANAGEMENT ---
+    let currentProductPhotos = [];
+
+    function renderProductPhotosGrid() {
+      const grid = document.getElementById('form-photos-grid');
+      const hiddenImgInput = document.getElementById('form-img');
+      if (!grid) return;
+
+      if (!currentProductPhotos || currentProductPhotos.length === 0) {
+        currentProductPhotos = ['/images/berehynia_dress_1789843600634.jpg'];
+      }
+
+      if (hiddenImgInput) {
+        hiddenImgInput.value = currentProductPhotos[0] || '';
+      }
+
+      grid.innerHTML = currentProductPhotos.map((photo, idx) => {
+        const isCover = idx === 0;
+        return `
+          <div class="relative group aspect-[3/4] bg-surface-container rounded-xs overflow-hidden border ${isCover ? 'border-primary ring-2 ring-primary/40' : 'border-surface-container-high'} shadow-xs flex flex-col justify-between">
+            <img src="${photo}" class="w-full h-full object-cover" alt="Фото ${idx + 1}" />
+            
+            <!-- Top Badges / Delete -->
+            <div class="absolute top-1.5 inset-x-1.5 flex items-center justify-between pointer-events-none">
+              ${isCover ? '<span class="pointer-events-auto bg-primary text-white text-[9px] font-bold px-1.5 py-0.5 rounded-2xs uppercase tracking-wider shadow-xs">Головне</span>' : '<span></span>'}
+              <button type="button" onclick="removeProductPhoto(${idx})" title="Видалити фото" class="pointer-events-auto p-1 rounded-full bg-black/60 hover:bg-red-700 text-white transition-colors shadow-xs">
+                <span class="material-symbols-outlined text-[14px]">close</span>
+              </button>
+            </div>
+
+            <!-- Bottom Action: Set as Cover -->
+            ${!isCover ? `
+              <div class="absolute inset-x-0 bottom-0 p-1 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex justify-center">
+                <button type="button" onclick="makeProductPhotoCover(${idx})" class="text-[10px] text-white font-semibold underline hover:text-amber-200">
+                  Зробити головним
+                </button>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
     }
 
-    function onFormImgUrlChange(val) {
-      const preview = document.getElementById('form-img-preview');
-      if (preview && val) {
-        preview.src = val;
+    function addPhotoToProductForm(url) {
+      if (!url) return;
+      if (!currentProductPhotos.includes(url)) {
+        // If there was only the default placeholder, replace it
+        if (currentProductPhotos.length === 1 && currentProductPhotos[0].includes('berehynia_dress_1789843600634.jpg')) {
+          currentProductPhotos = [url];
+        } else {
+          currentProductPhotos.push(url);
+        }
+        renderProductPhotosGrid();
+        BelleStore.showToast("Фото додано до картки товару! ✨");
       }
     }
 
-    function handleProductImageFileUpload(input) {
-      if (input.files && input.files[0]) {
-        const file = input.files[0];
+    function removeProductPhoto(index) {
+      if (currentProductPhotos.length <= 1) {
+        BelleStore.showToast("Потрібно залишити хоча б одне фото виробу.");
+        return;
+      }
+      currentProductPhotos.splice(index, 1);
+      renderProductPhotosGrid();
+    }
+
+    function makeProductPhotoCover(index) {
+      if (index > 0 && index < currentProductPhotos.length) {
+        const selected = currentProductPhotos.splice(index, 1)[0];
+        currentProductPhotos.unshift(selected);
+        renderProductPhotosGrid();
+        BelleStore.showToast("Головне фото оновлено! 🌟");
+      }
+    }
+
+    function addUrlPhotoToForm() {
+      const input = document.getElementById('form-custom-url-photo');
+      if (!input) return;
+      const val = input.value.trim();
+      if (val) {
+        addPhotoToProductForm(val);
+        input.value = '';
+      }
+    }
+
+    // Process multiple selected files simultaneously with canvas compression
+    function handleProductMultipleImageUpload(input) {
+      if (!input.files || input.files.length === 0) return;
+      const files = Array.from(input.files);
+      let loadedCount = 0;
+
+      files.forEach(file => {
         const reader = new FileReader();
         reader.onload = function(e) {
           const rawBase64 = e.target.result;
           const img = new Image();
           img.onload = function() {
             try {
-              // Resize and compress using canvas to ensure high quality while fitting in localStorage (<150KB)
               const canvas = document.createElement('canvas');
               let width = img.width;
               let height = img.height;
@@ -1387,22 +1506,25 @@
               ctx.drawImage(img, 0, 0, width, height);
 
               const compressedBase64 = canvas.toDataURL('image/jpeg', 0.84);
-              setProductFormImg(compressedBase64);
-              BelleStore.showToast("Фото успішно завантажено та збережено! ✨");
+              addPhotoToProductForm(compressedBase64);
             } catch (err) {
-              console.error("Canvas compression failed, using original base64:", err);
-              setProductFormImg(rawBase64);
-              BelleStore.showToast("Фото завантажено! ✨");
+              addPhotoToProductForm(rawBase64);
+            }
+
+            loadedCount++;
+            if (loadedCount === files.length) {
+              input.value = '';
+              BelleStore.showToast(`Успішно завантажено ${files.length} фото! ✨`);
             }
           };
           img.onerror = function() {
-            setProductFormImg(rawBase64);
-            BelleStore.showToast("Фото завантажено!");
+            addPhotoToProductForm(rawBase64);
+            loadedCount++;
           };
           img.src = rawBase64;
         };
         reader.readAsDataURL(file);
-      }
+      });
     }
 
     // --- COLOR PALETTE MANAGEMENT IN PRODUCT MODAL ---
@@ -1670,6 +1792,12 @@
         if (el) el.value = val || '';
       };
 
+      setVal('text-hero-img', texts.hero_img || 'images/belle_hero_banner_1789843699753.jpg');
+      setVal('text-hero-title', texts.hero_title);
+      setVal('text-hero-subtitle', texts.hero_subtitle);
+      const heroPreview = document.getElementById('text-hero-img-preview');
+      if (heroPreview) heroPreview.src = texts.hero_img || 'images/belle_hero_banner_1789843699753.jpg';
+
       setVal('text-about-text', texts.about_text);
       setVal('text-offer-text', texts.offer_text);
       setVal('text-privacy-text', texts.privacy_text);
@@ -1684,11 +1812,63 @@
       setVal('text-exchange-text', texts.exchange_text);
     }
 
+    function handleHeroBannerFileUpload(input) {
+      if (input.files && input.files[0]) {
+        const file = input.files[0];
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const rawBase64 = e.target.result;
+          const img = new Image();
+          img.onload = function() {
+            try {
+              const canvas = document.createElement('canvas');
+              let width = img.width;
+              let height = img.height;
+              const maxDim = 1600;
+
+              if (width > maxDim || height > maxDim) {
+                if (width > height) {
+                  height = Math.round((height * maxDim) / width);
+                  width = maxDim;
+                } else {
+                  width = Math.round((width * maxDim) / height);
+                  height = maxDim;
+                }
+              }
+
+              canvas.width = width;
+              canvas.height = height;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0, width, height);
+
+              const compressedBase64 = canvas.toDataURL('image/jpeg', 0.85);
+              const preview = document.getElementById('text-hero-img-preview');
+              const hiddenInput = document.getElementById('text-hero-img');
+              if (preview) preview.src = compressedBase64;
+              if (hiddenInput) hiddenInput.value = compressedBase64;
+              BelleStore.showToast("Фото банера підготовлено! Натисніть «Зберегти всі тексти», щоб застосувати на сайті ✨");
+            } catch (err) {
+              const preview = document.getElementById('text-hero-img-preview');
+              const hiddenInput = document.getElementById('text-hero-img');
+              if (preview) preview.src = rawBase64;
+              if (hiddenInput) hiddenInput.value = rawBase64;
+              BelleStore.showToast("Фото банера додано! ✨");
+            }
+          };
+          img.src = rawBase64;
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
     function handleSiteTextsSubmit(e) {
       e.preventDefault();
       const getVal = id => document.getElementById(id)?.value.trim() || '';
 
       const updated = {
+        hero_img: document.getElementById('text-hero-img')?.value || 'images/belle_hero_banner_1789843699753.jpg',
+        hero_title: getVal('text-hero-title'),
+        hero_subtitle: getVal('text-hero-subtitle'),
         about_text: getVal('text-about-text'),
         offer_text: getVal('text-offer-text'),
         privacy_text: getVal('text-privacy-text'),
@@ -1986,10 +2166,18 @@
           document.getElementById('form-old-price').value = p.oldPrice || '';
           document.getElementById('form-fabric').value = p.fabric || '';
           document.getElementById('form-desc').value = p.description || '';
-          document.getElementById('form-img').value = p.img || '';
-          document.getElementById('form-img-preview').src = p.img || '/images/berehynia_dress_1789843600634.jpg';
           document.getElementById('form-in-stock').checked = p.inStock !== false;
           
+          // Populate multi photos
+          if (Array.isArray(p.images) && p.images.length > 0) {
+            currentProductPhotos = [...p.images];
+          } else if (p.img) {
+            currentProductPhotos = [p.img];
+          } else {
+            currentProductPhotos = ['/images/berehynia_dress_1789843600634.jpg'];
+          }
+          renderProductPhotosGrid();
+
           currentProductColors = Array.isArray(p.colors) && p.colors.length > 0 ? [...p.colors] : ['Молочний', 'Чорний', 'Бордо'];
           renderColorsSelector();
 
@@ -2005,9 +2193,10 @@
         form.reset();
         document.getElementById('form-product-id').value = '';
         document.getElementById('form-art').value = 'BL-' + Math.floor(100 + Math.random() * 900);
-        document.getElementById('form-img-preview').src = '/images/berehynia_dress_1789843600634.jpg';
-        document.getElementById('form-img').value = '/images/berehynia_dress_1789843600634.jpg';
         
+        currentProductPhotos = ['/images/berehynia_dress_1789843600634.jpg'];
+        renderProductPhotosGrid();
+
         currentProductColors = ['Молочний', 'Чорний', 'Бордо'];
         renderColorsSelector();
 
@@ -2029,6 +2218,9 @@
     function handleProductFormSubmit(e) {
       e.preventDefault();
       const id = document.getElementById('form-product-id').value;
+      const validPhotos = currentProductPhotos.filter(Boolean);
+      const primaryPhoto = validPhotos[0] || '/images/berehynia_dress_1789843600634.jpg';
+
       const productData = {
         name: document.getElementById('form-name').value.trim(),
         art: document.getElementById('form-art').value.trim(),
@@ -2037,7 +2229,8 @@
         oldPrice: document.getElementById('form-old-price').value ? Number(document.getElementById('form-old-price').value) : null,
         fabric: document.getElementById('form-fabric').value.trim(),
         description: document.getElementById('form-desc').value.trim(),
-        img: document.getElementById('form-img').value.trim() || '/images/berehynia_dress_1789843600634.jpg',
+        img: primaryPhoto,
+        images: validPhotos.length > 0 ? validPhotos : [primaryPhoto],
         inStock: document.getElementById('form-in-stock').checked,
         colors: currentProductColors.length > 0 ? currentProductColors : ['Молочний'],
         sizes: currentProductSizes.length > 0 ? currentProductSizes : ['XS', 'S', 'M', 'L', 'XL'],
