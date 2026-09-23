@@ -399,19 +399,18 @@
 
     // Initialize Gallery Images (Single swipable gallery)
     galleryImages = [];
-    if (activeProductData.img) {
-      galleryImages.push(activeProductData.img);
-    }
-    
-    // Add additional gallery shots if explicitly defined in product.images
     if (Array.isArray(activeProductData.images) && activeProductData.images.length > 0) {
       activeProductData.images.forEach(imgUrl => {
-        if (!galleryImages.includes(imgUrl)) {
+        if (imgUrl && !galleryImages.includes(imgUrl)) {
           galleryImages.push(imgUrl);
         }
       });
-    } else if (activeProductData.id === 'beregynya' && activeProductData.img === '/images/berehynia_dress_1789843600634.jpg') {
-      // Only include preset detail angles if using the original default photo
+    } else if (activeProductData.img) {
+      galleryImages.push(activeProductData.img);
+    }
+    
+    // Only for default demo beregynya if untouched
+    if (activeProductData.id === 'beregynya' && activeProductData.img === '/images/berehynia_dress_1789843600634.jpg' && (!activeProductData.images || activeProductData.images.length <= 1)) {
       const extraBeregynyaShots = [
         '/images/berehynia_detail_1789843714868.jpg',
         '/images/berehynia_back_1789843731157.jpg',
@@ -425,7 +424,7 @@
     }
 
     if (galleryImages.length === 0) {
-      galleryImages.push('/images/berehynia_dress_1789843600634.jpg');
+      galleryImages.push(activeProductData.img || '/images/berehynia_dress_1789843600634.jpg');
     }
 
     currentSlideIndex = 0;
@@ -639,11 +638,8 @@
       }
       currentSlideIndex = galleryImages.indexOf(variantPhoto);
       renderGallerySlide();
-    } else if (activeProductData && activeProductData.img) {
-      if (!galleryImages.includes(activeProductData.img)) {
-        galleryImages.unshift(activeProductData.img);
-      }
-      currentSlideIndex = galleryImages.indexOf(activeProductData.img);
+    } else {
+      currentSlideIndex = 0;
       renderGallerySlide();
     }
 
