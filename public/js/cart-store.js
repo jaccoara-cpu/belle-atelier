@@ -909,25 +909,55 @@ const BelleStore = {
   async initiateAdminLogin() {
     try {
       const res = await fetch('/api/admin/login/request', { method: 'POST' });
-      // If server returned valid JSON
       if (res.ok) {
         const data = await res.json();
         return data;
       }
     } catch (err) {
-      // Backend unavailable (e.g. Cloudflare Pages static environment)
+      // Backend unavailable (Cloudflare Pages static host)
     }
 
-    // --- FALLBACK FOR CLOUDFLARE PAGES / STATIC DEPLOYMENT ---
-    // Generate secure client-side 6-digit session code so admin panel remains accessible
-    const fallbackCode = String(Math.floor(100000 + Math.random() * 900000));
-    sessionStorage.setItem('belle_fallback_2fa', fallbackCode);
+    // --- FALLBACK / CLIENT-SIDE 2FA DISPATCH FOR CLOUDFLARE PAGES ---
+    const code = String(Math.floor(100000 + Math.random() * 900000));
+    sessionStorage.setItem('belle_fallback_2fa', code);
 
+    const tgConfig = this.getTelegramConfig();
+    if (tgConfig && tgConfig.isActive && tgConfig.botToken && tgConfig.chatId && !tgConfig.botToken.includes('••••')) {
+      // If Telegram is configured on client, send directly to Telegram chat
+      try {
+        const timeStr = new Date().toLocaleString('uk-UA');
+        const text = `🔐 <b>Belle Atelier • Вхід в Адмін-панель</b>\n\n` +
+                     `Одноразовий 2FA-код для входу:\n` +
+                     `👉 <code>${code}</code> 👈\n\n` +
+                     `⏱ Дійсний 5 хвилин.\n` +
+                     `🕒 Час: <i>${timeStr}</i>`;
+        
+        await fetch(`https://api.telegram.org/bot${tgConfig.botToken}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: tgConfig.chatId,
+            text: text,
+            parse_mode: 'HTML'
+          })
+        });
+
+        return {
+          success: true,
+          via: 'telegram',
+          message: 'Одноразовий 2FA-код надіслано у ваш Telegram-чат!'
+        };
+      } catch (tgErr) {
+        console.warn('Telegram direct send failed:', tgErr);
+      }
+    }
+
+    // Default if no bot configured yet
     return {
       success: true,
       via: 'demo',
-      message: 'Режим статичного хостингу (Cloudflare Pages). Демонстраційний 2FA код згенеровано локально.',
-      code: fallbackCode
+      message: 'Telegram-бот ще не налаштовано. Одноразовий код відображено для первинного входу.',
+      code: code
     };
   },
 
