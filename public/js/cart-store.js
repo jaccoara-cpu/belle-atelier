@@ -1216,12 +1216,12 @@ const BelleStore = {
     if (errBox) {
       if (res.code) {
         errBox.classList.remove('hidden');
-        errBox.className = 'text-xs text-[#725B38] bg-[#F5F3EE] p-2.5 border border-[#E4E2DD] rounded';
-        errBox.innerHTML = `ℹ️ Демонстраційний код первинного входу: <strong class="text-[#5E1020] text-sm">${escapeHTML(res.code)}</strong>`;
+        errBox.className = 'text-xs text-[#725B38] bg-[#F5F3EE] p-3 border border-[#E4E2DD] rounded-xs text-center';
+        errBox.innerHTML = `Код первинного входу: <strong class="text-[#5E1020] text-sm tracking-widest font-mono ml-1">${escapeHTML(res.code)}</strong>`;
       } else {
         errBox.classList.remove('hidden');
-        errBox.className = 'text-xs text-emerald-800 bg-emerald-50 p-2.5 border border-emerald-200 rounded';
-        errBox.innerHTML = `✅ <b>Код надіслано в Telegram!</b> Перевірте ваш чат.`;
+        errBox.className = 'text-xs text-[#5E1020] bg-[#FBF6F7] p-3 border border-[#E8D7DA] rounded-xs flex items-center justify-center gap-2 font-medium tracking-wide';
+        errBox.innerHTML = `<span class="material-symbols-outlined text-[16px] text-[#5E1020]">check_circle</span><span>Код надіслано в Telegram-чат</span>`;
       }
     }
   },
