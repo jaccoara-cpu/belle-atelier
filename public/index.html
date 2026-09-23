@@ -284,29 +284,29 @@
 
       const categories = BelleStore.getCategories();
 
-      // Render home grid as neat narrow rectangles (matching catalog page 2)
+      // Render home grid as comfortable rectangles with full text fitting (no truncation)
       grid.innerHTML = categories.map(cat => {
         const isSale = cat.id === 'sale' || cat.isSale || cat.name.toUpperCase().includes('SALE');
 
         if (isSale) {
           return `
-            <a href="catalog.html?category=${cat.id}" class="flex items-center justify-between p-2.5 sm:p-3 bg-red-50/90 hover:bg-red-100 border border-red-200 rounded-xs transition-all duration-200 text-left">
-              <span class="flex items-center gap-1.5 min-w-0">
-                <span class="material-symbols-outlined text-[16px] text-red-600 shrink-0">local_offer</span>
-                <span class="text-xs uppercase tracking-wider font-bold text-red-600 truncate">${cat.name}</span>
+            <a href="catalog.html?category=${cat.id}" class="flex items-center justify-between min-h-[50px] sm:min-h-[56px] py-2.5 sm:py-3 px-3 sm:px-3.5 bg-red-50/90 hover:bg-red-100 border border-red-200 rounded-xs transition-all duration-200 text-left shadow-2xs">
+              <span class="flex items-center gap-2 flex-1 min-w-0">
+                <span class="material-symbols-outlined text-[18px] sm:text-[20px] text-red-600 shrink-0">local_offer</span>
+                <span class="text-[11px] sm:text-xs uppercase tracking-wider font-bold text-red-600 leading-snug break-words">${cat.name}</span>
               </span>
-              <span class="material-symbols-outlined text-[14px] text-red-400 shrink-0 ml-1">chevron_right</span>
+              <span class="material-symbols-outlined text-[16px] text-red-400 shrink-0 ml-1">chevron_right</span>
             </a>
           `;
         }
 
         return `
-          <a href="catalog.html?category=${cat.id}" class="flex items-center justify-between p-2.5 sm:p-3 bg-surface-container-lowest hover:bg-surface-container-low border border-surface-container-high hover:border-primary/50 text-on-surface hover:text-primary rounded-xs transition-all duration-200 text-left">
-            <span class="flex items-center gap-1.5 min-w-0">
-              <span class="material-symbols-outlined text-[16px] text-secondary shrink-0">${cat.icon || 'folder'}</span>
-              <span class="text-xs uppercase tracking-wider font-semibold truncate">${cat.name}</span>
+          <a href="catalog.html?category=${cat.id}" class="flex items-center justify-between min-h-[50px] sm:min-h-[56px] py-2.5 sm:py-3 px-3 sm:px-3.5 bg-surface-container-lowest hover:bg-surface-container-low border border-surface-container-high/80 hover:border-primary/50 text-on-surface hover:text-primary rounded-xs transition-all duration-200 text-left shadow-2xs">
+            <span class="flex items-center gap-2 flex-1 min-w-0">
+              <span class="material-symbols-outlined text-[18px] sm:text-[20px] text-secondary shrink-0">${cat.icon || 'folder'}</span>
+              <span class="text-[11px] sm:text-xs uppercase tracking-wider font-semibold leading-snug break-words">${cat.name}</span>
             </span>
-            <span class="material-symbols-outlined text-[14px] text-outline shrink-0 ml-1">chevron_right</span>
+            <span class="material-symbols-outlined text-[16px] text-outline shrink-0 ml-1">chevron_right</span>
           </a>
         `;
       }).join('');
