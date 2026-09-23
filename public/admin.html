@@ -1473,58 +1473,73 @@
     }
 
     // Process multiple selected files simultaneously with canvas compression
-    function handleProductMultipleImageUpload(input) {
+    async function handleProductMultipleImageUpload(input) {
       if (!input.files || input.files.length === 0) return;
       const files = Array.from(input.files);
-      let loadedCount = 0;
+      
+      const readAndCompress = file => {
+        return new Promise(resolve => {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            const rawBase64 = e.target.result;
+            const img = new Image();
+            img.onload = function() {
+              try {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+                const maxDim = 1200;
 
-      files.forEach(file => {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          const rawBase64 = e.target.result;
-          const img = new Image();
-          img.onload = function() {
-            try {
-              const canvas = document.createElement('canvas');
-              let width = img.width;
-              let height = img.height;
-              const maxDim = 1200;
-
-              if (width > maxDim || height > maxDim) {
-                if (width > height) {
-                  height = Math.round((height * maxDim) / width);
-                  width = maxDim;
-                } else {
-                  width = Math.round((width * maxDim) / height);
-                  height = maxDim;
+                if (width > maxDim || height > maxDim) {
+                  if (width > height) {
+                    height = Math.round((height * maxDim) / width);
+                    width = maxDim;
+                  } else {
+                    width = Math.round((width * maxDim) / height);
+                    height = maxDim;
+                  }
                 }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                const compressed = canvas.toDataURL('image/jpeg', 0.82);
+                resolve(compressed);
+              } catch (err) {
+                resolve(rawBase64);
               }
-
-              canvas.width = width;
-              canvas.height = height;
-              const ctx = canvas.getContext('2d');
-              ctx.drawImage(img, 0, 0, width, height);
-
-              const compressedBase64 = canvas.toDataURL('image/jpeg', 0.84);
-              addPhotoToProductForm(compressedBase64);
-            } catch (err) {
-              addPhotoToProductForm(rawBase64);
-            }
-
-            loadedCount++;
-            if (loadedCount === files.length) {
-              input.value = '';
-              BelleStore.showToast(`Успішно завантажено ${files.length} фото! ✨`);
-            }
+            };
+            img.onerror = () => resolve(rawBase64);
+            img.src = rawBase64;
           };
-          img.onerror = function() {
-            addPhotoToProductForm(rawBase64);
-            loadedCount++;
-          };
-          img.src = rawBase64;
-        };
-        reader.readAsDataURL(file);
-      });
+          reader.onerror = () => resolve(null);
+          reader.readAsDataURL(file);
+        });
+      };
+
+      BelleStore.showToast("Обробка фото...");
+      const results = await Promise.all(files.map(readAndCompress));
+      const validImages = results.filter(Boolean);
+
+      if (validImages.length > 0) {
+        // If current photos only had the placeholder, remove it
+        if (currentProductPhotos.length === 1 && currentProductPhotos[0].includes('berehynia_dress_1789843600634.jpg')) {
+          currentProductPhotos = [];
+        }
+
+        validImages.forEach(imgData => {
+          if (!currentProductPhotos.includes(imgData)) {
+            currentProductPhotos.push(imgData);
+          }
+        });
+
+        renderProductPhotosGrid();
+        BelleStore.showToast(`Успішно додано ${validImages.length} фото! ✨`);
+      }
+
+      input.value = '';
     }
 
     // --- COLOR PALETTE MANAGEMENT IN PRODUCT MODAL ---
