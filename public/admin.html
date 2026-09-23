@@ -984,10 +984,16 @@
       }
 
       const errBox = document.getElementById('lock-verify-error');
-      if (res.code && errBox) {
-        errBox.classList.remove('hidden');
-        errBox.className = 'text-xs text-[#725B38] bg-[#F5F3EE] p-2.5 border border-[#E4E2DD] rounded';
-        errBox.innerHTML = `ℹ️ Демонстраційний код первинного входу: <strong class="text-[#5E1020] text-sm">${escapeHTML(res.code)}</strong>`;
+      if (errBox) {
+        if (res.code) {
+          errBox.classList.remove('hidden');
+          errBox.className = 'text-xs text-[#725B38] bg-[#F5F3EE] p-2.5 border border-[#E4E2DD] rounded';
+          errBox.innerHTML = `ℹ️ Демонстраційний код первинного входу: <strong class="text-[#5E1020] text-sm">${escapeHTML(res.code)}</strong>`;
+        } else {
+          errBox.classList.remove('hidden');
+          errBox.className = 'text-xs text-emerald-800 bg-emerald-50 p-2.5 border border-emerald-200 rounded';
+          errBox.innerHTML = `✅ <b>Код надіслано в Telegram!</b> Перевірте ваш приватний чат.`;
+        }
       }
     }
 

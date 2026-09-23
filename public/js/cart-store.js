@@ -857,47 +857,79 @@ const BelleStore = {
   },
 
   async saveTelegramConfig(config) {
+    const cleanConfig = {
+      botToken: (config.botToken || '').trim(),
+      chatId: (config.chatId || '').trim(),
+      isActive: Boolean((config.botToken || '').trim() && (config.chatId || '').trim())
+    };
+
+    // Save to local storage for static Cloudflare Pages mode
+    localStorage.setItem('belle_telegram_config', JSON.stringify(cleanConfig));
+
+    // Also sync to server if running with backend
     const token = this.getAdminToken();
     if (token) {
       try {
-        const res = await fetch('/api/admin/telegram-config', {
+        await fetch('/api/admin/telegram-config', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
           },
-          body: JSON.stringify(config)
+          body: JSON.stringify(cleanConfig)
         });
-        const d = await res.json();
-        if (d.success) {
-          localStorage.setItem('belle_telegram_config', JSON.stringify({
-            isActive: d.isActive,
-            botToken: config.botToken ? '••••••••' : '',
-            chatId: config.chatId
-          }));
-          this.showToast('Налаштування Telegram-бота безпечно збережено на сервері! 🤖');
-          return true;
-        }
       } catch(e) {}
     }
 
-    localStorage.setItem('belle_telegram_config', JSON.stringify(config));
-    this.showToast('Налаштування збережено');
+    this.showToast('Налаштування Telegram-бота успішно збережено! 🤖');
     return true;
   },
 
   async sendTelegramTest() {
-    const token = this.getAdminToken();
-    if (!token) return { success: false, error: 'Потрібна авторизація' };
+    const config = this.getTelegramConfig();
+    const token = (config.botToken || '').trim();
+    const chat = (config.chatId || '').trim();
 
+    if (!token || !chat) {
+      return { success: false, error: 'Введіть Bot Token та Chat ID і натисніть «Зберегти налаштування»' };
+    }
+
+    const timeStr = new Date().toLocaleString('uk-UA');
+    const message = `✨ <b>Belle Atelier • Тестове сповіщення</b>\n\n` +
+                    `Telegram-бот успішно підключено до сайту!\n` +
+                    `Всі 2FA коди та нові замовлення надходитимуть сюди.\n\n` +
+                    `🕒 Час перевірки: <i>${timeStr}</i>`;
+
+    // Try client-side direct dispatch first (works on Cloudflare Pages)
     try {
-      const res = await fetch('/api/admin/telegram-test', {
+      const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: chat,
+          text: message,
+          parse_mode: 'HTML'
+        })
       });
-      return await res.json();
+      const data = await res.json();
+      if (data.ok) {
+        return { success: true, message: 'Тестове повідомлення успішно надіслано в Telegram!' };
+      } else {
+        return { success: false, error: data.description || 'Помилка Telegram API (перевірте токен або ID чату)' };
+      }
     } catch (err) {
-      return { success: false, error: err.message };
+      // Fallback to server endpoint if direct network call blocked
+      const adminToken = this.getAdminToken();
+      if (adminToken) {
+        try {
+          const resServer = await fetch('/api/admin/telegram-test', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${adminToken}` }
+          });
+          return await resServer.json();
+        } catch (e) {}
+      }
+      return { success: false, error: 'Помилка зв\'язку з сервером Telegram: ' + err.message };
     }
   },
 
@@ -1180,12 +1212,16 @@ const BelleStore = {
       input.focus();
     }
 
-    if (res.code) {
-      const errBox = document.getElementById('auth-verify-error');
-      if (errBox) {
+    const errBox = document.getElementById('auth-verify-error');
+    if (errBox) {
+      if (res.code) {
         errBox.classList.remove('hidden');
         errBox.className = 'text-xs text-[#725B38] bg-[#F5F3EE] p-2.5 border border-[#E4E2DD] rounded';
         errBox.innerHTML = `ℹ️ Демонстраційний код первинного входу: <strong class="text-[#5E1020] text-sm">${escapeHTML(res.code)}</strong>`;
+      } else {
+        errBox.classList.remove('hidden');
+        errBox.className = 'text-xs text-emerald-800 bg-emerald-50 p-2.5 border border-emerald-200 rounded';
+        errBox.innerHTML = `✅ <b>Код надіслано в Telegram!</b> Перевірте ваш чат.`;
       }
     }
   },
