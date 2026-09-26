@@ -138,6 +138,13 @@
             <button onclick="toggleActiveProductWishlist()" aria-label="Додати в обране" class="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/95 hover:bg-white flex items-center justify-center transition-all shadow-xs z-10 active:scale-90" type="button">
               <span class="material-symbols-outlined text-[20px] transition-colors" id="product-wishlist-icon">favorite</span>
             </button>
+
+            <!-- Jump down to Colors Button -->
+            <button type="button" onclick="scrollToColorsSection()" aria-label="Перейти до кольорів" class="absolute bottom-3 right-3 bg-white/95 hover:bg-white text-primary px-3 py-1.5 rounded-full shadow-md text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all z-10 border border-surface-container-high active:scale-95 cursor-pointer backdrop-blur-xs hover:shadow-lg">
+              <span class="material-symbols-outlined text-[15px]">palette</span>
+              <span>До кольорів</span>
+              <span class="material-symbols-outlined text-[15px]">arrow_downward</span>
+            </button>
           </div>
 
           <!-- Carousel Dots Navigation -->
@@ -152,39 +159,57 @@
         </div>
 
         <!-- Right Column: Clean Product Information -->
-        <div class="lg:col-span-6 flex flex-col space-y-6">
+        <div class="lg:col-span-6 flex flex-col space-y-5">
           
-          <!-- Product Title, Price, Description -->
-          <div class="bg-surface-container-lowest p-6 border border-surface-container-high rounded-xs space-y-4 shadow-xs">
-            <div>
-              <h1 class="font-headline text-2xl sm:text-4xl text-on-surface font-bold tracking-tight leading-tight" id="product-title">
+          <!-- Box 1: Product Title & Price (in one row) + Collapsible Description -->
+          <div class="bg-surface-container-lowest p-5 sm:p-6 border border-surface-container-high rounded-xs space-y-3.5 shadow-xs">
+            
+            <!-- Row 1: Title (left) & Price (right) on one line -->
+            <div class="flex items-start justify-between gap-4">
+              <h1 class="font-headline text-2xl sm:text-3xl lg:text-4xl text-on-surface font-bold tracking-tight leading-tight flex-1" id="product-title">
                 ...
               </h1>
+              
+              <!-- Price right-aligned -->
+              <div class="flex flex-col items-end shrink-0" id="product-price-container">
+                <div class="flex items-baseline gap-2">
+                  <span class="font-headline text-2xl sm:text-3xl font-bold text-primary" id="product-active-price">
+                    ... ₴
+                  </span>
+                  <span class="text-xs sm:text-sm text-outline line-through hidden" id="product-old-price">
+                    ... ₴
+                  </span>
+                </div>
+                <span class="text-[10px] font-bold bg-red-600 text-white px-1.5 py-0.5 rounded-xs uppercase tracking-wider mt-0.5 hidden" id="product-sale-badge">
+                  SALE
+                </span>
+              </div>
             </div>
 
-            <!-- Price -->
-            <div class="flex items-baseline gap-3 pt-1 border-b border-surface-container-high/60 pb-3" id="product-price-container">
-              <span class="font-headline text-2xl sm:text-3xl font-bold text-primary" id="product-active-price">
-                ... ₴
-              </span>
-              <span class="text-sm text-outline line-through hidden" id="product-old-price">
-                ... ₴
-              </span>
-              <span class="text-[11px] font-bold bg-red-600 text-white px-2 py-0.5 rounded-xs uppercase tracking-wider hidden" id="product-sale-badge">
-                SALE
-              </span>
+            <!-- Row 2: Collapsible Description (under title and price, closed by default) -->
+            <div class="border-t border-surface-container-high/60 pt-3">
+              <button type="button" id="toggle-desc-btn" onclick="toggleProductDescription()" class="w-full flex items-center justify-between text-left py-1 text-xs uppercase tracking-wider font-semibold text-primary hover:text-tertiary transition-colors group cursor-pointer">
+                <span class="flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-[18px]">subject</span>
+                  <span id="toggle-desc-btn-text">Читати опис виробу</span>
+                </span>
+                <span class="material-symbols-outlined text-[20px] transition-transform duration-200" id="toggle-desc-arrow">expand_more</span>
+              </button>
+              <div id="product-description-wrapper" class="hidden pt-2.5 space-y-2 text-xs sm:text-sm text-on-surface-variant leading-relaxed">
+                <p id="product-description">
+                  Завантаження інформації про виріб...
+                </p>
+                <div id="product-fabric-wrapper" class="pt-1 text-xs text-secondary font-medium flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-[16px]">checkroom</span>
+                  <span>Склад тканини: <strong class="text-on-surface" id="product-fabric-text">100% пом'якшений льон</strong></span>
+                </div>
+              </div>
             </div>
 
-            <!-- Description -->
-            <div>
-              <p class="text-xs sm:text-sm text-on-surface-variant leading-relaxed" id="product-description">
-                Завантаження інформації про виріб...
-              </p>
-            </div>
           </div>
 
-          <!-- Colors Notice, Sizes, Size Chart Button, Custom Measurements & Actions -->
-          <div class="bg-surface-container-lowest p-6 border border-surface-container-high rounded-xs space-y-5 shadow-xs">
+          <!-- Box 2: Colors, Custom Measurements, Self Size Selection & Actions -->
+          <div class="bg-surface-container-lowest p-5 sm:p-6 border border-surface-container-high rounded-xs space-y-5 shadow-xs">
             
             <!-- Special Offers Block (Visible if product has specialOffers) -->
             <div id="product-special-offers-container" class="hidden p-3.5 bg-red-50/70 border border-red-200 rounded-xs space-y-2.5">
@@ -213,27 +238,7 @@
               </div>
             </div>
 
-            <!-- Size Selection & Size Guide Button -->
-            <div>
-              <div class="flex items-center justify-between mb-2">
-                <span class="text-xs font-semibold uppercase tracking-wider text-on-surface">
-                  Оберіть розмір: <strong class="text-primary font-bold" id="selected-size-label">S</strong>
-                </span>
-                
-                <!-- Size Chart Button -->
-                <button type="button" onclick="openSizeModal()" class="text-xs font-semibold uppercase tracking-wider text-primary hover:text-tertiary flex items-center gap-1.5 transition-colors underline underline-offset-4 decoration-primary/40">
-                  <span class="material-symbols-outlined text-[18px]">straighten</span>
-                  <span>Розмірна таблиця</span>
-                </button>
-              </div>
-
-              <!-- Dynamic Sizes Buttons Grid -->
-              <div class="flex flex-wrap gap-2 pt-1" id="product-sizes-grid">
-                <!-- Populated dynamically from product.sizes -->
-              </div>
-            </div>
-
-            <!-- Custom Measurements Helper Section -->
+            <!-- Custom Measurements Helper Section (DIRECTLY UNDER COLORS) -->
             <div class="bg-surface-container-low p-3.5 border border-surface-container-high/80 rounded-xs space-y-2.5">
               <div class="flex items-center gap-1.5 text-primary">
                 <span class="material-symbols-outlined text-[18px]">straighten</span>
@@ -278,8 +283,28 @@
               </div>
             </div>
 
-            <!-- Quantity Stepper & Add to Cart Button (SIDE BY SIDE ON ONE ROW, CLEAN BUTTON WITHOUT PRICE) -->
-            <div class="pt-2">
+            <!-- Size Selection & Size Guide Button («Самостійно обрати розмір» UNDER MEASUREMENTS) -->
+            <div class="pt-1">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-semibold uppercase tracking-wider text-on-surface">
+                  Самостійно обрати розмір: <strong class="text-primary font-bold" id="selected-size-label">S</strong>
+                </span>
+                
+                <!-- Size Chart Button -->
+                <button type="button" onclick="openSizeModal()" class="text-xs font-semibold uppercase tracking-wider text-primary hover:text-tertiary flex items-center gap-1.5 transition-colors underline underline-offset-4 decoration-primary/40 cursor-pointer">
+                  <span class="material-symbols-outlined text-[18px]">straighten</span>
+                  <span>Розмірна таблиця</span>
+                </button>
+              </div>
+
+              <!-- Dynamic Sizes Buttons Grid -->
+              <div class="flex flex-wrap gap-2 pt-1" id="product-sizes-grid">
+                <!-- Populated dynamically from product.sizes -->
+              </div>
+            </div>
+
+            <!-- Quantity Stepper & Add to Cart Button (SIDE BY SIDE ON ONE ROW) -->
+            <div class="pt-2 border-t border-surface-container-high/60">
               <div class="flex items-center gap-3">
                 <!-- Stepper -->
                 <div class="flex items-center justify-between bg-surface-container border border-surface-container-high px-3 py-2 text-on-surface rounded-xs shrink-0">
@@ -292,8 +317,8 @@
                   </button>
                 </div>
 
-                <!-- Add to Cart CTA Button (Side by side, without price sum) -->
-                <button id="add-to-bag-btn" class="flex-1 bg-primary hover:bg-tertiary text-white py-3.5 px-6 font-semibold text-xs uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 shadow-sm active:scale-[0.99] rounded-xs" onclick="handleAddToCartClick(this)" type="button">
+                <!-- Add to Cart CTA Button -->
+                <button id="add-to-bag-btn" class="flex-1 bg-primary hover:bg-tertiary text-white py-3.5 px-6 font-semibold text-xs uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 shadow-sm active:scale-[0.99] rounded-xs cursor-pointer" onclick="handleAddToCartClick(this)" type="button">
                   <span class="material-symbols-outlined text-[20px]">shopping_bag</span>
                   <span id="add-to-cart-text">Додати в кошик</span>
                 </button>
@@ -465,6 +490,9 @@
 
     const descEl = document.getElementById('product-description');
     if (descEl) descEl.textContent = activeProductData.description || 'Ексклюзивний виріб ручної роботи від майстринь Belle Atelier.';
+
+    const fabricEl = document.getElementById('product-fabric-text');
+    if (fabricEl) fabricEl.textContent = activeProductData.fabric || "100% пом'якшений льон";
 
     // Initialize Gallery Images (Single swipable gallery)
     galleryImages = [];
@@ -714,6 +742,30 @@
     }
   }
 
+  let isDescriptionOpen = false;
+  function toggleProductDescription() {
+    const wrapper = document.getElementById('product-description-wrapper');
+    const btnText = document.getElementById('toggle-desc-btn-text');
+    const arrow = document.getElementById('toggle-desc-arrow');
+    isDescriptionOpen = !isDescriptionOpen;
+    if (isDescriptionOpen) {
+      if (wrapper) wrapper.classList.remove('hidden');
+      if (btnText) btnText.textContent = 'Згорнути опис';
+      if (arrow) arrow.style.transform = 'rotate(180deg)';
+    } else {
+      if (wrapper) wrapper.classList.add('hidden');
+      if (btnText) btnText.textContent = 'Читати опис виробу';
+      if (arrow) arrow.style.transform = 'rotate(0deg)';
+    }
+  }
+
+  function scrollToColorsSection() {
+    const el = document.getElementById('product-colors-container');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }
+
   let selectedColor = 'Молочний';
 
   // --- COLOR SELECTION & VARIANT PHOTO SWITCHING ---
@@ -727,11 +779,10 @@
       : ['Молочний'];
 
     const colors = rawColors.map(c => typeof c === 'object' && c ? (c.name || c.color || '') : String(c)).filter(Boolean);
+    if (colors.length === 0) colors.push('Молочний');
 
-    if (colors.length <= 1) {
-      selectedColor = colors[0] || 'Молочний';
-    } else if (!colors.includes(selectedColor)) {
-      selectedColor = colors[0] || 'Молочний';
+    if (!colors.includes(selectedColor)) {
+      selectedColor = colors[0];
     }
 
     const label = document.getElementById('selected-color-label');
@@ -740,13 +791,14 @@
     grid.innerHTML = colors.map(color => {
       const isSelected = color === selectedColor;
       const safeColor = escapeHTML(color);
+      const jsSafeColor = color.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
       return `
-        <button type="button" data-color="${safeColor}" onclick="selectProductColor(this.getAttribute('data-color'), this)" class="color-btn py-2 px-3.5 text-center text-xs font-semibold uppercase tracking-wider transition-all rounded-xs border flex items-center gap-1.5 ${
+        <button type="button" data-color="${safeColor}" onclick="selectProductColor('${jsSafeColor}', true)" class="color-btn py-2 px-3.5 text-center text-xs font-semibold uppercase tracking-wider transition-all rounded-xs border flex items-center gap-1.5 cursor-pointer select-none touch-manipulation ${
           isSelected 
             ? 'bg-primary text-white border-primary shadow-xs font-bold' 
             : 'bg-surface text-on-surface border-surface-container-high hover:border-primary'
         }">
-          <span class="w-2.5 h-2.5 rounded-full border border-black/20 ${getColorDotClass(color)}"></span>
+          <span class="w-2.5 h-2.5 rounded-full border border-black/20 shrink-0 ${getColorDotClass(color)}"></span>
           <span>${safeColor}</span>
         </button>
       `;
@@ -782,20 +834,22 @@
     return baseImgs;
   }
 
-  function selectProductColor(color, btn) {
+  function selectProductColor(color, isUserAction = false) {
     selectedColor = color;
     const label = document.getElementById('selected-color-label');
     if (label) label.textContent = color;
 
+    // Visual state synchronization across all color buttons
     document.querySelectorAll('.color-btn').forEach(b => {
-      b.classList.remove('bg-primary', 'text-white', 'border-primary', 'shadow-xs', 'font-bold');
-      b.classList.add('bg-surface', 'text-on-surface', 'border-surface-container-high');
+      const bColor = b.getAttribute('data-color');
+      if (bColor === color) {
+        b.classList.remove('bg-surface', 'text-on-surface', 'border-surface-container-high');
+        b.classList.add('bg-primary', 'text-white', 'border-primary', 'shadow-xs', 'font-bold');
+      } else {
+        b.classList.remove('bg-primary', 'text-white', 'border-primary', 'shadow-xs', 'font-bold');
+        b.classList.add('bg-surface', 'text-on-surface', 'border-surface-container-high');
+      }
     });
-
-    if (btn) {
-      btn.classList.remove('bg-surface', 'text-on-surface', 'border-surface-container-high');
-      btn.classList.add('bg-primary', 'text-white', 'border-primary', 'shadow-xs', 'font-bold');
-    }
 
     // Reset special offer if user explicitly changes color
     if (activeSpecialOfferId) {
@@ -821,7 +875,6 @@
 
     // 2. Second priority: If no direct colorImages, check variant rows for this color
     if (variantPhotos.length === 0 && activeProductData && Array.isArray(activeProductData.variants)) {
-      // Find all variant rows dedicated to this specific color
       const colorVariants = activeProductData.variants.filter(v => 
         v.color && v.color.trim().toLowerCase() === color.trim().toLowerCase()
       );
@@ -840,16 +893,21 @@
     }
 
     if (variantPhotos.length > 0) {
-      // Gallery shows strictly this color's dedicated photos
       galleryImages = [...variantPhotos];
     } else {
-      // Fallback to base product photos
       galleryImages = getBaseProductImages();
     }
 
     currentSlideIndex = 0;
     renderGallerySlide();
     recalculateVariantPrice();
+
+    if (isUserAction) {
+      const galleryEl = document.getElementById('gallery-carousel-container');
+      if (galleryEl) {
+        galleryEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
   }
 
   // --- SIZES SELECTION ---
@@ -857,9 +915,12 @@
     const grid = document.getElementById('product-sizes-grid');
     if (!grid) return;
 
-    const sizes = (activeProductData && Array.isArray(activeProductData.sizes) && activeProductData.sizes.length > 0)
+    const rawSizes = (activeProductData && Array.isArray(activeProductData.sizes) && activeProductData.sizes.length > 0)
       ? activeProductData.sizes
       : ['XS', 'S', 'M', 'L', 'XL'];
+
+    const sizes = rawSizes.map(s => typeof s === 'object' && s ? (s.name || s.size || '') : String(s)).filter(Boolean);
+    if (sizes.length === 0) sizes.push('S');
 
     if (!sizes.includes(selectedSize)) {
       selectedSize = sizes[0] || 'S';
@@ -870,8 +931,9 @@
     grid.innerHTML = sizes.map(size => {
       const isSelected = size === selectedSize;
       const safeSize = escapeHTML(size);
+      const jsSafeSize = size.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
       return `
-        <button type="button" data-size="${safeSize}" onclick="selectProductSize(this.getAttribute('data-size'), this)" class="size-btn py-2.5 px-4 text-center text-xs font-semibold uppercase tracking-wider transition-all rounded-xs border ${
+        <button type="button" data-size="${safeSize}" onclick="selectProductSize('${jsSafeSize}')" class="size-btn py-2.5 px-4 text-center text-xs font-semibold uppercase tracking-wider transition-all rounded-xs border cursor-pointer select-none touch-manipulation ${
           isSelected 
             ? 'bg-primary text-white border-primary shadow-xs font-bold' 
             : 'bg-surface text-on-surface border-surface-container-high hover:border-primary'
@@ -882,20 +944,21 @@
     }).join('');
   }
 
-  function selectProductSize(size, btn) {
+  function selectProductSize(size) {
     selectedSize = size;
     const label = document.getElementById('selected-size-label');
     if (label) label.textContent = size;
 
     document.querySelectorAll('.size-btn').forEach(b => {
-      b.classList.remove('bg-primary', 'text-white', 'border-primary', 'shadow-xs', 'font-bold');
-      b.classList.add('bg-surface', 'text-on-surface', 'border-surface-container-high');
+      const bSize = b.getAttribute('data-size');
+      if (bSize === size) {
+        b.classList.remove('bg-surface', 'text-on-surface', 'border-surface-container-high');
+        b.classList.add('bg-primary', 'text-white', 'border-primary', 'shadow-xs', 'font-bold');
+      } else {
+        b.classList.remove('bg-primary', 'text-white', 'border-primary', 'shadow-xs', 'font-bold');
+        b.classList.add('bg-surface', 'text-on-surface', 'border-surface-container-high');
+      }
     });
-
-    if (btn) {
-      btn.classList.remove('bg-surface', 'text-on-surface', 'border-surface-container-high');
-      btn.classList.add('bg-primary', 'text-white', 'border-primary', 'shadow-xs', 'font-bold');
-    }
 
     recalculateVariantPrice();
   }

@@ -101,10 +101,10 @@
 
         <!-- Measurements Advisory Note -->
         <div class="bg-surface-container-low p-4 rounded-xs border border-surface-container-high/80 space-y-2">
-          <p class="text-xs font-semibold text-primary">
+          <p class="text-xs font-semibold text-primary" id="cart-advisory-title">
             Введіть будь ласка ваші мірки для кожного виробу, щоб ми перевірили правильність підібраного розміру
           </p>
-          <p class="text-xs text-on-surface-variant leading-relaxed">
+          <p class="text-xs text-on-surface-variant leading-relaxed" id="cart-advisory-text">
             ❗ Якщо в кошику додано декілька виробів (наприклад, чоловічий та жіночий одяг), заповніть індивідуальні мірки для кожного з них окремо. За необхідності наш стиліст зв'яжеться з вами для уточнення.
           </p>
         </div>
@@ -557,6 +557,13 @@
     const container = document.getElementById('dynamic-measurements-container');
     if (!container) return;
 
+    // Load dynamic advisory text from site texts
+    const texts = (typeof BelleStore !== 'undefined' && BelleStore.getSiteTexts) ? BelleStore.getSiteTexts() : {};
+    const advTitleEl = document.getElementById('cart-advisory-title');
+    const advTextEl = document.getElementById('cart-advisory-text');
+    if (advTitleEl && texts.cart_advisory_title) advTitleEl.textContent = texts.cart_advisory_title;
+    if (advTextEl && texts.cart_advisory_text) advTextEl.textContent = texts.cart_advisory_text;
+
     if (!cartItems || cartItems.length === 0) {
       container.innerHTML = '<p class="text-xs text-outline italic">Кошик порожній</p>';
       return;
@@ -570,8 +577,6 @@
       const safeArt = escapeHTML(it.art || (matchedCatProd ? matchedCatProd.art : 'BL-000'));
       const safeColor = escapeHTML(it.color || 'Базовий');
       const safeSize = escapeHTML(it.size || 'M');
-      const rawImg = it.img || it.image || (matchedCatProd && (matchedCatProd.img || (matchedCatProd.images && matchedCatProd.images[0]))) || '/images/berehynia_dress_1789843600634.jpg';
-      const img = escapeHTML(normalizeImgUrl(rawImg));
 
       // Get existing or item-attached measurements
       const cur = itemMeasurements[idx] || it.measurements || {};
@@ -579,29 +584,26 @@
       const wVal = cur.waist || '';
       const hVal = cur.hips || '';
       const heVal = cur.height || '';
-      const noteVal = cur.note || '';
 
       // Sync into itemMeasurements in memory
       if (!itemMeasurements[idx]) {
-        itemMeasurements[idx] = { chest: cVal, waist: wVal, hips: hVal, height: heVal, note: noteVal };
+        itemMeasurements[idx] = { chest: cVal, waist: wVal, hips: hVal, height: heVal };
       }
 
       return `
         <div class="p-4 bg-surface-container-low border border-surface-container-high rounded-xs space-y-3">
-          <div class="flex items-center justify-between border-b border-surface-container-high/60 pb-2.5">
-            <div class="flex items-center gap-2.5">
-              <div class="w-10 h-12 rounded-2xs overflow-hidden border border-surface-container-high shrink-0 bg-surface">
-                <img src="${img}" class="w-full h-full object-cover" alt="${safeName}" />
-              </div>
+          <div class="flex items-center justify-between border-b border-surface-container-high/60 pb-2">
+            <div class="flex items-center gap-2">
+              <span class="w-5 h-5 rounded-full bg-primary/10 text-primary font-bold text-[10px] flex items-center justify-center shrink-0">${idx + 1}</span>
               <div>
-                <span class="text-[11px] font-bold text-primary uppercase block">Виріб #${idx + 1}: ${safeName}</span>
-                <span class="text-[10px] text-secondary font-medium">Арт. ${safeArt} • Розмір: <strong>${safeSize}</strong> • Колір: <strong>${safeColor}</strong></span>
+                <span class="text-xs font-bold text-primary block">Мірки до виробу #${idx + 1}: ${safeName}</span>
+                <span class="text-[10px] text-secondary font-medium">Арт. ${safeArt} • Колір: <strong>${safeColor}</strong> • Розмір: <strong>${safeSize}</strong></span>
               </div>
             </div>
             ${cartItems.length > 1 && idx === 0 ? `
-              <button type="button" onclick="copyFirstItemMeasurementsToAll()" class="text-[10px] text-primary hover:underline font-semibold flex items-center gap-1 bg-white px-2 py-1 rounded-xs border border-surface-container-high shadow-2xs">
+              <button type="button" onclick="copyFirstItemMeasurementsToAll()" class="text-[10px] text-primary hover:underline font-semibold flex items-center gap-1 bg-white px-2 py-1 rounded-xs border border-surface-container-high shadow-2xs cursor-pointer">
                 <span class="material-symbols-outlined text-[13px]">content_copy</span>
-                <span>Застосувати ці мірки до всіх товарів</span>
+                <span>Застосувати до всіх</span>
               </button>
             ` : ''}
           </div>
@@ -635,11 +637,6 @@
                 <span class="text-[10px] text-on-surface-variant">см</span>
               </div>
             </div>
-          </div>
-
-          <!-- Specific note for this garment (e.g. adjust length, sleeve length, etc.) -->
-          <div class="pt-0.5">
-            <input class="w-full py-1.5 px-2.5 bg-white border border-surface-container-high text-xs focus:outline-none focus:border-primary rounded-xs placeholder:text-outline" id="note-${idx}" value="${noteVal}" placeholder="Побажання щодо цього виробу (наприклад: довжина сукні 125 см, рукав 62 см)..." type="text" oninput="updateItemMeasurement(${idx}, 'note', this.value)" />
           </div>
         </div>
       `;
