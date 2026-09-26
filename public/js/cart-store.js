@@ -276,6 +276,10 @@ const BelleStore = {
       ? p.images.filter(Boolean).map(normalizeImgUrl)
       : (p.img ? [normalizeImgUrl(p.img)] : ['/images/berehynia_dress_1789843600634.jpg']);
 
+    const cleanColors = Array.isArray(p.colors) && p.colors.length > 0 
+      ? p.colors.map(c => typeof c === 'object' && c ? (c.name || c.color || '') : String(c)).filter(Boolean)
+      : ['Молочний'];
+
     return {
       ...p,
       id: String(p.id || ''),
@@ -290,12 +294,15 @@ const BelleStore = {
       isArchived: Boolean(p.isArchived),
       fabric: p.fabric || "100% пом'якшений льон",
       description: p.description || "",
-      sizes: Array.isArray(p.sizes) && p.sizes.length > 0 ? p.sizes : ['XS', 'S', 'M', 'L', 'XL'],
-      colors: Array.isArray(p.colors) && p.colors.length > 0 ? p.colors : ['Молочний'],
+      sizes: Array.isArray(p.sizes) && p.sizes.length > 0 
+        ? p.sizes.map(s => typeof s === 'object' && s ? (s.name || s.size || '') : String(s)).filter(Boolean)
+        : ['XS', 'S', 'M', 'L', 'XL'],
+      colors: cleanColors.length > 0 ? cleanColors : ['Молочний'],
+      colorImages: (p.colorImages && typeof p.colorImages === 'object') ? p.colorImages : {},
       variants: Array.isArray(p.variants) ? p.variants : [],
       img: rawImages[0],
       images: rawImages,
-      updatedAt: p.updatedAt || 0
+      updatedAt: Number(p.updatedAt) || 0
     };
   },
 
@@ -393,6 +400,33 @@ const BelleStore = {
       // Offline / standalone fallback
       console.info('Server sync not available, operating in local offline mode.');
     }
+
+    // 3. Fetch categories from server for cross-device consistency (Mobile <-> Desktop)
+    try {
+      const catRes = await fetch('/api/categories');
+      if (catRes.ok) {
+        const catData = await catRes.json();
+        if (catData.success && Array.isArray(catData.categories) && catData.categories.length > 0) {
+          localStorage.setItem('belle_categories', JSON.stringify(catData.categories));
+          window.dispatchEvent(new Event('belle-categories-updated'));
+        }
+      }
+    } catch(e) {}
+
+    // 4. Fetch site settings & hero from server
+    try {
+      const setRes = await fetch('/api/settings');
+      if (setRes.ok) {
+        const setData = await setRes.json();
+        if (setData.success && setData.settings && typeof setData.settings === 'object' && Object.keys(setData.settings).length > 0) {
+          const existing = this.getSiteTexts();
+          const mergedSettings = { ...existing, ...setData.settings };
+          localStorage.setItem('belle_site_texts', JSON.stringify(mergedSettings));
+          window.dispatchEvent(new Event('belle-site-texts-updated'));
+          window.dispatchEvent(new Event('belle-texts-updated'));
+        }
+      }
+    } catch(e) {}
   },
 
   // Add Product (Local + Server Sync)
@@ -567,6 +601,17 @@ const BelleStore = {
     try {
       localStorage.setItem('belle_categories', JSON.stringify(categories));
       window.dispatchEvent(new Event('belle-categories-updated'));
+      const token = this.getAdminToken();
+      if (token) {
+        fetch('/api/categories', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(categories)
+        }).catch(e => console.warn('Could not sync categories to server:', e));
+      }
     } catch (e) {
       console.error('Error saving categories:', e);
     }
@@ -719,7 +764,20 @@ const BelleStore = {
     try {
       localStorage.setItem('belle_site_texts', JSON.stringify(texts));
       window.dispatchEvent(new Event('belle-texts-updated'));
+      window.dispatchEvent(new Event('belle-site-texts-updated'));
       this.showToast('Тексти сайту успішно оновлено! ✨');
+
+      const token = this.getAdminToken();
+      if (token) {
+        fetch('/api/settings', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(texts)
+        }).catch(e => console.warn('Could not sync settings to server:', e));
+      }
     } catch(e) {
       console.error(e);
     }

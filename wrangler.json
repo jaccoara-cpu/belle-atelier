@@ -1,0 +1,12 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "belle-atelier",
+  "pages_build_output_dir": "public",
+  "compatibility_date": "2026-09-01",
+  "kv_namespaces": [
+    {
+      "binding": "BELLE_KV",
+      "id": "54e92db1671c4c6c9d3546dc44d1ec71"
+    }
+  ]
+}

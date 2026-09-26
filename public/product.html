@@ -588,9 +588,11 @@
     const container = document.getElementById('product-colors-container');
     if (!grid || !container) return;
 
-    const colors = (activeProductData && Array.isArray(activeProductData.colors) && activeProductData.colors.length > 0)
+    const rawColors = (activeProductData && Array.isArray(activeProductData.colors) && activeProductData.colors.length > 0)
       ? activeProductData.colors
       : ['Молочний'];
+
+    const colors = rawColors.map(c => typeof c === 'object' && c ? (c.name || c.color || '') : String(c)).filter(Boolean);
 
     if (colors.length <= 1) {
       selectedColor = colors[0] || 'Молочний';
@@ -661,9 +663,24 @@
       btn.classList.add('bg-primary', 'text-white', 'border-primary', 'shadow-xs', 'font-bold');
     }
 
-    // Isolate color-specific photos to strictly avoid mixing with other variants
+    // Isolate color-specific photos to strictly avoid mixing with other variants or promotional offers
     let variantPhotos = [];
-    if (activeProductData && Array.isArray(activeProductData.variants)) {
+
+    // 1. First priority: Check direct per-color photo gallery (colorImages)
+    if (activeProductData && activeProductData.colorImages && typeof activeProductData.colorImages === 'object') {
+      const matchKey = Object.keys(activeProductData.colorImages).find(k => 
+        k.trim().toLowerCase() === color.trim().toLowerCase()
+      );
+      if (matchKey && Array.isArray(activeProductData.colorImages[matchKey]) && activeProductData.colorImages[matchKey].length > 0) {
+        activeProductData.colorImages[matchKey].forEach(im => {
+          const clean = normalizeImgUrl(im);
+          if (clean && !variantPhotos.includes(clean)) variantPhotos.push(clean);
+        });
+      }
+    }
+
+    // 2. Second priority: If no direct colorImages, check variant rows for this color
+    if (variantPhotos.length === 0 && activeProductData && Array.isArray(activeProductData.variants)) {
       // Find all variant rows dedicated to this specific color
       const colorVariants = activeProductData.variants.filter(v => 
         v.color && v.color.trim().toLowerCase() === color.trim().toLowerCase()
@@ -1184,10 +1201,30 @@
   }
 
   document.addEventListener('DOMContentLoaded', () => {
+    if (typeof BelleStore !== 'undefined' && BelleStore.initStore) {
+      BelleStore.initStore();
+    }
     initProductPage();
 
     window.addEventListener('belle-products-updated', () => {
       initProductPage();
+    });
+
+    window.addEventListener('belle-categories-updated', () => {
+      const navList = document.getElementById('product-nav-categories-list');
+      if (navList && typeof BelleStore !== 'undefined') {
+        const cats = BelleStore.getCategories();
+        navList.innerHTML = cats.map(c => {
+          const isSale = c.id === 'sale' || c.isSale || c.name.toUpperCase().includes('SALE');
+          const safeId = encodeURIComponent(c.id);
+          const safeName = escapeHTML(c.name);
+          if (isSale) {
+            return `<a class="text-red-600 font-bold py-1 hover:text-red-700 flex items-center gap-2" href="catalog.html?category=${safeId}"><span class="material-symbols-outlined text-[18px]">local_offer</span><span>${safeName}</span></a>`;
+          }
+          const safeIcon = escapeHTML(c.icon || 'folder');
+          return `<a class="text-on-surface py-1 hover:text-primary flex items-center gap-2" href="catalog.html?category=${safeId}"><span class="material-symbols-outlined text-[18px] text-secondary">${safeIcon}</span><span>${safeName}</span></a>`;
+        }).join('');
+      }
     });
 
     window.addEventListener('belle-wishlist-updated', () => {

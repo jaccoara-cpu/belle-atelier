@@ -669,9 +669,19 @@
   }
 
   document.addEventListener('DOMContentLoaded', () => {
+    if (typeof BelleStore !== 'undefined' && BelleStore.initStore) {
+      BelleStore.initStore();
+    }
     loadSavedMeasurements();
     renderCartPage();
     renderCartNavCategories();
+
+    window.addEventListener('belle-site-texts-updated', () => {
+      updateCartPricing();
+    });
+    window.addEventListener('belle-texts-updated', () => {
+      updateCartPricing();
+    });
 
     const bespokeToggle = document.getElementById('bespoke-toggle');
     if (bespokeToggle) {
@@ -749,7 +759,7 @@
         const salonCity = texts.contacts_salon_city || 'м. Київ, просп. Європейського Союзу, 45Б';
 
         if (deliveryRadios === 'np-global') deliveryMethodName = 'Нова Пошта Global';
-        else if (deliveryRadios === 'ukrposhta') deliveryMethodName = 'Укрпошта (Міжнародна)';
+        else if (deliveryRadios === 'ukrposhta') deliveryMethodName = 'Укрпошта міжнародна доставка';
         else if (deliveryRadios === 'pickup') deliveryMethodName = `Самовивіз (${salonCity})`;
 
         const payment = document.querySelector('input[name="payment"]:checked')?.value || 'postpay';

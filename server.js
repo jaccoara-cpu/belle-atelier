@@ -772,6 +772,60 @@ const server = http.createServer(async (req, res) => {
       }
     }
 
+    // GET /api/categories
+    if (pathname === '/api/categories' && method === 'GET') {
+      const DEFAULT_CATS = [
+        { id: 'women', name: 'Жіночий одяг', icon: 'checkroom', order: 1 },
+        { id: 'men', name: 'Чоловічий одяг', icon: 'styler', order: 2 },
+        { id: 'sets', name: 'Парні комплекти', icon: 'favorite', order: 3 },
+        { id: 'accessories', name: 'Аксесуари', icon: 'straighten', order: 4 },
+        { id: 'souvenirs', name: 'Сувеніри', icon: 'card_giftcard', order: 5 },
+        { id: 'sale', name: 'SALE', icon: 'local_offer', order: 6, isSale: true }
+      ];
+      const categories = readJSON('categories.json', DEFAULT_CATS);
+      return sendJSON(res, 200, { success: true, categories });
+    }
+
+    // POST /api/categories (Admin Protected)
+    if (pathname === '/api/categories' && method === 'POST') {
+      if (!verifyAdminSession(req)) {
+        return sendJSON(res, 401, { success: false, error: 'Потрібна авторизація адміністратора' });
+      }
+      try {
+        const body = await parseBody(req, 1024 * 1024);
+        if (Array.isArray(body)) {
+          writeJSON('categories.json', body);
+          return sendJSON(res, 200, { success: true, categories: body });
+        }
+        return sendJSON(res, 400, { success: false, error: 'Недійсний масив категорій' });
+      } catch (err) {
+        return sendJSON(res, 400, { success: false, error: err.message });
+      }
+    }
+
+    // GET /api/settings
+    if (pathname === '/api/settings' && method === 'GET') {
+      const settings = readJSON('settings.json', {});
+      return sendJSON(res, 200, { success: true, settings });
+    }
+
+    // POST /api/settings (Admin Protected)
+    if (pathname === '/api/settings' && method === 'POST') {
+      if (!verifyAdminSession(req)) {
+        return sendJSON(res, 401, { success: false, error: 'Потрібна авторизація адміністратора' });
+      }
+      try {
+        const body = await parseBody(req, 1024 * 1024);
+        if (body && typeof body === 'object') {
+          writeJSON('settings.json', body);
+          return sendJSON(res, 200, { success: true, settings: body });
+        }
+        return sendJSON(res, 400, { success: false, error: 'Недійсні налаштування' });
+      } catch (err) {
+        return sendJSON(res, 400, { success: false, error: err.message });
+      }
+    }
+
     // ==============================================================
     // 4. ORDERS & ANTI-TAMPERING VERIFICATION (BURP SUITE DEFENSE)
     // ==============================================================

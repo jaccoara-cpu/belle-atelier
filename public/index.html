@@ -146,7 +146,6 @@
       <div class="mb-3">
         <a href="catalog.html" class="w-full flex items-center justify-between p-3 sm:p-3.5 bg-primary text-white border border-primary hover:bg-tertiary transition-all rounded-xs shadow-xs group">
           <span class="flex items-center gap-2">
-            <span class="material-symbols-outlined text-[18px]">grid_view</span>
             <span class="text-xs sm:text-sm uppercase tracking-wider font-bold">Весь каталог</span>
           </span>
           <span class="material-symbols-outlined text-[16px] group-hover:translate-x-0.5 transition-transform">arrow_forward</span>
@@ -156,6 +155,24 @@
       <!-- Categories in neat narrow rectangles, 2 per row -->
       <div class="grid grid-cols-2 gap-2.5 sm:gap-3" id="home-categories-grid">
         <!-- Categories dynamically rendered from BelleStore.getCategories() -->
+      </div>
+    </section>
+
+    <!-- NEW / FEATURED PRODUCTS SECTION (Mobile & Desktop) -->
+    <section class="max-w-7xl mx-auto px-4 md:px-8 py-8 sm:py-12 border-t border-surface-container-high/60">
+      <div class="flex items-center justify-between mb-6 pb-2 border-b border-surface-container-high">
+        <div>
+          <h2 class="font-headline text-2xl sm:text-3xl text-primary font-bold">Новинки та обрані моделі</h2>
+          <p class="text-xs text-secondary font-medium mt-0.5">Ексклюзивний авторський одяг ательє</p>
+        </div>
+        <a href="catalog.html" class="text-xs uppercase tracking-wider font-semibold text-primary hover:text-tertiary flex items-center gap-1 transition-colors">
+          <span>Дивитися всі</span>
+          <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+        </a>
+      </div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6" id="home-featured-products-grid">
+        <!-- Dynamically rendered active products -->
       </div>
     </section>
 
@@ -226,8 +243,16 @@
   <script src="js/cart-store.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
+      if (typeof BelleStore !== 'undefined' && BelleStore.initStore) {
+        BelleStore.initStore();
+      }
       renderHomeCategories();
       renderHomeContacts();
+      renderHomeFeaturedProducts();
+
+      window.addEventListener('belle-products-updated', () => {
+        renderHomeFeaturedProducts();
+      });
 
       window.addEventListener('belle-categories-updated', () => {
         renderHomeCategories();
@@ -246,6 +271,63 @@
         });
       }
     });
+
+    function renderHomeFeaturedProducts() {
+      const grid = document.getElementById('home-featured-products-grid');
+      if (!grid || typeof BelleStore === 'undefined' || !BelleStore.getActiveProducts) return;
+
+      const prods = BelleStore.getActiveProducts();
+      if (!prods || prods.length === 0) {
+        grid.innerHTML = '<div class="col-span-full py-8 text-center text-xs text-secondary">Вироби завантажуються...</div>';
+        return;
+      }
+
+      // Display up to 8 latest/featured products
+      const featured = prods.slice(0, 8);
+      grid.innerHTML = featured.map(p => {
+        const safeId = encodeURIComponent(p.id);
+        const safeName = escapeHTML(p.name);
+        const safeArt = escapeHTML(p.art || 'BL-000');
+        const safeImg = escapeHTML(normalizeImgUrl(p.img || (p.images && p.images[0])));
+        const safeSale = escapeHTML(p.sale || '');
+        const formattedPrice = Number(p.price || 0).toLocaleString('uk-UA');
+        const formattedOldPrice = p.oldPrice ? Number(p.oldPrice).toLocaleString('uk-UA') : null;
+
+        return `
+          <article class="group relative flex flex-col bg-surface border border-surface-container-high/80 rounded-xs overflow-hidden shadow-2xs hover:shadow-md transition-all duration-300">
+            <div class="relative w-full aspect-[3/4] bg-surface-container overflow-hidden">
+              <a href="product.html?id=${safeId}" class="block w-full h-full">
+                <img src="${safeImg}" alt="${safeName}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+              </a>
+              ${safeSale ? `<span class="absolute top-2 left-2 bg-red-600 text-white text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-xs uppercase tracking-wider shadow-xs">${safeSale}</span>` : ''}
+              <button onclick="event.preventDefault(); event.stopPropagation(); BelleStore.toggleWishlist('${safeId}');" class="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/80 hover:bg-white text-on-surface hover:text-red-600 flex items-center justify-center transition-colors shadow-xs" title="Додати до обраного">
+                <span class="material-symbols-outlined text-[18px]">favorite</span>
+              </button>
+            </div>
+
+            <div class="p-3 sm:p-4 flex flex-col flex-1 justify-between gap-2">
+              <div>
+                <span class="text-[10px] font-mono text-outline block mb-0.5">${safeArt}</span>
+                <h3 class="font-headline text-sm sm:text-base font-bold text-on-surface group-hover:text-primary transition-colors leading-snug line-clamp-2">
+                  <a href="product.html?id=${safeId}">${safeName}</a>
+                </h3>
+              </div>
+
+              <div class="pt-2 border-t border-surface-container-high/60 flex items-baseline justify-between">
+                <div>
+                  <span class="font-headline text-sm sm:text-base font-bold text-primary">${formattedPrice} ₴</span>
+                  ${formattedOldPrice ? `<span class="text-[11px] text-outline line-through ml-1.5">${formattedOldPrice} ₴</span>` : ''}
+                </div>
+                <a href="product.html?id=${safeId}" class="text-[11px] font-semibold text-primary hover:text-tertiary uppercase tracking-wider flex items-center gap-0.5">
+                  <span>Обрати</span>
+                  <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+                </a>
+              </div>
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
 
     function renderHomeContacts() {
       if (typeof BelleStore === 'undefined' || !BelleStore.getSiteTexts) return;

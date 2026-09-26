@@ -198,6 +198,9 @@
   let sortOption = 'new';
 
   document.addEventListener('DOMContentLoaded', () => {
+    if (typeof BelleStore !== 'undefined' && BelleStore.initStore) {
+      BelleStore.initStore();
+    }
     const searchInput = document.getElementById('catalog-search');
     const sortSelect = document.getElementById('catalog-sort');
 
@@ -268,7 +271,6 @@
               : 'bg-surface-container-lowest border-surface-container-high hover:border-primary/50 text-on-surface'
           }">
             <span class="flex items-center gap-2.5">
-              <span class="material-symbols-outlined text-[18px]">grid_view</span>
               <span class="text-xs uppercase tracking-wider font-bold">Весь каталог</span>
             </span>
             <span class="flex items-center gap-1 text-xs opacity-75">
