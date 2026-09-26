@@ -99,46 +99,19 @@
           </div>
         </div>
 
-        <!-- Measurements Advisory Note (Clean, no buttons) -->
+        <!-- Measurements Advisory Note -->
         <div class="bg-surface-container-low p-4 rounded-xs border border-surface-container-high/80 space-y-2">
           <p class="text-xs font-semibold text-primary">
-            Введіть будь ласка ваші мірки, щоб ми перевірили правильність підібраного розміру
+            Введіть будь ласка ваші мірки для кожного виробу, щоб ми перевірили правильність підібраного розміру
           </p>
           <p class="text-xs text-on-surface-variant leading-relaxed">
-            ❗ Будь ласка, не вказуйте обхват грудей, талії та стегон навмання. Ці мірки дуже важливі для правильного підбору вашого розміру. За необхідності наш менеджер зв'яжеться з вами та допоможе точно підібрати розмір.
+            ❗ Якщо в кошику додано декілька виробів (наприклад, чоловічий та жіночий одяг), заповніть індивідуальні мірки для кожного з них окремо. За необхідності наш стиліст зв'яжеться з вами для уточнення.
           </p>
         </div>
 
-        <!-- 4-Grid Measurements Inputs -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 pt-1">
-          <div class="bg-surface-container-low p-3 rounded-xs border border-surface-container-high flex flex-col justify-between">
-            <label class="text-[11px] uppercase tracking-wider text-on-surface-variant font-semibold mb-1" for="chest">Обхват грудей</label>
-            <div class="flex items-baseline gap-1 border-b border-outline hover:border-primary focus-within:border-primary transition-colors py-1">
-              <input class="w-full bg-transparent font-bold text-base text-on-surface focus:outline-none" id="chest" placeholder="88" type="number"/>
-              <span class="text-xs text-on-surface-variant">см</span>
-            </div>
-          </div>
-          <div class="bg-surface-container-low p-3 rounded-xs border border-surface-container-high flex flex-col justify-between">
-            <label class="text-[11px] uppercase tracking-wider text-on-surface-variant font-semibold mb-1" for="waist">Обхват талії</label>
-            <div class="flex items-baseline gap-1 border-b border-outline hover:border-primary focus-within:border-primary transition-colors py-1">
-              <input class="w-full bg-transparent font-bold text-base text-on-surface focus:outline-none" id="waist" placeholder="68" type="number"/>
-              <span class="text-xs text-on-surface-variant">см</span>
-            </div>
-          </div>
-          <div class="bg-surface-container-low p-3 rounded-xs border border-surface-container-high flex flex-col justify-between">
-            <label class="text-[11px] uppercase tracking-wider text-on-surface-variant font-semibold mb-1" for="hips">Обхват стегон</label>
-            <div class="flex items-baseline gap-1 border-b border-outline hover:border-primary focus-within:border-primary transition-colors py-1">
-              <input class="w-full bg-transparent font-bold text-base text-on-surface focus:outline-none" id="hips" placeholder="96" type="number"/>
-              <span class="text-xs text-on-surface-variant">см</span>
-            </div>
-          </div>
-          <div class="bg-surface-container-low p-3 rounded-xs border border-surface-container-high flex flex-col justify-between">
-            <label class="text-[11px] uppercase tracking-wider text-on-surface-variant font-semibold mb-1" for="height">Ваш зріст</label>
-            <div class="flex items-baseline gap-1 border-b border-outline hover:border-primary focus-within:border-primary transition-colors py-1">
-              <input class="w-full bg-transparent font-bold text-base text-on-surface focus:outline-none" id="height" placeholder="172" type="number"/>
-              <span class="text-xs text-on-surface-variant">см</span>
-            </div>
-          </div>
+        <!-- Dynamic Per-Item Measurements Cards Container -->
+        <div id="dynamic-measurements-container" class="space-y-4 pt-1">
+          <!-- Populated dynamically per item in cart -->
         </div>
 
         <!-- Custom Tailoring / Corrections Option (No extra fee) -->
@@ -200,7 +173,7 @@
             <input class="accent-primary w-4 h-4 cursor-pointer" name="delivery" type="radio" value="ukrposhta"/>
             <div class="flex items-center gap-1.5">
               <span class="material-symbols-outlined text-secondary text-[18px]">flight_takeoff</span>
-              <span class="text-xs font-semibold text-on-surface">Укрпошта</span>
+              <span class="text-xs font-semibold text-on-surface">Укрпошта міжнародна доставка</span>
             </div>
           </label>
 
@@ -283,31 +256,37 @@
           <label class="flex items-center justify-between p-3 rounded-xs bg-surface-container-low border border-surface-container-high cursor-pointer hover:bg-surface-container transition-all has-[:checked]:bg-surface-container-high has-[:checked]:border-primary has-[:checked]:ring-1 has-[:checked]:ring-primary">
             <div class="flex items-center gap-2.5">
               <input checked="" class="accent-primary w-4 h-4 cursor-pointer" name="payment" type="radio" value="full-online"/>
-              <span class="text-xs font-medium text-on-surface">Повна оплата на сайті</span>
+              <span class="text-xs font-medium text-on-surface" id="cart-pay-online-title">Повна оплата на сайті</span>
             </div>
-            <div class="flex items-center gap-1.5 text-on-surface-variant text-[10px]">
+            <div class="flex items-center gap-1.5 text-on-surface-variant text-[10px]" id="cart-pay-online-desc">
               <span>Apple Pay</span> • <span>Google Pay</span> • <span>Visa / MC</span>
             </div>
           </label>
 
-          <!-- Payment 2: Prepayment 300 UAH -->
-          <label class="flex items-center gap-2.5 p-3 rounded-xs bg-surface-container-low border border-surface-container-high cursor-pointer hover:bg-surface-container transition-all has-[:checked]:bg-surface-container-high has-[:checked]:border-primary has-[:checked]:ring-1 has-[:checked]:ring-primary">
-            <input class="accent-primary w-4 h-4 cursor-pointer" name="payment" type="radio" value="postpay"/>
-            <span class="text-xs font-medium text-on-surface">Післяплата з передоплатою 300 грн</span>
+          <!-- Payment 2: Prepayment -->
+          <label class="flex items-start gap-2.5 p-3 rounded-xs bg-surface-container-low border border-surface-container-high cursor-pointer hover:bg-surface-container transition-all has-[:checked]:bg-surface-container-high has-[:checked]:border-primary has-[:checked]:ring-1 has-[:checked]:ring-primary">
+            <input class="mt-0.5 accent-primary w-4 h-4 cursor-pointer" name="payment" type="radio" value="postpay"/>
+            <div class="flex flex-col">
+              <span class="text-xs font-medium text-on-surface" id="cart-pay-postpay-title">Післяплата з передоплатою 300 грн</span>
+              <span class="text-[11px] text-on-surface-variant mt-0.5" id="cart-pay-postpay-desc">Мінімальний аванс за доставку, решта суми при отриманні</span>
+            </div>
           </label>
 
-          <!-- Payment 3: Custom 50/50 without description -->
-          <label class="flex items-center gap-2.5 p-3 rounded-xs bg-surface-container-low border border-surface-container-high cursor-pointer hover:bg-surface-container transition-all has-[:checked]:bg-surface-container-high has-[:checked]:border-primary has-[:checked]:ring-1 has-[:checked]:ring-primary">
-            <input class="accent-primary w-4 h-4 cursor-pointer" name="payment" type="radio" value="split"/>
-            <span class="text-xs font-medium text-on-surface">Парні / індивідуальні замовлення 50%</span>
+          <!-- Payment 3: Custom 50/50 -->
+          <label class="flex items-start gap-2.5 p-3 rounded-xs bg-surface-container-low border border-surface-container-high cursor-pointer hover:bg-surface-container transition-all has-[:checked]:bg-surface-container-high has-[:checked]:border-primary has-[:checked]:ring-1 has-[:checked]:ring-primary">
+            <input class="mt-0.5 accent-primary w-4 h-4 cursor-pointer" name="payment" type="radio" value="split"/>
+            <div class="flex flex-col">
+              <span class="text-xs font-medium text-on-surface" id="cart-pay-split-title">Парні / індивідуальні замовлення 50%</span>
+              <span class="text-[11px] text-on-surface-variant mt-0.5" id="cart-pay-split-desc">Оплата 50% вартості при замовленні, 50% після готовності</span>
+            </div>
           </label>
 
-          <!-- Payment 4: IBAN Invoice with requested description -->
+          <!-- Payment 4: IBAN Invoice -->
           <label class="flex items-start gap-2.5 p-3 rounded-xs bg-surface-container-low border border-surface-container-high cursor-pointer hover:bg-surface-container transition-all has-[:checked]:bg-surface-container-high has-[:checked]:border-primary has-[:checked]:ring-1 has-[:checked]:ring-primary">
             <input class="mt-0.5 accent-primary w-4 h-4 cursor-pointer" name="payment" type="radio" value="iban"/>
             <div class="flex flex-col">
-              <span class="text-xs font-medium text-on-surface">Оплата на реквізити IBAN</span>
-              <span class="text-[11px] text-on-surface-variant mt-0.5">просто відправте мені реквізити та я оплачу вручну</span>
+              <span class="text-xs font-medium text-on-surface" id="cart-pay-iban-title">Оплата на реквізити IBAN</span>
+              <span class="text-[11px] text-on-surface-variant mt-0.5" id="cart-pay-iban-desc">просто відправте мені реквізити та я оплачу вручну</span>
             </div>
           </label>
         </div>
@@ -437,16 +416,18 @@
     if (headerCount) headerCount.textContent = `Вибрані вироби (${totalCount})`;
 
     // Render each item with CLICKABLE LINKS
+    const catalogProds = (typeof BelleStore !== 'undefined' && BelleStore.getProducts) ? BelleStore.getProducts() : [];
     container.innerHTML = cartItems.map((it, idx) => {
       const p = Number(it.price) || 0;
       const q = Number(it.quantity) || 1;
       const rowPrice = p * q;
-      const rawImg = it.image || '/images/berehynia_dress_1789843600634.jpg';
+      const matchedCatProd = catalogProds.find(cp => cp.id === it.id);
+      const rawImg = it.img || it.image || (matchedCatProd && (matchedCatProd.img || (matchedCatProd.images && matchedCatProd.images[0]))) || '/images/berehynia_dress_1789843600634.jpg';
       const img = escapeHTML(normalizeImgUrl(rawImg));
       const safeId = encodeURIComponent(it.id || 'beregynya');
       const prodUrl = `product.html?id=${safeId}`;
-      const safeName = escapeHTML(it.name || 'Виріб ательє');
-      const safeArt = escapeHTML(it.art || 'BL-COUTURE');
+      const safeName = escapeHTML(it.name || (matchedCatProd ? matchedCatProd.name : 'Виріб ательє'));
+      const safeArt = escapeHTML(it.art || (matchedCatProd ? matchedCatProd.art : 'BL-COUTURE'));
       const safeSize = escapeHTML(it.size || 'M');
       const safeColor = escapeHTML(it.color || 'Базовий');
 
@@ -486,6 +467,7 @@
     }).join('');
 
     updateCartPricing();
+    renderMeasurementsUI();
   }
 
   function updateCartPricing() {
@@ -500,6 +482,28 @@
     if (subtotalVal) subtotalVal.textContent = `${baseSum.toLocaleString('uk-UA')} ₴`;
     if (totalVal) totalVal.textContent = `${finalTotal.toLocaleString('uk-UA')} ₴`;
 
+    // Dynamic Payment Texts & Deposit Amount
+    const texts = (typeof BelleStore !== 'undefined' && BelleStore.getSiteTexts) ? BelleStore.getSiteTexts() : {};
+    const depositAmt = Number(texts.payment_deposit_amount) >= 0 ? Number(texts.payment_deposit_amount) : 300;
+
+    const payOnlineTitle = document.getElementById('cart-pay-online-title');
+    const payOnlineDesc = document.getElementById('cart-pay-online-desc');
+    const payPostpayTitle = document.getElementById('cart-pay-postpay-title');
+    const payPostpayDesc = document.getElementById('cart-pay-postpay-desc');
+    const paySplitTitle = document.getElementById('cart-pay-split-title');
+    const paySplitDesc = document.getElementById('cart-pay-split-desc');
+    const payIbanTitle = document.getElementById('cart-pay-iban-title');
+    const payIbanDesc = document.getElementById('cart-pay-iban-desc');
+
+    if (payOnlineTitle && texts.payment_online_title) payOnlineTitle.textContent = texts.payment_online_title;
+    if (payOnlineDesc && texts.payment_online_desc) payOnlineDesc.textContent = texts.payment_online_desc;
+    if (payPostpayTitle) payPostpayTitle.textContent = texts.payment_postpay_title ? `${texts.payment_postpay_title} ${depositAmt} грн` : `Післяплата з передоплатою ${depositAmt} грн`;
+    if (payPostpayDesc && texts.payment_postpay_desc) payPostpayDesc.textContent = texts.payment_postpay_desc;
+    if (paySplitTitle && texts.payment_split_title) paySplitTitle.textContent = texts.payment_split_title;
+    if (paySplitDesc && texts.payment_split_desc) paySplitDesc.textContent = texts.payment_split_desc;
+    if (payIbanTitle && texts.payment_iban_title) payIbanTitle.textContent = texts.payment_iban_title;
+    if (payIbanDesc && texts.payment_iban_desc) payIbanDesc.textContent = texts.payment_iban_desc;
+
     // Payment method split
     const selectedPayment = document.querySelector('input[name="payment"]:checked')?.value;
     if (selectedPayment === 'full-online' || selectedPayment === 'iban') {
@@ -510,12 +514,130 @@
       if (payNowVal) payNowVal.textContent = `${half.toLocaleString('uk-UA')} ₴`;
       if (payLaterVal) payLaterVal.textContent = `${(finalTotal - half).toLocaleString('uk-UA')} ₴`;
     } else {
-      const deposit = Math.min(300, finalTotal);
+      const deposit = Math.min(depositAmt, finalTotal);
       const remainder = Math.max(0, finalTotal - deposit);
       if (payNowVal) payNowVal.textContent = `${deposit.toLocaleString('uk-UA')} ₴`;
       if (payLaterVal) payLaterVal.textContent = `${remainder.toLocaleString('uk-UA')} ₴`;
     }
   }
+
+  // Per-item measurements storage in cart session
+  let itemMeasurements = {};
+
+  function renderMeasurementsUI() {
+    const container = document.getElementById('dynamic-measurements-container');
+    if (!container) return;
+
+    if (!cartItems || cartItems.length === 0) {
+      container.innerHTML = '<p class="text-xs text-outline italic">Кошик порожній</p>';
+      return;
+    }
+
+    // Load any default measurements from localStorage if not set
+    let defaultSaved = {};
+    try {
+      const saved = localStorage.getItem('belle_user_measurements');
+      if (saved) defaultSaved = JSON.parse(saved);
+    } catch(e) {}
+
+    container.innerHTML = cartItems.map((it, idx) => {
+      const matchedCatProd = catalogProds.find(cp => cp.id === it.id);
+      const safeName = escapeHTML(it.name || (matchedCatProd ? matchedCatProd.name : 'Виріб'));
+      const safeArt = escapeHTML(it.art || (matchedCatProd ? matchedCatProd.art : 'BL-000'));
+      const safeColor = escapeHTML(it.color || 'Базовий');
+      const safeSize = escapeHTML(it.size || 'M');
+      const rawImg = it.img || it.image || (matchedCatProd && (matchedCatProd.img || (matchedCatProd.images && matchedCatProd.images[0]))) || '/images/berehynia_dress_1789843600634.jpg';
+      const img = escapeHTML(normalizeImgUrl(rawImg));
+
+      // Get existing or saved values
+      const cur = itemMeasurements[idx] || (idx === 0 ? defaultSaved : {});
+      const cVal = cur.chest || '';
+      const wVal = cur.waist || '';
+      const hVal = cur.hips || '';
+      const heVal = cur.height || '';
+      const noteVal = cur.note || '';
+
+      return `
+        <div class="p-4 bg-surface-container-low border border-surface-container-high rounded-xs space-y-3">
+          <div class="flex items-center justify-between border-b border-surface-container-high/60 pb-2.5">
+            <div class="flex items-center gap-2.5">
+              <div class="w-10 h-12 rounded-2xs overflow-hidden border border-surface-container-high shrink-0 bg-surface">
+                <img src="${img}" class="w-full h-full object-cover" alt="${safeName}" />
+              </div>
+              <div>
+                <span class="text-[11px] font-bold text-primary uppercase block">Виріб #${idx + 1}: ${safeName}</span>
+                <span class="text-[10px] text-secondary font-medium">Арт. ${safeArt} • Розмір: <strong>${safeSize}</strong> • Колір: <strong>${safeColor}</strong></span>
+              </div>
+            </div>
+            ${cartItems.length > 1 && idx === 0 ? `
+              <button type="button" onclick="copyFirstItemMeasurementsToAll()" class="text-[10px] text-primary hover:underline font-semibold flex items-center gap-1 bg-white px-2 py-1 rounded-xs border border-surface-container-high shadow-2xs">
+                <span class="material-symbols-outlined text-[13px]">content_copy</span>
+                <span>Застосувати ці мірки до всіх товарів</span>
+              </button>
+            ` : ''}
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+            <div class="bg-white p-2.5 rounded-xs border border-surface-container-high flex flex-col justify-between">
+              <label class="text-[10px] uppercase tracking-wider text-on-surface-variant font-semibold mb-1" for="chest-${idx}">Обхват грудей</label>
+              <div class="flex items-baseline gap-1 border-b border-outline/60 focus-within:border-primary py-0.5">
+                <input class="w-full bg-transparent font-bold text-sm text-on-surface focus:outline-none" id="chest-${idx}" value="${cVal}" placeholder="88" type="number" oninput="updateItemMeasurement(${idx}, 'chest', this.value)"/>
+                <span class="text-[10px] text-on-surface-variant">см</span>
+              </div>
+            </div>
+            <div class="bg-white p-2.5 rounded-xs border border-surface-container-high flex flex-col justify-between">
+              <label class="text-[10px] uppercase tracking-wider text-on-surface-variant font-semibold mb-1" for="waist-${idx}">Обхват талії</label>
+              <div class="flex items-baseline gap-1 border-b border-outline/60 focus-within:border-primary py-0.5">
+                <input class="w-full bg-transparent font-bold text-sm text-on-surface focus:outline-none" id="waist-${idx}" value="${wVal}" placeholder="68" type="number" oninput="updateItemMeasurement(${idx}, 'waist', this.value)"/>
+                <span class="text-[10px] text-on-surface-variant">см</span>
+              </div>
+            </div>
+            <div class="bg-white p-2.5 rounded-xs border border-surface-container-high flex flex-col justify-between">
+              <label class="text-[10px] uppercase tracking-wider text-on-surface-variant font-semibold mb-1" for="hips-${idx}">Обхват стегон</label>
+              <div class="flex items-baseline gap-1 border-b border-outline/60 focus-within:border-primary py-0.5">
+                <input class="w-full bg-transparent font-bold text-sm text-on-surface focus:outline-none" id="hips-${idx}" value="${hVal}" placeholder="96" type="number" oninput="updateItemMeasurement(${idx}, 'hips', this.value)"/>
+                <span class="text-[10px] text-on-surface-variant">см</span>
+              </div>
+            </div>
+            <div class="bg-white p-2.5 rounded-xs border border-surface-container-high flex flex-col justify-between">
+              <label class="text-[10px] uppercase tracking-wider text-on-surface-variant font-semibold mb-1" for="height-${idx}">Зріст</label>
+              <div class="flex items-baseline gap-1 border-b border-outline/60 focus-within:border-primary py-0.5">
+                <input class="w-full bg-transparent font-bold text-sm text-on-surface focus:outline-none" id="height-${idx}" value="${heVal}" placeholder="172" type="number" oninput="updateItemMeasurement(${idx}, 'height', this.value)"/>
+                <span class="text-[10px] text-on-surface-variant">см</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Specific note for this garment (e.g. adjust length, sleeve length, etc.) -->
+          <div class="pt-0.5">
+            <input class="w-full py-1.5 px-2.5 bg-white border border-surface-container-high text-xs focus:outline-none focus:border-primary rounded-xs placeholder:text-outline" id="note-${idx}" value="${noteVal}" placeholder="Побажання щодо цього виробу (наприклад: довжина сукні 125 см, рукав 62 см)..." type="text" oninput="updateItemMeasurement(${idx}, 'note', this.value)" />
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  window.updateItemMeasurement = function(idx, field, value) {
+    if (!itemMeasurements[idx]) itemMeasurements[idx] = {};
+    itemMeasurements[idx][field] = value.trim();
+
+    // Persist first item measurements as user default
+    if (idx === 0) {
+      try {
+        localStorage.setItem('belle_user_measurements', JSON.stringify(itemMeasurements[0]));
+      } catch(e) {}
+    }
+  };
+
+  window.copyFirstItemMeasurementsToAll = function() {
+    if (!itemMeasurements[0]) return;
+    const base = itemMeasurements[0];
+    cartItems.forEach((_, idx) => {
+      itemMeasurements[idx] = { ...base };
+    });
+    renderMeasurementsUI();
+    BelleStore.showToast("Мірки застосовано до всіх виробів! ✨");
+  };
 
   window.changeItemQty = function(idx, delta) {
     const cart = BelleStore.getCart();
@@ -523,6 +645,7 @@
       cart[idx].quantity = (Number(cart[idx].quantity) || 1) + delta;
       if (cart[idx].quantity <= 0) {
         cart.splice(idx, 1);
+        delete itemMeasurements[idx];
       }
       BelleStore.saveCart(cart);
       renderCartPage();
@@ -531,6 +654,7 @@
 
   window.deleteCartItem = function(idx) {
     BelleStore.removeFromCart(idx);
+    delete itemMeasurements[idx];
     renderCartPage();
   };
 
@@ -539,18 +663,14 @@
     try {
       const saved = localStorage.getItem('belle_user_measurements');
       if (saved) {
-        const m = JSON.parse(saved);
-        if (m.chest && document.getElementById('chest')) document.getElementById('chest').value = m.chest;
-        if (m.waist && document.getElementById('waist')) document.getElementById('waist').value = m.waist;
-        if (m.hips && document.getElementById('hips')) document.getElementById('hips').value = m.hips;
-        if (m.height && document.getElementById('height')) document.getElementById('height').value = m.height;
+        itemMeasurements[0] = JSON.parse(saved);
       }
     } catch(e) {}
   }
 
   document.addEventListener('DOMContentLoaded', () => {
-    renderCartPage();
     loadSavedMeasurements();
+    renderCartPage();
     renderCartNavCategories();
 
     const bespokeToggle = document.getElementById('bespoke-toggle');
@@ -599,10 +719,26 @@
         const branchInput = document.getElementById('dest-branch');
         const commentInput = document.getElementById('cust-comment');
 
-        const chest = document.getElementById('chest')?.value || '';
-        const waist = document.getElementById('waist')?.value || '';
-        const hips = document.getElementById('hips')?.value || '';
-        const height = document.getElementById('height')?.value || '';
+        // Compile items with their specific individual measurements
+        const itemsWithMeasurements = currentCart.map((it, idx) => {
+          const m = itemMeasurements[idx] || itemMeasurements[0] || {};
+          return {
+            ...it,
+            measurements: {
+              chest: m.chest || '',
+              waist: m.waist || '',
+              hips: m.hips || '',
+              height: m.height || '',
+              note: m.note || ''
+            }
+          };
+        });
+
+        const firstM = itemMeasurements[0] || {};
+        const chest = firstM.chest || '';
+        const waist = firstM.waist || '';
+        const hips = firstM.hips || '';
+        const height = firstM.height || '';
         const bespoke = document.getElementById('bespoke-toggle')?.checked || false;
         const urgent = document.getElementById('urgent-toggle')?.checked || false;
         const eventDate = document.getElementById('event-date')?.value || '';
@@ -624,11 +760,6 @@
           return;
         }
 
-        // Save filled measurements
-        if (chest || waist || hips || height) {
-          localStorage.setItem('belle_user_measurements', JSON.stringify({ chest, waist, hips, height }));
-        }
-
         const itemsSum = currentCart.reduce((acc, it) => acc + ((Number(it.price) || 0) * (Number(it.quantity) || 1)), 0);
         const totalAmount = itemsSum;
 
@@ -647,6 +778,7 @@
           customerTelegram: tgInput?.value.trim() || '',
           comment: commentInput?.value.trim() || '',
           chest, waist, hips, height,
+          itemMeasurements: itemMeasurements,
           isBespoke: bespoke,
           eventDate: urgent && eventDate ? eventDate : '',
           deliveryMethod: deliveryMethodName,
@@ -656,7 +788,7 @@
           totalAmount,
           payNow,
           payLater,
-          items: currentCart
+          items: itemsWithMeasurements
         };
 
         submitBtn.disabled = true;

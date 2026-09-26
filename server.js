@@ -840,6 +840,14 @@ const server = http.createServer(async (req, res) => {
           const rowTotal = authoritativeItemPrice * qty;
           authoritativeItemsSum += rowTotal;
 
+          const itemMeasurements = (item.measurements && typeof item.measurements === 'object') ? {
+            chest: sanitizeText(item.measurements.chest || ''),
+            waist: sanitizeText(item.measurements.waist || ''),
+            hips: sanitizeText(item.measurements.hips || ''),
+            height: sanitizeText(item.measurements.height || ''),
+            note: sanitizeText(item.measurements.note || '')
+          } : null;
+
           verifiedItems.push({
             id: item.id || 'custom',
             art: officialArt,
@@ -848,7 +856,8 @@ const server = http.createServer(async (req, res) => {
             color: sanitizeText(item.color || 'Базовий'),
             quantity: qty,
             price: authoritativeItemPrice,
-            total: rowTotal
+            total: rowTotal,
+            measurements: itemMeasurements
           });
         }
 
@@ -924,9 +933,23 @@ const server = http.createServer(async (req, res) => {
         writeJSON('orders.json', orders);
 
         // --- DISPATCH NOTIFICATION VIA SERVER TELEGRAM BOT ---
-        const itemsList = verifiedItems.map((it, idx) =>
-          `  <b>${idx + 1}. ${it.name}</b> (Арт. ${it.art})\n     • Розмір: <code>${it.size}</code> | Колір: ${it.color}\n     • Кількість: ${it.quantity} шт. × ${it.price.toLocaleString('uk-UA')} ₴ = <b>${it.total.toLocaleString('uk-UA')} ₴</b>`
-        ).join('\n\n');
+        const itemsList = verifiedItems.map((it, idx) => {
+          let mStr = '';
+          if (it.measurements) {
+            const parts = [
+              it.measurements.chest ? `ОГ: ${it.measurements.chest} см` : null,
+              it.measurements.waist ? `ОТ: ${it.measurements.waist} см` : null,
+              it.measurements.hips ? `ОБ: ${it.measurements.hips} см` : null,
+              it.measurements.height ? `Зріст: ${it.measurements.height} см` : null,
+              it.measurements.note ? `Побажання: ${it.measurements.note}` : null
+            ].filter(Boolean);
+            if (parts.length > 0) {
+              mStr = `\n     📏 <i>Мірки для цієї моделі:</i> ${parts.join(', ')}`;
+            }
+          }
+
+          return `  <b>${idx + 1}. ${it.name}</b> (Арт. ${it.art})\n     • Розмір: <code>${it.size}</code> | Колір: ${it.color}\n     • Кількість: ${it.quantity} шт. × ${it.price.toLocaleString('uk-UA')} ₴ = <b>${it.total.toLocaleString('uk-UA')} ₴</b>${mStr}`;
+        }).join('\n\n');
 
         const measurementsList = [
           newOrder.measurements.chest ? `ОГ: ${newOrder.measurements.chest} см` : null,
@@ -941,7 +964,7 @@ const server = http.createServer(async (req, res) => {
           `📞 <b>Телефон:</b> <code>${newOrder.customer.phone}</code>\n` +
           (newOrder.customer.instagram ? `✉️ <b>Instagram:</b> ${newOrder.customer.instagram}\n` : '') +
           (newOrder.customer.telegram ? `💬 <b>Telegram:</b> ${newOrder.customer.telegram}\n` : '') +
-          (measurementsList ? `📏 <b>Мірки клієнта:</b> ${measurementsList}\n` : '') +
+          (measurementsList ? `📏 <b>Базові мірки:</b> ${measurementsList}\n` : '') +
           `📍 <b>Доставка:</b> ${newOrder.delivery.method} (${newOrder.delivery.city}${newOrder.delivery.branch ? ', ' + newOrder.delivery.branch : ''})\n` +
           `💳 <b>Оплата:</b> ${newOrder.payment.method} (Передоплата: ${newOrder.payment.payNow} ₴)\n` +
           (newOrder.comment ? `📝 <b>Коментар:</b> ${newOrder.comment}\n` : '') +

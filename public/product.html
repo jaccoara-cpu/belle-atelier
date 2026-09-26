@@ -284,26 +284,44 @@
   </div>
 </main>
 
-<!-- Interactive Size Guide Modal (Photo-Based) -->
-<div class="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs hidden items-center justify-center p-4 transition-opacity" id="size-modal" onclick="handleModalBackdropClick(event)">
-  <div class="bg-surface max-w-3xl w-full p-5 sm:p-7 shadow-2xl relative max-h-[92vh] overflow-y-auto rounded-xs border border-surface-container-high">
-    <div class="flex items-start justify-between pb-4 border-b border-surface-container-high">
+<!-- Interactive Size Guide Modal (Horizontal Carousel Slider) -->
+<div class="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs hidden items-center justify-center p-3 sm:p-4 transition-opacity" id="size-modal" onclick="handleModalBackdropClick(event)">
+  <div class="bg-surface max-w-3xl w-full p-4 sm:p-6 shadow-2xl relative max-h-[95vh] flex flex-col rounded-xs border border-surface-container-high overflow-hidden">
+    <div class="flex items-start justify-between pb-3 border-b border-surface-container-high shrink-0">
       <div>
-        <span class="text-xs uppercase tracking-widest text-secondary block font-semibold">Belle Atelier</span>
-        <h3 class="font-headline text-2xl sm:text-3xl font-bold text-primary">Розмірна таблиця</h3>
+        <span class="text-[11px] uppercase tracking-widest text-secondary block font-semibold">Belle Atelier</span>
+        <h3 class="font-headline text-xl sm:text-2xl font-bold text-primary">Розмірна таблиця</h3>
       </div>
       <button aria-label="Закрити вікно" class="p-1.5 text-outline hover:text-primary transition-colors" onclick="closeSizeModal()" type="button">
-        <span class="material-symbols-outlined text-[26px]">close</span>
+        <span class="material-symbols-outlined text-[24px]">close</span>
       </button>
     </div>
 
-    <!-- Size Chart Photos Carousel / List -->
-    <div class="my-4 space-y-4" id="size-modal-images-container">
-      <!-- Dynamically populated from BelleStore.getSizeChartImages() -->
+    <!-- Size Chart Photos Horizontal Carousel -->
+    <div class="relative my-3 flex-1 min-h-[300px] flex items-center justify-center bg-surface-container-low rounded-xs border border-surface-container-high/80 overflow-hidden" id="size-chart-carousel-box">
+      <div class="w-full h-full max-h-[65vh] flex items-center justify-center p-2 sm:p-4" id="size-modal-images-container">
+        <!-- Dynamically populated current slide -->
+      </div>
+
+      <!-- Left / Right Nav Arrows -->
+      <button id="size-chart-prev-btn" onclick="prevSizeChartSlide()" type="button" aria-label="Попередня таблиця" class="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/90 hover:bg-white text-primary shadow-md flex items-center justify-center transition-all z-10 border border-surface-container-high cursor-pointer">
+        <span class="material-symbols-outlined text-[22px]">arrow_back</span>
+      </button>
+      <button id="size-chart-next-btn" onclick="nextSizeChartSlide()" type="button" aria-label="Наступна таблиця" class="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/90 hover:bg-white text-primary shadow-md flex items-center justify-center transition-all z-10 border border-surface-container-high cursor-pointer">
+        <span class="material-symbols-outlined text-[22px]">arrow_forward</span>
+      </button>
     </div>
 
-    <div class="pt-3 border-t border-surface-container-high flex items-center justify-between">
-      <span class="text-xs text-secondary font-medium">Усі параметри вказано в сантиметрах</span>
+    <!-- Dots & Pagination Info -->
+    <div class="flex items-center justify-center gap-1.5 pb-2 shrink-0" id="size-chart-dots-container">
+      <!-- Dots -->
+    </div>
+
+    <div class="pt-3 border-t border-surface-container-high flex items-center justify-between shrink-0">
+      <span class="text-xs text-secondary font-medium flex items-center gap-1">
+        <span class="material-symbols-outlined text-[16px]">swap_horiz</span>
+        <span>Гортайте вбік для перегляду всіх таблиць</span>
+      </span>
       <button class="bg-primary text-white py-2 px-6 text-xs uppercase font-semibold tracking-wider hover:bg-tertiary transition-colors rounded-xs" onclick="closeSizeModal()" type="button">
         Закрити
       </button>
@@ -419,11 +437,9 @@
       galleryImages.push('/images/berehynia_dress_1789843600634.jpg');
     }
 
-    currentSlideIndex = 0;
-    renderGallerySlide();
-
-    // Render Colors Buttons
+    // Render Colors Buttons & Select Default Color Gallery
     renderProductColors();
+    selectProductColor(selectedColor);
 
     // Render Sizes Buttons
     renderProductSizes();
@@ -614,6 +630,22 @@
     return 'bg-secondary';
   }
 
+  function getBaseProductImages() {
+    let baseImgs = [];
+    if (activeProductData && Array.isArray(activeProductData.images) && activeProductData.images.length > 0) {
+      activeProductData.images.forEach(im => {
+        const clean = normalizeImgUrl(im);
+        if (clean && !baseImgs.includes(clean)) baseImgs.push(clean);
+      });
+    } else if (activeProductData && activeProductData.img) {
+      baseImgs.push(normalizeImgUrl(activeProductData.img));
+    }
+    if (baseImgs.length === 0) {
+      baseImgs.push('/images/berehynia_dress_1789843600634.jpg');
+    }
+    return baseImgs;
+  }
+
   function selectProductColor(color, btn) {
     selectedColor = color;
     const label = document.getElementById('selected-color-label');
@@ -629,28 +661,37 @@
       btn.classList.add('bg-primary', 'text-white', 'border-primary', 'shadow-xs', 'font-bold');
     }
 
-    // Check if there is a variant-specific photo for this color
-    let variantPhoto = null;
+    // Isolate color-specific photos to strictly avoid mixing with other variants
+    let variantPhotos = [];
     if (activeProductData && Array.isArray(activeProductData.variants)) {
-      const match = activeProductData.variants.find(v => 
-        v.img && v.color && v.color.trim().toLowerCase() === color.trim().toLowerCase()
+      // Find all variant rows dedicated to this specific color
+      const colorVariants = activeProductData.variants.filter(v => 
+        v.color && v.color.trim().toLowerCase() === color.trim().toLowerCase()
       );
-      if (match && match.img) {
-        variantPhoto = normalizeImgUrl(match.img);
-      }
+
+      colorVariants.forEach(v => {
+        if (Array.isArray(v.images) && v.images.length > 0) {
+          v.images.forEach(im => {
+            const clean = normalizeImgUrl(im);
+            if (clean && !variantPhotos.includes(clean)) variantPhotos.push(clean);
+          });
+        } else if (v.img) {
+          const clean = normalizeImgUrl(v.img);
+          if (clean && !variantPhotos.includes(clean)) variantPhotos.push(clean);
+        }
+      });
     }
 
-    if (variantPhoto) {
-      if (!galleryImages.includes(variantPhoto)) {
-        galleryImages.unshift(variantPhoto);
-      }
-      currentSlideIndex = galleryImages.indexOf(variantPhoto);
-      renderGallerySlide();
+    if (variantPhotos.length > 0) {
+      // Gallery shows strictly this color's dedicated photos
+      galleryImages = [...variantPhotos];
     } else {
-      currentSlideIndex = 0;
-      renderGallerySlide();
+      // Fallback to base product photos
+      galleryImages = getBaseProductImages();
     }
 
+    currentSlideIndex = 0;
+    renderGallerySlide();
     recalculateVariantPrice();
   }
 
@@ -853,33 +894,96 @@
     }).join('');
   }
 
-  // --- SIZE GUIDE MODAL (PHOTO-BASED) ---
+  // --- SIZE GUIDE MODAL (HORIZONTAL PHOTO CAROUSEL) ---
+  let sizeChartSlideIndex = 0;
+  let sizeChartImagesList = [];
+
   function renderSizeChartModal() {
     const container = document.getElementById('size-modal-images-container');
+    const prevBtn = document.getElementById('size-chart-prev-btn');
+    const nextBtn = document.getElementById('size-chart-next-btn');
+    const dotsContainer = document.getElementById('size-chart-dots-container');
     if (!container || typeof BelleStore === 'undefined') return;
 
-    const images = BelleStore.getSizeChartImages();
-    if (images.length === 0) {
+    sizeChartImagesList = BelleStore.getSizeChartImages();
+    if (sizeChartImagesList.length === 0) {
       container.innerHTML = `
         <div class="p-8 text-center text-outline">
           <span class="material-symbols-outlined text-4xl mb-2">straighten</span>
           <p class="text-xs">Фото розмірної таблиці наразі оновлюється стилістами ательє.</p>
         </div>
       `;
+      if (prevBtn) prevBtn.style.display = 'none';
+      if (nextBtn) nextBtn.style.display = 'none';
+      if (dotsContainer) dotsContainer.innerHTML = '';
       return;
     }
 
-    container.innerHTML = images.map((imgUrl, idx) => {
-      const safeSrc = escapeHTML(normalizeImgUrl(imgUrl));
-      return `
-      <div class="w-full border border-surface-container-high rounded-xs overflow-hidden bg-white shadow-xs">
-        <img src="${safeSrc}" alt="Розмірна таблиця ${idx + 1}" class="w-full h-auto object-contain" />
+    if (sizeChartSlideIndex >= sizeChartImagesList.length) {
+      sizeChartSlideIndex = 0;
+    }
+
+    const safeSrc = escapeHTML(normalizeImgUrl(sizeChartImagesList[sizeChartSlideIndex]));
+    container.innerHTML = `
+      <div class="w-full h-full flex items-center justify-center animate-fade-in">
+        <img src="${safeSrc}" alt="Розмірна таблиця ${sizeChartSlideIndex + 1} з ${sizeChartImagesList.length}" class="max-h-[58vh] max-w-full object-contain rounded-xs shadow-xs" />
       </div>
-      `;
-    }).join('');
+    `;
+
+    if (sizeChartImagesList.length <= 1) {
+      if (prevBtn) prevBtn.style.display = 'none';
+      if (nextBtn) nextBtn.style.display = 'none';
+      if (dotsContainer) dotsContainer.innerHTML = '';
+    } else {
+      if (prevBtn) prevBtn.style.display = 'flex';
+      if (nextBtn) nextBtn.style.display = 'flex';
+      if (dotsContainer) {
+        dotsContainer.innerHTML = sizeChartImagesList.map((_, idx) => `
+          <button type="button" onclick="goToSizeChartSlide(${idx})" class="h-2 rounded-full transition-all ${idx === sizeChartSlideIndex ? 'w-6 bg-primary' : 'w-2 bg-outline/40 hover:bg-outline'}" aria-label="Таблиця ${idx + 1}"></button>
+        `).join('') + `
+          <span class="text-[11px] text-secondary font-semibold ml-2">${sizeChartSlideIndex + 1} / ${sizeChartImagesList.length}</span>
+        `;
+      }
+    }
+  }
+
+  function prevSizeChartSlide() {
+    if (sizeChartImagesList.length === 0) return;
+    sizeChartSlideIndex = (sizeChartSlideIndex - 1 + sizeChartImagesList.length) % sizeChartImagesList.length;
+    renderSizeChartModal();
+  }
+
+  function nextSizeChartSlide() {
+    if (sizeChartImagesList.length === 0) return;
+    sizeChartSlideIndex = (sizeChartSlideIndex + 1) % sizeChartImagesList.length;
+    renderSizeChartModal();
+  }
+
+  function goToSizeChartSlide(idx) {
+    sizeChartSlideIndex = idx;
+    renderSizeChartModal();
+  }
+
+  // Swipe gestures for size chart
+  let sizeTouchStartX = 0;
+  let sizeTouchEndX = 0;
+  const sizeBoxEl = document.getElementById('size-chart-carousel-box');
+  if (sizeBoxEl) {
+    sizeBoxEl.addEventListener('touchstart', (e) => {
+      sizeTouchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+    sizeBoxEl.addEventListener('touchend', (e) => {
+      sizeTouchEndX = e.changedTouches[0].screenX;
+      const diff = sizeTouchEndX - sizeTouchStartX;
+      if (Math.abs(diff) > 40) {
+        if (diff < 0) nextSizeChartSlide();
+        else prevSizeChartSlide();
+      }
+    }, { passive: true });
   }
 
   function openSizeModal() {
+    sizeChartSlideIndex = 0;
     renderSizeChartModal();
     const modal = document.getElementById('size-modal');
     modal.classList.remove('hidden');
