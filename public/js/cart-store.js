@@ -936,9 +936,15 @@ Object.assign(BelleStore, {
       Boolean(it.isBespoke) === Boolean(item.isBespoke)
     );
 
+    const itemMeasurements = item.measurements || {};
+
     if (existingIndex > -1) {
       cart[existingIndex].quantity = (Number(cart[existingIndex].quantity) || 1) + (Number(item.quantity) || 1);
+      if (item.measurements && Object.values(item.measurements).some(Boolean)) {
+        cart[existingIndex].measurements = { ...(cart[existingIndex].measurements || {}), ...item.measurements };
+      }
     } else {
+      const newItemIdx = cart.length;
       cart.push({
         id: item.id,
         art: item.art || 'BL-000',
@@ -948,8 +954,21 @@ Object.assign(BelleStore, {
         size: item.size || 'S',
         color: item.color || 'Молочний',
         quantity: Math.max(1, Number(item.quantity) || 1),
-        isBespoke: Boolean(item.isBespoke)
+        isBespoke: Boolean(item.isBespoke),
+        measurements: itemMeasurements
       });
+
+      // Save to belle_cart_measurements
+      try {
+        let allM = {};
+        const storedM = localStorage.getItem('belle_cart_measurements');
+        if (storedM) allM = JSON.parse(storedM) || {};
+        allM[newItemIdx] = itemMeasurements;
+        localStorage.setItem('belle_cart_measurements', JSON.stringify(allM));
+        if (newItemIdx === 0 && Object.values(itemMeasurements).some(Boolean)) {
+          localStorage.setItem('belle_user_measurements', JSON.stringify(itemMeasurements));
+        }
+      } catch(e) {}
     }
 
     this.saveCart(cart);

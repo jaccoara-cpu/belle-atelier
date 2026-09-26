@@ -26,7 +26,12 @@ const TELEGRAM_CONFIG = {
 function jsonResponse(data, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
-    headers: CORS_HEADERS
+    headers: {
+      ...CORS_HEADERS,
+      'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    }
   });
 }
 
@@ -337,9 +342,23 @@ export default {
           return `  <b>${idx + 1}. ${escapeHTML(it.name)}</b> (Арт. ${escapeHTML(it.art || 'BL-000')})\n     • Розмір: <code>${escapeHTML(it.size || 'M')}</code> | Колір: ${escapeHTML(it.color || 'Базовий')}\n     • Кількість: ${it.quantity} шт. × ${(Number(it.price) || 0).toLocaleString('uk-UA')} ₴ = <b>${((Number(it.price) || 0) * (Number(it.quantity) || 1)).toLocaleString('uk-UA')} ₴</b>${mStr}`;
         }).join('\n\n');
 
-        const cust = orderData.customer || {};
-        const deliv = orderData.delivery || {};
-        const pay = orderData.payment || {};
+        const cust = {
+          name: orderData.customerName || (orderData.customer && orderData.customer.name) || 'Не вказано',
+          phone: orderData.phone || (orderData.customer && orderData.customer.phone) || '',
+          instagram: orderData.customerInstagram || (orderData.customer && orderData.customer.instagram) || '',
+          telegram: orderData.customerTelegram || (orderData.customer && orderData.customer.telegram) || ''
+        };
+        const deliv = {
+          method: orderData.deliveryMethod || (orderData.delivery && orderData.delivery.method) || 'Самовивіз',
+          city: orderData.city || (orderData.delivery && orderData.delivery.city) || '',
+          branch: orderData.address || (orderData.delivery && orderData.delivery.branch) || ''
+        };
+        const pay = {
+          method: orderData.paymentMethod || (orderData.payment && orderData.payment.method) || 'Післяплата',
+          payNow: orderData.payNow !== undefined ? orderData.payNow : ((orderData.payment && orderData.payment.payNow) || 0),
+          payLater: orderData.payLater !== undefined ? orderData.payLater : ((orderData.payment && orderData.payment.payLater) || 0),
+          totalAmount: orderData.totalAmount !== undefined ? orderData.totalAmount : ((orderData.payment && orderData.payment.totalAmount) || 0)
+        };
 
         const tgMessage = 
           `🌸 <b>НОВЕ ЗАМОВЛЕННЯ З САЙТУ #${orderId}</b> 🌸\n` +

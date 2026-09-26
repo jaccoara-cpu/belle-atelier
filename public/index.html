@@ -54,8 +54,8 @@
     <div class="h-16 sm:h-20 max-w-7xl mx-auto px-4 md:px-8 flex items-center justify-between">
       <!-- Left side: Hamburger menu button + Logo and Name -->
       <div class="flex items-center gap-3 sm:gap-6">
-        <button id="index-mobile-menu-btn" class="p-2 -ml-2 text-on-surface hover:text-primary transition-colors focus:outline-none" aria-label="Відкрити меню">
-          <span class="material-symbols-outlined text-[26px]">menu</span>
+        <button id="index-mobile-menu-btn" type="button" class="p-2 -ml-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-on-surface hover:text-primary transition-colors focus:outline-none cursor-pointer select-none touch-manipulation z-50" aria-label="Відкрити меню">
+          <span class="material-symbols-outlined text-[28px] pointer-events-none">menu</span>
         </button>
 
         <a class="flex items-center gap-3 group" href="index.html">
@@ -240,7 +240,7 @@
     </div>
   </div>
 
-  <script src="js/cart-store.js"></script>
+  <script src="js/cart-store.js?v=2.4.0"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       if (typeof BelleStore !== 'undefined' && BelleStore.initStore) {
@@ -266,9 +266,17 @@
       const iMobileBtn = document.getElementById('index-mobile-menu-btn');
       const iMobileNav = document.getElementById('index-mobile-nav');
       if (iMobileBtn && iMobileNav) {
-        iMobileBtn.addEventListener('click', () => {
+        const toggleIndexMenu = (e) => {
+          if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+          }
           iMobileNav.classList.toggle('hidden');
-        });
+        };
+        iMobileBtn.addEventListener('click', toggleIndexMenu);
+        iMobileBtn.addEventListener('touchend', (e) => {
+          toggleIndexMenu(e);
+        }, { passive: false });
       }
     });
 

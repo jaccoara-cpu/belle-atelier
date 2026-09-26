@@ -39,8 +39,8 @@
 <header class="sticky top-0 left-0 w-full z-50 bg-surface/95 backdrop-blur-md border-b border-surface-container-high">
   <div class="h-16 sm:h-20 max-w-7xl mx-auto px-4 md:px-8 flex items-center justify-between">
     <div class="flex items-center gap-3 sm:gap-6">
-      <button id="product-mobile-menu-btn" class="p-2 -ml-2 text-on-surface hover:text-primary transition-colors focus:outline-none" aria-label="Відкрити меню">
-        <span class="material-symbols-outlined text-[26px]">menu</span>
+      <button id="product-mobile-menu-btn" type="button" class="p-2 -ml-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-on-surface hover:text-primary transition-colors focus:outline-none cursor-pointer select-none touch-manipulation z-50" aria-label="Відкрити меню">
+        <span class="material-symbols-outlined text-[28px] pointer-events-none">menu</span>
       </button>
 
       <a class="flex items-center gap-3 group" href="index.html">
@@ -417,7 +417,7 @@
   </div>
 </div>
 
-<script src="js/cart-store.js"></script>
+<script src="js/cart-store.js?v=2.4.0"></script>
 <script>
   let currentQty = 1;
   let activeProductData = null;
@@ -1015,6 +1015,13 @@
       }
     }
 
+    const currentMeasurements = {
+      chest: document.getElementById('prod-chest')?.value.trim() || '',
+      waist: document.getElementById('prod-waist')?.value.trim() || '',
+      hips: document.getElementById('prod-hips')?.value.trim() || '',
+      height: document.getElementById('prod-height')?.value.trim() || ''
+    };
+
     BelleStore.addToCart({
       id: activeProductData ? activeProductData.id : 'beregynya',
       name: itemName,
@@ -1025,7 +1032,8 @@
       color: selectedColor,
       fabric: activeProductData ? activeProductData.fabric : "100% пом'якшений льон",
       image: cartImg,
-      img: cartImg
+      img: cartImg,
+      measurements: currentMeasurements
     });
 
     const originalHtml = btn.innerHTML;
@@ -1419,9 +1427,17 @@
     const pMobileBtn = document.getElementById('product-mobile-menu-btn');
     const pMobileNav = document.getElementById('product-mobile-nav');
     if (pMobileBtn && pMobileNav) {
-      pMobileBtn.addEventListener('click', () => {
+      const toggleProductMenu = (e) => {
+        if (e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
         pMobileNav.classList.toggle('hidden');
-      });
+      };
+      pMobileBtn.addEventListener('click', toggleProductMenu);
+      pMobileBtn.addEventListener('touchend', (e) => {
+        toggleProductMenu(e);
+      }, { passive: false });
     }
   });
 </script>

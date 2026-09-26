@@ -7,8 +7,8 @@
   <div class="h-16 sm:h-20 max-w-7xl mx-auto px-4 md:px-8 flex items-center justify-between">
     <!-- Left side: Hamburger menu button + Logo and Name -->
     <div class="flex items-center gap-3 sm:gap-6">
-      <button id="cart-mobile-menu-btn" class="p-2 -ml-2 text-on-surface hover:text-primary transition-colors focus:outline-none" aria-label="Відкрити меню">
-        <span class="material-symbols-outlined text-[26px]">menu</span>
+      <button id="cart-mobile-menu-btn" type="button" class="p-2 -ml-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-on-surface hover:text-primary transition-colors focus:outline-none cursor-pointer select-none touch-manipulation z-50" aria-label="Відкрити меню">
+        <span class="material-symbols-outlined text-[28px] pointer-events-none">menu</span>
       </button>
 
       <a class="flex items-center gap-3 group" href="index.html">
@@ -379,7 +379,7 @@
 </div>
 
 <!-- Interactive JavaScript -->
-<script src="js/cart-store.js"></script>
+<script src="js/cart-store.js?v=2.4.0"></script>
 <script>
   let cartItems = [];
 
@@ -524,6 +524,35 @@
   // Per-item measurements storage in cart session
   let itemMeasurements = {};
 
+  // Populate Saved Measurements from Product Page & Cart Session
+  function loadSavedMeasurements() {
+    try {
+      const allSaved = localStorage.getItem('belle_cart_measurements');
+      if (allSaved) {
+        itemMeasurements = JSON.parse(allSaved) || {};
+      }
+    } catch(e) {
+      itemMeasurements = {};
+    }
+
+    // Default item 0 from single product measurements if empty
+    try {
+      const singleSaved = localStorage.getItem('belle_user_measurements');
+      if (singleSaved && (!itemMeasurements[0] || Object.keys(itemMeasurements[0]).length === 0)) {
+        itemMeasurements[0] = JSON.parse(singleSaved);
+      }
+    } catch(e) {}
+  }
+
+  function saveAllMeasurementsToStorage() {
+    try {
+      localStorage.setItem('belle_cart_measurements', JSON.stringify(itemMeasurements));
+      if (itemMeasurements[0]) {
+        localStorage.setItem('belle_user_measurements', JSON.stringify(itemMeasurements[0]));
+      }
+    } catch(e) {}
+  }
+
   function renderMeasurementsUI() {
     const container = document.getElementById('dynamic-measurements-container');
     if (!container) return;
@@ -532,13 +561,6 @@
       container.innerHTML = '<p class="text-xs text-outline italic">Кошик порожній</p>';
       return;
     }
-
-    // Load any default measurements from localStorage if not set
-    let defaultSaved = {};
-    try {
-      const saved = localStorage.getItem('belle_user_measurements');
-      if (saved) defaultSaved = JSON.parse(saved);
-    } catch(e) {}
 
     const catalogProds = (typeof BelleStore !== 'undefined' && BelleStore.getProducts) ? BelleStore.getProducts() : [];
 
@@ -551,13 +573,18 @@
       const rawImg = it.img || it.image || (matchedCatProd && (matchedCatProd.img || (matchedCatProd.images && matchedCatProd.images[0]))) || '/images/berehynia_dress_1789843600634.jpg';
       const img = escapeHTML(normalizeImgUrl(rawImg));
 
-      // Get existing or saved values
-      const cur = itemMeasurements[idx] || (idx === 0 ? defaultSaved : {});
+      // Get existing or item-attached measurements
+      const cur = itemMeasurements[idx] || it.measurements || {};
       const cVal = cur.chest || '';
       const wVal = cur.waist || '';
       const hVal = cur.hips || '';
       const heVal = cur.height || '';
       const noteVal = cur.note || '';
+
+      // Sync into itemMeasurements in memory
+      if (!itemMeasurements[idx]) {
+        itemMeasurements[idx] = { chest: cVal, waist: wVal, hips: hVal, height: heVal, note: noteVal };
+      }
 
       return `
         <div class="p-4 bg-surface-container-low border border-surface-container-high rounded-xs space-y-3">
@@ -622,13 +649,7 @@
   window.updateItemMeasurement = function(idx, field, value) {
     if (!itemMeasurements[idx]) itemMeasurements[idx] = {};
     itemMeasurements[idx][field] = value.trim();
-
-    // Persist first item measurements as user default
-    if (idx === 0) {
-      try {
-        localStorage.setItem('belle_user_measurements', JSON.stringify(itemMeasurements[0]));
-      } catch(e) {}
-    }
+    saveAllMeasurementsToStorage();
   };
 
   window.copyFirstItemMeasurementsToAll = function() {
@@ -637,6 +658,7 @@
     cartItems.forEach((_, idx) => {
       itemMeasurements[idx] = { ...base };
     });
+    saveAllMeasurementsToStorage();
     renderMeasurementsUI();
     BelleStore.showToast("Мірки застосовано до всіх виробів! ✨");
   };
@@ -648,6 +670,7 @@
       if (cart[idx].quantity <= 0) {
         cart.splice(idx, 1);
         delete itemMeasurements[idx];
+        saveAllMeasurementsToStorage();
       }
       BelleStore.saveCart(cart);
       renderCartPage();
@@ -657,18 +680,9 @@
   window.deleteCartItem = function(idx) {
     BelleStore.removeFromCart(idx);
     delete itemMeasurements[idx];
+    saveAllMeasurementsToStorage();
     renderCartPage();
   };
-
-  // Populate Saved Measurements from Product Page
-  function loadSavedMeasurements() {
-    try {
-      const saved = localStorage.getItem('belle_user_measurements');
-      if (saved) {
-        itemMeasurements[0] = JSON.parse(saved);
-      }
-    } catch(e) {}
-  }
 
   document.addEventListener('DOMContentLoaded', () => {
     if (typeof BelleStore !== 'undefined' && BelleStore.initStore) {
@@ -846,13 +860,21 @@
     updateCartPickupAddress();
     window.addEventListener('belle-site-texts-updated', updateCartPickupAddress);
 
-    // Mobile menu toggle
+    // Mobile menu toggle (Enhanced for physical touch devices)
     const cMobileBtn = document.getElementById('cart-mobile-menu-btn');
     const cMobileNav = document.getElementById('cart-mobile-nav');
     if (cMobileBtn && cMobileNav) {
-      cMobileBtn.addEventListener('click', () => {
+      const toggleMenu = (e) => {
+        if (e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
         cMobileNav.classList.toggle('hidden');
-      });
+      };
+      cMobileBtn.addEventListener('click', toggleMenu);
+      cMobileBtn.addEventListener('touchend', (e) => {
+        toggleMenu(e);
+      }, { passive: false });
     }
   });
 

@@ -39,8 +39,8 @@
 <header class="sticky top-0 left-0 w-full z-50 bg-surface/95 backdrop-blur-md border-b border-surface-container-high">
   <div class="h-16 sm:h-20 max-w-7xl mx-auto px-4 md:px-8 flex items-center justify-between">
     <div class="flex items-center gap-3 sm:gap-6">
-      <button id="mobile-menu-btn" class="p-2 -ml-2 text-on-surface hover:text-primary transition-colors focus:outline-none" aria-label="Відкрити меню">
-        <span class="material-symbols-outlined text-[26px]">menu</span>
+      <button id="mobile-menu-btn" type="button" class="p-2 -ml-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-on-surface hover:text-primary transition-colors focus:outline-none cursor-pointer select-none touch-manipulation z-50" aria-label="Відкрити меню">
+        <span class="material-symbols-outlined text-[28px] pointer-events-none">menu</span>
       </button>
 
       <a class="flex items-center gap-3 group" href="index.html">
@@ -207,7 +207,7 @@
   </div>
 </main>
 
-<script src="js/cart-store.js"></script>
+<script src="js/cart-store.js?v=2.4.0"></script>
 <script>
   // Wishlist state handling via BelleStore
   window.toggleWishlist = function(idOrName) {
@@ -571,9 +571,17 @@
     const mobileBtn = document.getElementById('mobile-menu-btn');
     const mobileNav = document.getElementById('mobile-nav');
     if (mobileBtn && mobileNav) {
-      mobileBtn.addEventListener('click', () => {
+      const toggleCatalogMenu = (e) => {
+        if (e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
         mobileNav.classList.toggle('hidden');
-      });
+      };
+      mobileBtn.addEventListener('click', toggleCatalogMenu);
+      mobileBtn.addEventListener('touchend', (e) => {
+        toggleCatalogMenu(e);
+      }, { passive: false });
     }
 
     // Initial render
