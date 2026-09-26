@@ -46,6 +46,14 @@ function writeJSON(file, data) {
   try {
     fs.writeFileSync(tempPath, JSON.stringify(data, null, 2), 'utf8');
     fs.renameSync(tempPath, filePath);
+
+    // Also mirror to public/data for static file accessibility
+    const pubDataDir = path.join(PUBLIC_DIR, 'data');
+    if (fs.existsSync(pubDataDir)) {
+      try {
+        fs.writeFileSync(path.join(pubDataDir, file), JSON.stringify(data, null, 2), 'utf8');
+      } catch (_) {}
+    }
     return true;
   } catch (err) {
     console.error(`Error atomic writing ${file}:`, err);
@@ -641,6 +649,8 @@ const server = http.createServer(async (req, res) => {
           description: sanitizeText(pData.description || ""),
           sizes: Array.isArray(pData.sizes) && pData.sizes.length > 0 ? pData.sizes : ['XS', 'S', 'M', 'L', 'XL'],
           colors: Array.isArray(pData.colors) && pData.colors.length > 0 ? pData.colors : ['Молочний'],
+          colorImages: (pData.colorImages && typeof pData.colorImages === 'object') ? pData.colorImages : {},
+          specialOffers: Array.isArray(pData.specialOffers) ? pData.specialOffers : [],
           variants: Array.isArray(pData.variants) ? pData.variants : [],
           img: rawImages[0] || '/images/berehynia_dress_1789843600634.jpg',
           images: rawImages,
@@ -805,8 +815,35 @@ const server = http.createServer(async (req, res) => {
 
     // GET /api/settings
     if (pathname === '/api/settings' && method === 'GET') {
-      const settings = readJSON('settings.json', {});
-      return sendJSON(res, 200, { success: true, settings });
+      const DEFAULT_SETTINGS = {
+        hero_img: '/images/belle_hero_banner_1789843699753.jpg',
+        hero_title: 'Ексклюзивний одяг для всієї родини!',
+        hero_subtitle: 'Обирай свій образ',
+        contacts_title: 'Ательє та шоурум',
+        contacts_badge: 'Київ • Belle Atelier',
+        contacts_address: 'м. Київ, просп. Європейського Союзу, 45Б',
+        contacts_phone: '0 (93) 971 60 65',
+        contacts_instagram: 'https://www.instagram.com/belle.atelier.boutique?stkn=bzZ2ZWs5aTE0a3Fw',
+        contacts_instagram_handle: '@belle.atelier.boutique',
+        contacts_telegram_channel: '',
+        contacts_salon_city: 'м. Київ, просп. Європейського Союзу, 45Б',
+        about_text: `Belle Atelier & Boutique — простір українського кутюру, де поєднуються автентичні традиції вишивки та сучасний преміальний крій. Ми створюємо вироби з натурального льону, шовку та оксамиту, вкладаючи душу в кожен стібок. Кожна сукня, сорочка чи жакет — це витвір мистецтва, створений підкреслити вашу неповторність. Завітайте до нашого київського салону або замовляйте індивідуальний пошив за вашими особистими мірками.`,
+        offer_text: `ПУБЛІЧНИЙ ДОГОВІР ОФЕРТИ\n1. Загальні положення: Цей Договір є публічною офертою інтернет-магазину та ательє «Belle Atelier» щодо продажу товарів та надання послуг індивідуального пошиття.\n2. Оформлення замовлення: Покупець оформлює замовлення самостійно на сайті або через менеджера.\n3. Оплата та доставка: Оплата здійснюється онлайн через платіжні сервіси, за реквізитами IBAN або післяплатою відповідно до обраного способу. Доставка здійснюється перевізником «Нова Пошта» або самовивозом.\n4. Права та обов'язки: Продавець зобов'язується передати якісний товар Покупцеві у встановлені строки.`,
+        privacy_text: `ПОЛІТИКА КОНФІДЕНЦІЙНОСТІ\n1. Збір даних: Ми збираємо персональні дані (ім'я, номер телефону, параметри фігури, адресу доставки) виключно для якісного виконання замовлення та індивідуального пошиття.\n2. Захист інформації: Всі персональні дані клієнтів є суворо конфіденційними та не передаються третім особам, окрім служб доставки.\n3. Зберігання: Інформація зберігається відповідно до вимог чинного законодавства України.`,
+        rules_text: `1. Оформлення замовлення: Оберіть виріб, вкажіть потрібний розмір, колір та заповніть контактні дані у кошику. Наш стиліст зв’яжеться з вами у Telegram або по телефону для підтвердження.\n2. Індивідуальний пошив: Якщо потрібна корекція за вашими мірками або пошиття унікального виробу, менеджер уточнить параметри (ОГ, ОТ, ОБ, зріст).\n3. Оплата: Передоплата 50% або повна оплата на рахунок ФОП / банківською картою. Для готових виробів можлива післяплата з мінімальним авансом за доставку.\n4. Доставка: Доставка по Україні службою «Нова Пошта» (1-3 дні) або самовивіз із нашого салону в Києві (просп. Європейського Союзу, 45Б).`,
+        exchange_text: `1. Термін: Ви можете обміняти або повернути товар належної якості протягом 14 днів з моменту отримання згідно із Законом України «Про захист прав споживачів».\n2. Умови повернення: Виріб не повинен мати слідів носіння, прання чи пошкоджень, зі збереженням усіх оригінальних бірок, пломб та фірмового пакування.`,
+        payment_deposit_amount: 300,
+        payment_online_title: 'Повна оплата на сайті',
+        payment_online_desc: 'Apple Pay • Google Pay • Visa / MC',
+        payment_postpay_title: 'Післяплата з передоплатою',
+        payment_postpay_desc: 'Мінімальний аванс за доставку, решта суми при отриманні',
+        payment_split_title: 'Парні / індивідуальні замовлення 50%',
+        payment_split_desc: 'Оплата 50% вартості при замовленні, 50% після готовності',
+        payment_iban_title: 'Оплата на реквізити IBAN',
+        payment_iban_desc: 'просто відправте мені реквізити та я оплачу вручну'
+      };
+      const settings = readJSON('settings.json', DEFAULT_SETTINGS);
+      return sendJSON(res, 200, { success: true, settings: { ...DEFAULT_SETTINGS, ...settings } });
     }
 
     // POST /api/settings (Admin Protected)

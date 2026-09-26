@@ -1,0 +1,39 @@
+[
+  {
+    "id": "women",
+    "name": "Жіночий одяг",
+    "icon": "checkroom",
+    "order": 1
+  },
+  {
+    "id": "men",
+    "name": "Чоловічий одяг",
+    "icon": "styler",
+    "order": 2
+  },
+  {
+    "id": "sets",
+    "name": "Парні комплекти",
+    "icon": "favorite",
+    "order": 3
+  },
+  {
+    "id": "accessories",
+    "name": "Аксесуари",
+    "icon": "straighten",
+    "order": 4
+  },
+  {
+    "id": "souvenirs",
+    "name": "Сувеніри",
+    "icon": "card_giftcard",
+    "order": 5
+  },
+  {
+    "id": "sale",
+    "name": "SALE",
+    "icon": "local_offer",
+    "order": 6,
+    "isSale": true
+  }
+]

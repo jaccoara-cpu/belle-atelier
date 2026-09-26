@@ -3,31 +3,31 @@
     "id": "beregynya",
     "art": "BL-402",
     "name": "Сукня «Берегиня»",
-    "category": "dresses",
+    "category": "women",
     "cat": "women",
-    "category_name": "Плаття та сукні",
+    "category_name": "Жіночий одяг",
     "price": 4800,
     "oldPrice": null,
     "sale": null,
     "inStock": true,
+    "isArchived": false,
     "fabric": "100% пом'якшений льон",
     "badge": "Ручна вишивка",
     "sub_badge": "Лімітована серія",
     "description": "Монохромна борщівська техніка, оздоблена витонченим мереживом ручного плетіння. Вільний автентичний силует з пишними рукавами-бохо.",
     "colors": [
-      {
-        "name": "Молочний / Сирий льон",
-        "hex": "#F5F2EB"
-      },
-      {
-        "name": "Глибокий бордо",
-        "hex": "#5E1020"
-      },
-      {
-        "name": "Графіт",
-        "hex": "#1B1B1A"
-      }
+      "Молочний / Сирий льон",
+      "Глибокий бордо",
+      "Графіт"
     ],
+    "colorImages": {
+      "Молочний / Сирий льон": [
+        "/images/berehynia_dress_1789843600634.jpg",
+        "/images/berehynia_detail_1789843714868.jpg",
+        "/images/berehynia_back_1789843731157.jpg",
+        "/images/berehynia_motion_1789843747467.jpg"
+      ]
+    },
     "sizes": [
       "XS",
       "S",
@@ -48,33 +48,37 @@
       "Ручна вишивка нитками муліне подвійного кручення",
       "Традиційний сакральний орнамент «Дерево життя»",
       "Індивідуальна посадка в салоні або пошив за мірками"
-    ]
+    ],
+    "variants": []
   },
   {
     "id": "oberig",
     "art": "BL-108",
     "name": "Сорочка «Оберіг»",
-    "category": "vyshyvanky",
+    "category": "men",
     "cat": "men",
-    "category_name": "Вишиванки",
+    "category_name": "Чоловічий одяг",
     "price": 3950,
     "oldPrice": 4800,
     "sale": "SALE −22%",
     "inStock": true,
+    "isArchived": false,
     "fabric": "Органічний преміум-льон",
     "badge": "SALE −22%",
     "sub_badge": "Бестселер",
     "description": "Класична аристократична сорочка з вишуканою геометричною вишивкою коміра-стійки та манжетів. Вільний крій, що пасує до будь-якого образу.",
     "colors": [
-      {
-        "name": "Графітово-чорний",
-        "hex": "#1B1B1A"
-      },
-      {
-        "name": "Молочний льон",
-        "hex": "#F5F2EB"
-      }
+      "Графітово-чорний",
+      "Молочний льон"
     ],
+    "colorImages": {
+      "Графітово-чорний": [
+        "/images/oberig_shirt_1789843615744.jpg"
+      ],
+      "Молочний льон": [
+        "/images/berehynia_back_1789843731157.jpg"
+      ]
+    },
     "sizes": [
       "XS",
       "S",
@@ -91,77 +95,78 @@
       "Приємний до тіла натуральний дихаючий льон",
       "Гуцульський геометричний код оберегу та сили",
       "Ідеально поєднується з брюками та спідницями"
-    ]
+    ],
+    "variants": []
   },
   {
     "id": "hetmansky",
     "art": "BL-512",
     "name": "Жакет «Гетьманський»",
-    "category": "jackets",
+    "category": "women",
     "cat": "women",
-    "category_name": "Жакети та пальта",
+    "category_name": "Жіночий одяг",
     "price": 5400,
     "oldPrice": null,
     "sale": null,
     "inStock": true,
+    "isArchived": false,
     "fabric": "Шляхетна шерсть та оксамит",
     "badge": "Ательє Кутюр",
     "sub_badge": "Ексклюзив салону",
     "description": "Шляхетний жакет з оксамитовими манжетами та золотавим сутажем за лекалами козацької старшини.",
     "colors": [
-      {
-        "name": "Глибокий чорний",
-        "hex": "#1B1B1A"
-      },
-      {
-        "name": "Королівський синій",
-        "hex": "#192841"
-      }
+      "Глибокий чорний",
+      "Королівський синій"
     ],
+    "colorImages": {
+      "Глибокий чорний": [
+        "/images/hetman_jacket_1789843629464.jpg",
+        "/images/atelier_workshop.jpg"
+      ]
+    },
     "sizes": [
       "XS",
       "S",
       "M"
     ],
-    "img": "/images/uploads/prod_1790173202601_4a13e7f0.jpg",
+    "img": "/images/hetman_jacket_1789843629464.jpg",
     "images": [
-      "/images/uploads/prod_1790173202601_4a13e7f0.jpg",
-      "/images/uploads/prod_1790173202603_890df299.jpg"
+      "/images/hetman_jacket_1789843629464.jpg",
+      "/images/atelier_workshop.jpg"
     ],
     "features": [
       "Преміальна тонка вовна з натуральним оксамитом",
       "Приталений архітектурний силует",
       "Підкладка з натурального шовку"
     ],
-    "isArchived": false,
-    "variants": [],
-    "updatedAt": 1790173205843
+    "variants": []
   },
   {
     "id": "mavka",
     "art": "BL-304",
     "name": "Сукня «Мавка»",
-    "category": "dresses",
+    "category": "women",
     "cat": "women",
-    "category_name": "Плаття та сукні",
+    "category_name": "Жіночий одяг",
     "price": 4500,
     "oldPrice": 5800,
     "sale": "SALE −22%",
     "inStock": true,
+    "isArchived": false,
     "fabric": "Шовк та льон",
     "badge": "Ручна вишивка",
     "sub_badge": "Лімітована серія",
     "description": "Летюча смарагдова сукня з шовковими вставками та золотавою вишивкою лісових мотивів живої природи.",
     "colors": [
-      {
-        "name": "Смарагд",
-        "hex": "#274E3C"
-      },
-      {
-        "name": "Шавлія",
-        "hex": "#7B887C"
-      }
+      "Смарагд",
+      "Шавлія"
     ],
+    "colorImages": {
+      "Смарагд": [
+        "/images/mavka_dress_1789843642965.jpg",
+        "/images/berehynia_motion_1789843747467.jpg"
+      ]
+    },
     "sizes": [
       "S",
       "M",
@@ -176,7 +181,8 @@
       "Поєднання пом'якшеного льону та натурального шовку",
       "Глибокий смарагдовий природний барвник",
       "Пояс ручної роботи з китицями у комплекті"
-    ]
+    ],
+    "variants": []
   },
   {
     "id": "podillya",
@@ -184,25 +190,26 @@
     "name": "Корсет «Поділля»",
     "category": "accessories",
     "cat": "accessories",
-    "category_name": "Корсети & Крайки",
+    "category_name": "Аксесуари",
     "price": 3900,
     "oldPrice": null,
     "sale": null,
     "inStock": true,
+    "isArchived": false,
     "fabric": "Оксамит & Металеві кісточки",
     "badge": "Скульптурний крій",
     "sub_badge": "Авторська серія",
     "description": "Ідеальна підтримка стану, регульована шовкова шнурівка та рельєфна гладь подільських квітів.",
     "colors": [
-      {
-        "name": "Чорний оксамит",
-        "hex": "#1B1B1A"
-      },
-      {
-        "name": "Бордо",
-        "hex": "#5E1020"
-      }
+      "Чорний оксамит",
+      "Бордо"
     ],
+    "colorImages": {
+      "Чорний оксамит": [
+        "/images/podillya_corset_1789843684134.jpg",
+        "/images/berehynia_detail_1789843714868.jpg"
+      ]
+    },
     "sizes": [
       "XS",
       "S",
@@ -218,7 +225,8 @@
       "Анатомічні металеві кісточки з німецької сталі",
       "Шовкова підкладка, що приємна до тіла",
       "Автентична рельєфна гладь ручної роботи"
-    ]
+    ],
+    "variants": []
   },
   {
     "id": "dzherelo",
@@ -231,16 +239,20 @@
     "oldPrice": null,
     "sale": null,
     "inStock": true,
+    "isArchived": false,
     "fabric": "100% пом'якшений льон",
     "badge": "Весільний сет",
     "sub_badge": "Парний образ",
     "description": "Гармонійний дует чоловічої сорочки та вишуканої сукні для весілля, вінчання або родинних свят з єдиним сакральним кодом.",
     "colors": [
-      {
-        "name": "Молочний льон",
-        "hex": "#F5F2EB"
-      }
+      "Молочний льон"
     ],
+    "colorImages": {
+      "Молочний льон": [
+        "/images/dzherelo_set_1789843655280.jpg",
+        "/images/marusya_shirt.jpg"
+      ]
+    },
     "sizes": [
       "S / M",
       "M / L",
@@ -255,33 +267,35 @@
       "Ідеальна колористична та орнаментальна узгодженість",
       "Енергетика родинного оберегу та дерева життя",
       "Подарунковий фірмовий дерев'яний бокс"
-    ]
+    ],
+    "variants": []
   },
   {
     "id": "zorya",
     "art": "BL-215",
     "name": "Льонна туніка «Зоря»",
-    "category": "vyshyvanky",
+    "category": "women",
     "cat": "women",
-    "category_name": "Вишиванки",
+    "category_name": "Жіночий одяг",
     "price": 3600,
     "oldPrice": null,
     "sale": null,
     "inStock": true,
+    "isArchived": false,
     "fabric": "Пом'якшений варений льон",
     "badge": "Літній реліз",
     "sub_badge": "Легкий крій",
     "description": "Полегшена літня туніка з контрастною синьо-теракотовою вишивкою та розрізами з боків.",
     "colors": [
-      {
-        "name": "Пісочний",
-        "hex": "#E8DEC8"
-      },
-      {
-        "name": "Волошковий",
-        "hex": "#4C6E8D"
-      }
+      "Пісочний",
+      "Волошковий"
     ],
+    "colorImages": {
+      "Пісочний": [
+        "/images/zorya_tunic_1789843670230.jpg",
+        "/images/berehynia_back_1789843731157.jpg"
+      ]
+    },
     "sizes": [
       "One Size (XS-L)"
     ],
@@ -294,6 +308,7 @@
       "Вільний розслаблений силует оверсайз",
       "Тактильний варений льон, що не потребує прасування",
       "Гарно поєднується з легкими брюками та джинсами"
-    ]
+    ],
+    "variants": []
   }
 ]

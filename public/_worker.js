@@ -84,23 +84,24 @@ export default {
 
       // GET /api/categories
       if (url.pathname === '/api/categories' && request.method === 'GET') {
-        let cats = DEFAULT_CATEGORIES;
+        let cats = null;
         if (kv) {
           try {
             const stored = await kv.get('belle_categories', 'json');
             if (Array.isArray(stored) && stored.length > 0) {
-              const hasObsolete = stored.some(c => 
-                c.name && (c.name.includes('КРАЙКИ') || c.name.includes('Крайки') || c.name.includes('ПАЛЬТА') || c.name.includes('Пальта'))
-              );
-              if (!hasObsolete) {
-                cats = stored;
-              } else {
-                await kv.put('belle_categories', JSON.stringify(DEFAULT_CATEGORIES));
-              }
+              cats = stored;
             }
           } catch(e) {}
         }
-        return jsonResponse({ success: true, categories: cats });
+        if (!cats) {
+          try {
+            const assetRes = await env.ASSETS.fetch(new Request(new URL('/data/categories.json', request.url)));
+            if (assetRes.ok) {
+              cats = await assetRes.json();
+            }
+          } catch(e) {}
+        }
+        return jsonResponse({ success: true, categories: cats || DEFAULT_CATEGORIES });
       }
 
       // POST /api/categories
@@ -115,14 +116,24 @@ export default {
 
       // GET /api/settings
       if (url.pathname === '/api/settings' && request.method === 'GET') {
-        let settings = {};
+        let settings = null;
         if (kv) {
           try {
             const stored = await kv.get('belle_site_texts', 'json');
-            if (stored) settings = stored;
+            if (stored && typeof stored === 'object' && Object.keys(stored).length > 0) {
+              settings = stored;
+            }
           } catch(e) {}
         }
-        return jsonResponse({ success: true, settings });
+        if (!settings) {
+          try {
+            const assetRes = await env.ASSETS.fetch(new Request(new URL('/data/settings.json', request.url)));
+            if (assetRes.ok) {
+              settings = await assetRes.json();
+            }
+          } catch(e) {}
+        }
+        return jsonResponse({ success: true, settings: settings || {} });
       }
 
       // POST /api/settings

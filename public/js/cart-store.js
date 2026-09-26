@@ -87,8 +87,8 @@ const DEFAULT_PRODUCTS = [
     art: 'BL-402',
     name: 'Сукня «Берегиня»',
     cat: 'women',
-    category: 'dresses',
-    category_name: 'Плаття та сукні',
+    category: 'women',
+    category_name: 'Жіночий одяг',
     price: 4800,
     oldPrice: null,
     sale: null,
@@ -98,21 +98,31 @@ const DEFAULT_PRODUCTS = [
     description: "Монохромна борщівська техніка, оздоблена витонченим мереживом ручного плетіння. Вільний автентичний силует з пишними рукавами-бохо.",
     sizes: ['XS', 'S', 'M', 'L', 'XL', 'Індивідуальні мірки'],
     colors: ['Молочний / Сирий льон', 'Глибокий бордо', 'Графіт'],
+    colorImages: {
+      "Молочний / Сирий льон": [
+        "/images/berehynia_dress_1789843600634.jpg",
+        "/images/berehynia_detail_1789843714868.jpg",
+        "/images/berehynia_back_1789843731157.jpg",
+        "/images/berehynia_motion_1789843747467.jpg"
+      ]
+    },
     img: '/images/berehynia_dress_1789843600634.jpg',
     images: [
       '/images/berehynia_dress_1789843600634.jpg',
       '/images/berehynia_detail_1789843714868.jpg',
       '/images/berehynia_back_1789843731157.jpg',
       '/images/berehynia_motion_1789843747467.jpg'
-    ]
+    ],
+    variants: [],
+    specialOffers: []
   },
   {
     id: 'oberig',
     art: 'BL-108',
     name: 'Сорочка «Оберіг»',
     cat: 'men',
-    category: 'vyshyvanky',
-    category_name: 'Вишиванки',
+    category: 'men',
+    category_name: 'Чоловічий одяг',
     price: 3950,
     oldPrice: 4800,
     sale: 'SALE −22%',
@@ -122,19 +132,25 @@ const DEFAULT_PRODUCTS = [
     description: "Класична аристократична сорочка з вишуканою геометричною вишивкою коміра-стійки та манжетів. Вільний крій, що пасує до будь-якого образу.",
     sizes: ['XS', 'S', 'M', 'L', 'XL'],
     colors: ['Графітово-чорний', 'Молочний льон'],
+    colorImages: {
+      "Графітово-чорний": ["/images/oberig_shirt_1789843615744.jpg"],
+      "Молочний льон": ["/images/berehynia_back_1789843731157.jpg"]
+    },
     img: '/images/oberig_shirt_1789843615744.jpg',
     images: [
       '/images/oberig_shirt_1789843615744.jpg',
       '/images/berehynia_back_1789843731157.jpg'
-    ]
+    ],
+    variants: [],
+    specialOffers: []
   },
   {
     id: 'hetmansky',
     art: 'BL-512',
     name: 'Жакет «Гетьманський»',
     cat: 'women',
-    category: 'jackets',
-    category_name: 'Жакети та пальта',
+    category: 'women',
+    category_name: 'Жіночий одяг',
     price: 5400,
     oldPrice: null,
     sale: null,
@@ -144,19 +160,27 @@ const DEFAULT_PRODUCTS = [
     description: "Шляхетний жакет з оксамитовими манжетами та золотавим сутажем за лекалами козацької старшини.",
     sizes: ['XS', 'S', 'M'],
     colors: ['Глибокий чорний', 'Королівський синій'],
+    colorImages: {
+      "Глибокий чорний": [
+        "/images/hetman_jacket_1789843629464.jpg",
+        "/images/atelier_workshop.jpg"
+      ]
+    },
     img: '/images/hetman_jacket_1789843629464.jpg',
     images: [
       '/images/hetman_jacket_1789843629464.jpg',
       '/images/atelier_workshop.jpg'
-    ]
+    ],
+    variants: [],
+    specialOffers: []
   },
   {
     id: 'mavka',
     art: 'BL-304',
     name: 'Сукня «Мавка»',
     cat: 'women',
-    category: 'dresses',
-    category_name: 'Плаття та сукні',
+    category: 'women',
+    category_name: 'Жіночий одяг',
     price: 4500,
     oldPrice: 5800,
     sale: 'SALE −22%',
@@ -166,11 +190,19 @@ const DEFAULT_PRODUCTS = [
     description: "Летюча смарагдова сукня з шовковими вставками та золотавою вишивкою лісових мотивів живої природи.",
     sizes: ['S', 'M', 'L'],
     colors: ['Смарагд', 'Шавлія'],
+    colorImages: {
+      "Смарагд": [
+        "/images/mavka_dress_1789843642965.jpg",
+        "/images/berehynia_motion_1789843747467.jpg"
+      ]
+    },
     img: '/images/mavka_dress_1789843642965.jpg',
     images: [
       '/images/mavka_dress_1789843642965.jpg',
       '/images/berehynia_motion_1789843747467.jpg'
-    ]
+    ],
+    variants: [],
+    specialOffers: []
   },
   {
     id: 'podillya',
@@ -178,7 +210,7 @@ const DEFAULT_PRODUCTS = [
     name: 'Корсет «Поділля»',
     cat: 'accessories',
     category: 'accessories',
-    category_name: 'Корсети & Крайки',
+    category_name: 'Аксесуари',
     price: 3900,
     oldPrice: null,
     sale: null,
@@ -188,16 +220,24 @@ const DEFAULT_PRODUCTS = [
     description: "Ідеальна підтримка стану, регульована шовкова шнурівка та рельєфна гладь подільських квітів.",
     sizes: ['XS', 'S', 'M', 'L'],
     colors: ['Чорний оксамит', 'Бордо'],
+    colorImages: {
+      "Чорний оксамит": [
+        "/images/podillya_corset_1789843684134.jpg",
+        "/images/berehynia_detail_1789843714868.jpg"
+      ]
+    },
     img: '/images/podillya_corset_1789843684134.jpg',
     images: [
       '/images/podillya_corset_1789843684134.jpg',
       '/images/berehynia_detail_1789843714868.jpg'
-    ]
+    ],
+    variants: [],
+    specialOffers: []
   },
   {
     id: 'dzherelo',
     art: 'BL-770',
-    name: 'Сет «Джерело Життя»',
+    name: 'Парний сет «Джерело Життя»',
     cat: 'sets',
     category: 'sets',
     category_name: 'Парні комплекти',
@@ -210,19 +250,27 @@ const DEFAULT_PRODUCTS = [
     description: "Гармонійний дует чоловічої сорочки та вишуканої сукні для весілля, вінчання або родинних свят.",
     sizes: ['S / M', 'M / L', 'Індивідуальні мірки'],
     colors: ['Молочний льон'],
+    colorImages: {
+      "Молочний льон": [
+        "/images/dzherelo_set_1789843655280.jpg",
+        "/images/marusya_shirt.jpg"
+      ]
+    },
     img: '/images/dzherelo_set_1789843655280.jpg',
     images: [
       '/images/dzherelo_set_1789843655280.jpg',
       '/images/marusya_shirt.jpg'
-    ]
+    ],
+    variants: [],
+    specialOffers: []
   },
   {
     id: 'zorya',
     art: 'BL-215',
-    name: 'Туніка «Зоря»',
+    name: 'Льонна туніка «Зоря»',
     cat: 'women',
-    category: 'vyshyvanky',
-    category_name: 'Вишиванки',
+    category: 'women',
+    category_name: 'Жіночий одяг',
     price: 3600,
     oldPrice: null,
     sale: null,
@@ -232,11 +280,19 @@ const DEFAULT_PRODUCTS = [
     description: "Полегшена літня туніка з контрастною синьо-теракотовою вишивкою та розрізами з боків.",
     sizes: ['One Size (XS-L)'],
     colors: ['Пісочний', 'Волошковий'],
+    colorImages: {
+      "Пісочний": [
+        "/images/zorya_tunic_1789843670230.jpg",
+        "/images/berehynia_back_1789843731157.jpg"
+      ]
+    },
     img: '/images/zorya_tunic_1789843670230.jpg',
     images: [
-      '/images/zorya_tunic_1789843670230.jpg',
-      '/images/berehynia_back_1789843731157.jpg'
-    ]
+      "/images/zorya_tunic_1789843670230.jpg",
+      "/images/berehynia_back_1789843731157.jpg"
+    ],
+    variants: [],
+    specialOffers: []
   }
 ];
 
@@ -244,6 +300,9 @@ const BelleStore = {
   _cachedProducts: null,
   escapeHTML,
   normalizeImgUrl,
+};
+window.BelleStore = BelleStore;
+Object.assign(BelleStore, {
 
   // --- PRODUCTS CRUD WITH INDEXEDDB & SERVER SYNC ---
   getProducts() {
@@ -280,13 +339,63 @@ const BelleStore = {
       ? p.colors.map(c => typeof c === 'object' && c ? (c.name || c.color || '') : String(c)).filter(Boolean)
       : ['Молочний'];
 
+    // Normalize colorImages
+    const cleanColorImages = {};
+    if (p.colorImages && typeof p.colorImages === 'object') {
+      Object.entries(p.colorImages).forEach(([cName, cPhotos]) => {
+        if (Array.isArray(cPhotos) && cPhotos.length > 0) {
+          cleanColorImages[cName] = cPhotos.filter(Boolean).map(normalizeImgUrl);
+        }
+      });
+    }
+
+    // Normalize variants
+    const cleanVariants = Array.isArray(p.variants) ? p.variants.map(v => {
+      const vImages = Array.isArray(v.images) && v.images.length > 0
+        ? v.images.filter(Boolean).map(normalizeImgUrl)
+        : (v.img ? [normalizeImgUrl(v.img)] : []);
+      return {
+        ...v,
+        id: v.id || 'var_' + Math.random().toString(36).substring(2, 9),
+        color: v.color || '',
+        size: v.size || '',
+        price: v.price ? Math.max(0, Math.round(Number(v.price))) : null,
+        oldPrice: v.oldPrice ? Math.max(0, Math.round(Number(v.oldPrice))) : null,
+        sale: v.sale || (v.oldPrice && v.oldPrice > v.price ? `SALE −${Math.round((1 - v.price/v.oldPrice)*100)}%` : null),
+        img: vImages[0] || (v.img ? normalizeImgUrl(v.img) : rawImages[0]),
+        images: vImages
+      };
+    }) : [];
+
+    // Normalize specialOffers
+    const cleanSpecialOffers = Array.isArray(p.specialOffers) ? p.specialOffers.map(sp => {
+      const spImages = Array.isArray(sp.images) && sp.images.length > 0
+        ? sp.images.filter(Boolean).map(normalizeImgUrl)
+        : (sp.img ? [normalizeImgUrl(sp.img)] : []);
+      return {
+        ...sp,
+        id: sp.id || 'sp_' + Math.random().toString(36).substring(2, 9),
+        title: String(sp.title || sp.name || 'Спеціальна пропозиція'),
+        price: Math.max(0, Math.round(Number(sp.price) || 0)),
+        oldPrice: sp.oldPrice ? Math.max(0, Math.round(Number(sp.oldPrice))) : null,
+        sale: sp.sale || (sp.oldPrice && sp.oldPrice > sp.price ? `SALE −${Math.round((1 - sp.price/sp.oldPrice)*100)}%` : null),
+        description: String(sp.description || ''),
+        img: spImages[0] || (sp.img ? normalizeImgUrl(sp.img) : rawImages[0]),
+        images: spImages
+      };
+    }) : [];
+
+    const finalCat = (p.cat === 'dresses' || p.cat === 'vyshyvanky' || p.cat === 'jackets') ? 'women' : (p.cat || p.category || 'women');
+    const finalCategory = (p.category === 'dresses' || p.category === 'vyshyvanky' || p.category === 'jackets') ? 'women' : (p.category || p.cat || 'women');
+
     return {
       ...p,
       id: String(p.id || ''),
       name: String(p.name || ''),
       art: String(p.art || 'BL-000'),
-      cat: p.cat || p.category || 'women',
-      category: p.category || p.cat || 'women',
+      cat: finalCat,
+      category: finalCategory,
+      category_name: p.category_name || (finalCat === 'women' ? 'Жіночий одяг' : (finalCat === 'men' ? 'Чоловічий одяг' : (finalCat === 'sets' ? 'Парні комплекти' : (finalCat === 'accessories' ? 'Аксесуари' : 'Одяг')))),
       price: Math.max(0, Math.round(Number(p.price) || 0)),
       oldPrice: p.oldPrice ? Math.max(0, Math.round(Number(p.oldPrice))) : null,
       sale: p.sale || null,
@@ -298,8 +407,9 @@ const BelleStore = {
         ? p.sizes.map(s => typeof s === 'object' && s ? (s.name || s.size || '') : String(s)).filter(Boolean)
         : ['XS', 'S', 'M', 'L', 'XL'],
       colors: cleanColors.length > 0 ? cleanColors : ['Молочний'],
-      colorImages: (p.colorImages && typeof p.colorImages === 'object') ? p.colorImages : {},
-      variants: Array.isArray(p.variants) ? p.variants : [],
+      colorImages: cleanColorImages,
+      variants: cleanVariants,
+      specialOffers: cleanSpecialOffers,
       img: rawImages[0],
       images: rawImages,
       updatedAt: Number(p.updatedAt) || 0
@@ -567,7 +677,6 @@ const BelleStore = {
     this.showToast('Каталог скинуто до початкового стану');
   },
 
-  // --- CATEGORIES CRUD ---
   getCategories() {
     const DEFAULT_CATEGORIES = [
       { id: 'women', name: 'Жіночий одяг', icon: 'checkroom', order: 1 },
@@ -582,12 +691,18 @@ const BelleStore = {
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          parsed.forEach(c => {
-            if (c.id === 'sale' || c.isSale || (c.name && c.name.toLowerCase().includes('sale'))) {
-              c.name = 'SALE';
-            }
-          });
-          return parsed;
+          // Check for obsolete/corrupt categories
+          const hasObsolete = parsed.some(c => 
+            c.name && (c.name.includes('КРАЙКИ') || c.name.includes('Крайки') || c.name.includes('ПАЛЬТА') || c.name.includes('Пальта') || c.name.includes('ЖАКЕТИ') || c.name.includes('Жакети'))
+          );
+          if (!hasObsolete) {
+            parsed.forEach(c => {
+              if (c.id === 'sale' || c.isSale || (c.name && c.name.toLowerCase().includes('sale'))) {
+                c.name = 'SALE';
+              }
+            });
+            return parsed;
+          }
         }
       }
     } catch (e) {
@@ -1543,7 +1658,7 @@ const BelleStore = {
       toast.classList.add('translate-y-20', 'opacity-0');
     }, 3500);
   }
-};
+});
 
 // Global helper wrappers for all pages
 window.openWishlistModal = function() {

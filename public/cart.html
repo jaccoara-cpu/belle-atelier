@@ -540,6 +540,8 @@
       if (saved) defaultSaved = JSON.parse(saved);
     } catch(e) {}
 
+    const catalogProds = (typeof BelleStore !== 'undefined' && BelleStore.getProducts) ? BelleStore.getProducts() : [];
+
     container.innerHTML = cartItems.map((it, idx) => {
       const matchedCatProd = catalogProds.find(cp => cp.id === it.id);
       const safeName = escapeHTML(it.name || (matchedCatProd ? matchedCatProd.name : 'Виріб'));

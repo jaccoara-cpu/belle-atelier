@@ -930,6 +930,30 @@
           </div>
         </div>
 
+        <!-- Special Offers (Спеціальні пропозиції з власними фото та ціною) -->
+        <div class="bg-surface-container-lowest p-4 border border-surface-container-high rounded-xs space-y-3">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="flex items-center gap-1.5 font-semibold text-primary text-xs uppercase tracking-wider">
+                <span class="material-symbols-outlined text-[18px]">local_offer</span>
+                <span>Спеціальні пропозиції товару</span>
+              </div>
+              <p class="text-[11px] text-secondary font-medium mt-0.5">Власні фото, спецціна та бейдж (фото спецпропозицій ніколи не змішуються з кольорами)</p>
+            </div>
+            <button type="button" onclick="addSpecialOfferRow()" class="py-1 px-2.5 bg-primary/10 text-primary hover:bg-primary hover:text-white rounded-xs font-semibold text-xs transition-colors flex items-center gap-1">
+              <span class="material-symbols-outlined text-[15px]">add</span>
+              <span>+ Спецпропозиція</span>
+            </button>
+          </div>
+
+          <div id="form-special-offers-container" class="space-y-2.5">
+            <!-- Dynamically populated special offer rows -->
+          </div>
+          <div id="form-special-offers-empty" class="text-center py-2 text-[11px] text-outline italic">
+            Немає окремих спецпропозицій
+          </div>
+        </div>
+
         <div class="flex items-center gap-6 pt-2">
           <label class="flex items-center gap-2 cursor-pointer font-semibold text-on-surface">
             <input type="checkbox" id="form-in-stock" checked class="w-4 h-4 text-primary accent-primary rounded" />
@@ -1759,35 +1783,72 @@
         const safeColor = escapeHTML(color);
 
         return `
-          <div class="p-2.5 bg-white border border-surface-container-high rounded-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs">
-            <div class="flex items-center gap-2">
-              <span class="w-3 h-3 rounded-full border border-black/20 bg-primary"></span>
-              <div>
-                <span class="text-xs font-bold text-primary uppercase">${safeColor}</span>
-                <span class="text-[10px] text-secondary ml-1.5 font-medium">(${photos.length} фото)</span>
+          <div class="p-3 bg-white border border-surface-container-high rounded-xs space-y-2.5 shadow-2xs">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-surface-container-high/60 pb-2">
+              <div class="flex items-center gap-2">
+                <span class="w-3.5 h-3.5 rounded-full border border-black/20 bg-primary"></span>
+                <div>
+                  <span class="text-xs font-bold text-primary uppercase">${safeColor}</span>
+                  <span class="text-[10px] text-secondary ml-1.5 font-medium">(${photos.length} фото)</span>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-2">
+                <input type="file" id="color-file-input-${cIdx}" accept="image/*" multiple class="hidden" onchange="handleColorPhotoUpload(this, '${safeColor}')" />
+                <button type="button" onclick="document.getElementById('color-file-input-${cIdx}').click()" class="py-1 px-3 bg-primary/10 hover:bg-primary hover:text-white text-primary rounded-xs text-[11px] font-semibold transition-colors flex items-center gap-1 shadow-2xs">
+                  <span class="material-symbols-outlined text-[15px]">add_photo_alternate</span>
+                  <span>+ Додати фото до «${safeColor}»</span>
+                </button>
               </div>
             </div>
 
-            <!-- Photos thumbnails + Upload button -->
+            <!-- Photos thumbnails grid with Reorder & Delete -->
             <div class="flex items-center gap-2 flex-wrap">
+              ${photos.length === 0 ? '<span class="text-[11px] text-outline italic">Немає окремих фото для цього кольору (клієнт побачить фото за замовчуванням).</span>' : ''}
               ${photos.map((im, pIdx) => `
-                <div class="relative w-12 h-14 rounded-xs overflow-hidden border border-surface-container-high shrink-0 group">
+                <div class="relative w-16 h-20 rounded-xs overflow-hidden border border-surface-container-high shrink-0 group shadow-2xs bg-surface-container">
                   <img src="${im}" class="w-full h-full object-cover" />
-                  <button type="button" onclick="removeColorPhoto('${safeColor}', ${pIdx})" class="absolute inset-0 bg-red-600/80 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity" title="Видалити це фото">
-                    <span class="material-symbols-outlined text-[16px]">close</span>
-                  </button>
+                  
+                  <!-- Badges / Controls -->
+                  <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex flex-col justify-between p-1 transition-opacity">
+                    <div class="flex items-center justify-between">
+                      <span class="text-[9px] text-white font-mono bg-black/60 px-1 rounded-2xs">#${pIdx + 1}</span>
+                      <button type="button" onclick="removeColorPhoto('${safeColor}', ${pIdx})" class="p-0.5 rounded-full bg-red-600 text-white hover:bg-red-700" title="Видалити фото">
+                        <span class="material-symbols-outlined text-[12px]">close</span>
+                      </button>
+                    </div>
+
+                    <!-- Move Left / Right -->
+                    <div class="flex items-center justify-center gap-1">
+                      ${pIdx > 0 ? `
+                        <button type="button" onclick="moveColorPhoto('${safeColor}', ${pIdx}, -1)" class="p-0.5 rounded bg-white/80 hover:bg-white text-primary" title="Посунути ліворуч">
+                          <span class="material-symbols-outlined text-[12px]">arrow_back</span>
+                        </button>
+                      ` : ''}
+                      ${pIdx < photos.length - 1 ? `
+                        <button type="button" onclick="moveColorPhoto('${safeColor}', ${pIdx}, 1)" class="p-0.5 rounded bg-white/80 hover:bg-white text-primary" title="Посунути праворуч">
+                          <span class="material-symbols-outlined text-[12px]">arrow_forward</span>
+                        </button>
+                      ` : ''}
+                    </div>
+                  </div>
                 </div>
               `).join('')}
-
-              <input type="file" id="color-file-input-${cIdx}" accept="image/*" multiple class="hidden" onchange="handleColorPhotoUpload(this, '${safeColor}')" />
-              <button type="button" onclick="document.getElementById('color-file-input-${cIdx}').click()" class="py-1.5 px-3 bg-surface hover:bg-surface-container border border-dashed border-primary/60 text-primary rounded-xs text-[11px] font-semibold transition-colors flex items-center gap-1 shadow-2xs">
-                <span class="material-symbols-outlined text-[16px]">add_photo_alternate</span>
-                <span>+ Додати фото до кольору «${safeColor}»</span>
-              </button>
             </div>
           </div>
         `;
       }).join('');
+    }
+
+    function moveColorPhoto(color, pIdx, delta) {
+      if (!currentColorPhotos[color] || !Array.isArray(currentColorPhotos[color])) return;
+      const arr = currentColorPhotos[color];
+      const targetIdx = pIdx + delta;
+      if (targetIdx >= 0 && targetIdx < arr.length) {
+        const item = arr.splice(pIdx, 1)[0];
+        arr.splice(targetIdx, 0, item);
+        renderColorPhotosUI();
+      }
     }
 
     async function handleColorPhotoUpload(input, color) {
@@ -1837,6 +1898,164 @@
         currentProductColors.push(val);
         input.value = '';
         renderColorsSelector();
+      }
+    }
+
+    // --- SPECIAL OFFERS MANAGEMENT ---
+    let currentSpecialOffers = [];
+
+    function renderSpecialOffersUI() {
+      const container = document.getElementById('form-special-offers-container');
+      const emptyEl = document.getElementById('form-special-offers-empty');
+      if (!container || !emptyEl) return;
+
+      if (!currentSpecialOffers || currentSpecialOffers.length === 0) {
+        container.innerHTML = '';
+        emptyEl.classList.remove('hidden');
+        return;
+      }
+
+      emptyEl.classList.add('hidden');
+
+      container.innerHTML = currentSpecialOffers.map((offer, idx) => {
+        const discountPct = (offer.oldPrice && Number(offer.oldPrice) > Number(offer.price)) 
+          ? Math.round((1 - Number(offer.price) / Number(offer.oldPrice)) * 100) 
+          : 0;
+        const photos = Array.isArray(offer.images) ? offer.images : (offer.img ? [offer.img] : []);
+
+        return `
+          <div class="p-3 bg-white border border-surface-container-high rounded-xs text-xs space-y-2.5 shadow-2xs">
+            <div class="flex items-center justify-between border-b border-surface-container-high/60 pb-2">
+              <span class="font-bold text-primary uppercase text-[11px] flex items-center gap-1">
+                <span class="material-symbols-outlined text-[16px]">local_offer</span>
+                <span>Спеціальна пропозиція #${idx + 1}</span>
+              </span>
+              <button type="button" onclick="removeSpecialOfferRow(${idx})" title="Видалити спецпропозицію" class="text-outline hover:text-red-700 text-xs flex items-center gap-0.5">
+                <span class="material-symbols-outlined text-[16px]">delete</span>
+                <span>Видалити</span>
+              </button>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+              <div>
+                <label class="block text-[10px] text-primary font-bold uppercase mb-1">Назва / Заголовок спецпропозиції *</label>
+                <input type="text" placeholder="Напр. Сет зі знижкою 20%" value="${escapeHTML(offer.title || '')}" oninput="updateSpecialOfferData(${idx}, 'title', this.value)" class="w-full py-1.5 px-2 bg-surface border border-surface-container-high focus:border-primary font-medium text-xs" />
+              </div>
+
+              <div>
+                <label class="block text-[10px] text-primary font-bold uppercase mb-1">Ціна спецпропозиції (₴) *</label>
+                <input type="number" required min="1" step="any" placeholder="4200" value="${offer.price || ''}" oninput="updateSpecialOfferData(${idx}, 'price', this.value)" class="w-full py-1.5 px-2 bg-surface border border-surface-container-high focus:border-primary font-bold text-primary text-xs" />
+              </div>
+
+              <div>
+                <label class="block text-[10px] text-outline font-semibold uppercase mb-1">Стара ціна (₴)</label>
+                <div class="flex items-center gap-1">
+                  <input type="number" min="1" step="any" placeholder="5200" value="${offer.oldPrice || ''}" oninput="updateSpecialOfferData(${idx}, 'oldPrice', this.value)" class="w-full py-1.5 px-2 bg-surface border border-surface-container-high focus:border-primary font-medium text-xs" />
+                  <span id="offer-discount-badge-${idx}" class="shrink-0 text-[10px] font-bold bg-primary text-white px-1.5 py-0.5 rounded-xs ${discountPct > 0 ? '' : 'hidden'}">-${discountPct}%</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Dedicated Promo Photos for this offer -->
+            <div class="pt-2 border-t border-surface-container-high/60">
+              <div class="flex items-center justify-between mb-1.5">
+                <label class="text-[10px] font-bold uppercase text-primary flex items-center gap-1">
+                  <span class="material-symbols-outlined text-[14px]">photo_camera</span>
+                  <span>Фотографії саме цієї спецпропозиції (${photos.length})</span>
+                </label>
+                <input type="file" id="offer-file-input-${idx}" accept="image/*" multiple class="hidden" onchange="handleSpecialOfferPhotoUpload(this, ${idx})" />
+                <button type="button" onclick="document.getElementById('offer-file-input-${idx}').click()" class="py-1 px-2.5 bg-secondary/10 hover:bg-secondary hover:text-white text-secondary rounded-xs text-[10px] font-semibold transition-colors flex items-center gap-1">
+                  <span class="material-symbols-outlined text-[14px]">add_photo_alternate</span>
+                  <span>+ Додати фото</span>
+                </button>
+              </div>
+
+              <div class="flex items-center gap-2 flex-wrap">
+                ${photos.length === 0 ? '<span class="text-[11px] text-outline italic">Немає окремих фото (буде показано головне фото товару).</span>' : ''}
+                ${photos.map((im, pIdx) => `
+                  <div class="relative w-14 h-18 rounded-xs overflow-hidden border border-surface-container-high shrink-0 group bg-surface-container shadow-2xs">
+                    <img src="${im}" class="w-full h-full object-cover" />
+                    <button type="button" onclick="removeSpecialOfferPhoto(${idx}, ${pIdx})" class="absolute inset-0 bg-red-600/80 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity" title="Видалити це фото">
+                      <span class="material-symbols-outlined text-[14px]">close</span>
+                    </button>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function addSpecialOfferRow() {
+      const basePrice = Number(document.getElementById('form-price')?.value) || 4800;
+      const baseOldPrice = Number(document.getElementById('form-old-price')?.value) || null;
+      currentSpecialOffers.push({
+        id: 'offer_' + Date.now(),
+        title: 'Спеціальна пропозиція',
+        price: basePrice,
+        oldPrice: baseOldPrice,
+        images: []
+      });
+      renderSpecialOffersUI();
+    }
+
+    function removeSpecialOfferRow(idx) {
+      currentSpecialOffers.splice(idx, 1);
+      renderSpecialOffersUI();
+    }
+
+    function updateSpecialOfferData(idx, field, value) {
+      if (!currentSpecialOffers[idx]) return;
+      if (field === 'price' || field === 'oldPrice') {
+        currentSpecialOffers[idx][field] = value ? Number(value) : null;
+        const offer = currentSpecialOffers[idx];
+        const badge = document.getElementById(`offer-discount-badge-${idx}`);
+        const discountPct = (offer.oldPrice && Number(offer.oldPrice) > Number(offer.price)) 
+          ? Math.round((1 - Number(offer.price) / Number(offer.oldPrice)) * 100) 
+          : 0;
+        if (badge) {
+          if (discountPct > 0) {
+            badge.textContent = `-${discountPct}%`;
+            badge.classList.remove('hidden');
+          } else {
+            badge.classList.add('hidden');
+          }
+        }
+      } else {
+        currentSpecialOffers[idx][field] = value.trim();
+      }
+    }
+
+    async function handleSpecialOfferPhotoUpload(input, idx) {
+      if (input.files && input.files.length > 0 && currentSpecialOffers[idx]) {
+        const files = Array.from(input.files);
+        BelleStore.showToast(`Обробка фото для спецпропозиції (${files.length})...`);
+        const results = await Promise.all(files.map(uploadOrCompressImage));
+        const validPhotos = results.filter(Boolean);
+
+        if (validPhotos.length > 0) {
+          if (!Array.isArray(currentSpecialOffers[idx].images)) {
+            currentSpecialOffers[idx].images = [];
+          }
+          validPhotos.forEach(p => {
+            if (!currentSpecialOffers[idx].images.includes(p)) {
+              currentSpecialOffers[idx].images.push(p);
+            }
+          });
+          currentSpecialOffers[idx].img = currentSpecialOffers[idx].images[0];
+          renderSpecialOffersUI();
+          BelleStore.showToast("Фото спецпропозиції успішно додано! ✨");
+        }
+      }
+      input.value = '';
+    }
+
+    function removeSpecialOfferPhoto(oIdx, pIdx) {
+      if (currentSpecialOffers[oIdx] && Array.isArray(currentSpecialOffers[oIdx].images)) {
+        currentSpecialOffers[oIdx].images.splice(pIdx, 1);
+        currentSpecialOffers[oIdx].img = currentSpecialOffers[oIdx].images[0] || '';
+        renderSpecialOffersUI();
       }
     }
 
@@ -2472,6 +2691,10 @@
           
           currentVariants = Array.isArray(p.variants) ? JSON.parse(JSON.stringify(p.variants)) : [];
           renderVariantsUI();
+
+          currentSpecialOffers = Array.isArray(p.specialOffers) ? JSON.parse(JSON.stringify(p.specialOffers)) : [];
+          renderSpecialOffersUI();
+
           updateDiscountBadge();
         }
       } else {
@@ -2492,6 +2715,10 @@
 
         currentVariants = [];
         renderVariantsUI();
+
+        currentSpecialOffers = [];
+        renderSpecialOffersUI();
+
         updateDiscountBadge();
       }
 
@@ -2518,6 +2745,17 @@
         });
       }
 
+      const cleanSpecialOffers = currentSpecialOffers
+        .filter(so => so.title && so.price)
+        .map(so => ({
+          id: so.id || ('offer_' + Date.now()),
+          title: so.title.trim(),
+          price: Number(so.price),
+          oldPrice: so.oldPrice ? Number(so.oldPrice) : null,
+          sale: (so.oldPrice && Number(so.oldPrice) > Number(so.price)) ? `SALE −${Math.round((1 - Number(so.price) / Number(so.oldPrice)) * 100)}%` : null,
+          images: Array.isArray(so.images) && so.images.length > 0 ? so.images.map(normalizeImgUrl) : (so.img ? [normalizeImgUrl(so.img)] : [])
+        }));
+
       const productData = {
         name: document.getElementById('form-name').value.trim(),
         art: document.getElementById('form-art').value.trim(),
@@ -2532,6 +2770,7 @@
         colors: currentProductColors.length > 0 ? currentProductColors : ['Молочний'],
         colorImages: cleanColorImages,
         sizes: currentProductSizes.length > 0 ? currentProductSizes : ['XS', 'S', 'M', 'L', 'XL'],
+        specialOffers: cleanSpecialOffers,
         variants: currentVariants.filter(v => v.price && (v.size || v.color || v.img || (Array.isArray(v.images) && v.images.length > 0))).map(v => ({
           ...v,
           img: (Array.isArray(v.images) && v.images[0]) || v.img || primaryPhoto,
