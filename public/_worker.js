@@ -417,7 +417,8 @@ export default {
                 return new Response(bytes, {
                   headers: {
                     'Content-Type': mimeType,
-                    'Cache-Control': 'public, max-age=31536000, immutable',
+                    'Cache-Control': 'public, max-age=86400, stale-while-revalidate=3600',
+                    'ETag': `"${imgId}"`,
                     'Access-Control-Allow-Origin': '*'
                   }
                 });
