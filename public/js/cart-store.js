@@ -902,32 +902,62 @@ Object.assign(BelleStore, {
   },
 
   // --- SHOPPING CART MANAGEMENT ---
+  _cartCache: null,
+
   getCart() {
+    if (this._cartCache && Array.isArray(this._cartCache)) {
+      return this._cartCache;
+    }
     try {
       const stored = localStorage.getItem('belle_cart');
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed)) {
-          return parsed.map(it => ({
+          const normalized = parsed.map(it => ({
             ...it,
             img: normalizeImgUrl(it.img || it.image)
           }));
+          this._cartCache = normalized;
+          return normalized;
         }
       }
     } catch (e) {
       console.error('Error reading cart:', e);
     }
+    this._cartCache = [];
     return [];
   },
 
   saveCart(cart) {
+    this._cartCache = cart;
     try {
       localStorage.setItem('belle_cart', JSON.stringify(cart));
-      this.updateCartBadge();
-      window.dispatchEvent(new CustomEvent('belle-cart-updated', { detail: cart }));
     } catch (e) {
-      console.error('Error saving cart:', e);
+      // If QuotaExceededError (e.g. Due to large base64 image strings), trim image data in localStorage safely
+      try {
+        const lightCart = cart.map(it => {
+          let lightImg = it.img || it.image || '';
+          if (lightImg.length > 500 && lightImg.startsWith('data:image/')) {
+            const prods = this.getProducts();
+            const found = prods.find(p => p.id === it.id);
+            lightImg = (found && (found.img || (found.images && found.images[0]))) || '/images/berehynia_dress_1789843600634.jpg';
+          }
+          return { ...it, img: lightImg, image: lightImg };
+        });
+        localStorage.setItem('belle_cart', JSON.stringify(lightCart));
+      } catch (innerErr) {
+        console.warn('LocalStorage quota limit reached for cart:', innerErr);
+      }
     }
+
+    try {
+      if (typeof BelleDB !== 'undefined' && BelleDB.set) {
+        BelleDB.set('belle_cart', cart);
+      }
+    } catch (_) {}
+
+    this.updateCartBadge();
+    window.dispatchEvent(new CustomEvent('belle-cart-updated', { detail: cart }));
   },
 
   addToCart(item) {
@@ -940,11 +970,21 @@ Object.assign(BelleStore, {
     );
 
     const itemMeasurements = item.measurements || {};
+    let resolvedImg = item.img || item.image;
+    if (!resolvedImg) {
+      const prods = this.getProducts();
+      const p = prods.find(x => x.id === item.id);
+      resolvedImg = (p && (p.img || (p.images && p.images[0]))) || '/images/berehynia_dress_1789843600634.jpg';
+    }
 
     if (existingIndex > -1) {
       cart[existingIndex].quantity = (Number(cart[existingIndex].quantity) || 1) + (Number(item.quantity) || 1);
       if (item.measurements && Object.values(item.measurements).some(Boolean)) {
         cart[existingIndex].measurements = { ...(cart[existingIndex].measurements || {}), ...item.measurements };
+      }
+      if (resolvedImg && (!cart[existingIndex].img || cart[existingIndex].img.includes('berehynia_dress_1789843600634.jpg'))) {
+        cart[existingIndex].img = normalizeImgUrl(resolvedImg);
+        cart[existingIndex].image = normalizeImgUrl(resolvedImg);
       }
     } else {
       const newItemIdx = cart.length;
@@ -953,7 +993,8 @@ Object.assign(BelleStore, {
         art: item.art || 'BL-000',
         name: item.name,
         price: Number(item.price) || 0,
-        img: normalizeImgUrl(item.img || item.image),
+        img: normalizeImgUrl(resolvedImg),
+        image: normalizeImgUrl(resolvedImg),
         size: item.size || 'S',
         color: item.color || 'Молочний',
         quantity: Math.max(1, Number(item.quantity) || 1),

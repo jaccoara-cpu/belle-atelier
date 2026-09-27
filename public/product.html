@@ -763,10 +763,13 @@
     const el = document.getElementById('product-colors-container');
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.add('ring-2', 'ring-primary', 'rounded-xs', 'transition-all');
+      setTimeout(() => el.classList.remove('ring-2', 'ring-primary'), 1000);
     }
   }
 
-  let selectedColor = 'Молочний';
+  let selectedColor = null;
+  let lastRenderedColorList = '';
 
   // --- COLOR SELECTION & VARIANT PHOTO SWITCHING ---
   function renderProductColors() {
@@ -781,19 +784,36 @@
     const colors = rawColors.map(c => typeof c === 'object' && c ? (c.name || c.color || '') : String(c)).filter(Boolean);
     if (colors.length === 0) colors.push('Молочний');
 
-    if (!colors.includes(selectedColor)) {
+    if (!selectedColor || !colors.includes(selectedColor)) {
       selectedColor = colors[0];
     }
 
     const label = document.getElementById('selected-color-label');
     if (label) label.textContent = selectedColor;
 
+    const colorsKey = colors.join('|');
+    if (grid.children.length > 0 && lastRenderedColorList === colorsKey) {
+      // Just update visual selection without wiping DOM listeners
+      document.querySelectorAll('.color-btn').forEach(b => {
+        const bColor = b.getAttribute('data-color');
+        if (bColor === selectedColor) {
+          b.classList.remove('bg-surface', 'text-on-surface', 'border-surface-container-high');
+          b.classList.add('bg-primary', 'text-white', 'border-primary', 'shadow-xs', 'font-bold');
+        } else {
+          b.classList.remove('bg-primary', 'text-white', 'border-primary', 'shadow-xs', 'font-bold');
+          b.classList.add('bg-surface', 'text-on-surface', 'border-surface-container-high');
+        }
+      });
+      return;
+    }
+
+    lastRenderedColorList = colorsKey;
     grid.innerHTML = colors.map(color => {
       const isSelected = color === selectedColor;
       const safeColor = escapeHTML(color);
       const jsSafeColor = color.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
       return `
-        <button type="button" data-color="${safeColor}" onclick="selectProductColor('${jsSafeColor}', true)" class="color-btn py-2 px-3.5 text-center text-xs font-semibold uppercase tracking-wider transition-all rounded-xs border flex items-center gap-1.5 cursor-pointer select-none touch-manipulation ${
+        <button type="button" data-color="${safeColor}" onclick="selectProductColor('${jsSafeColor}', true)" class="color-btn py-2 px-3.5 text-center text-xs font-semibold uppercase tracking-wider transition-all rounded-xs border flex items-center gap-1.5 cursor-pointer select-none active:scale-95 touch-manipulation ${
           isSelected 
             ? 'bg-primary text-white border-primary shadow-xs font-bold' 
             : 'bg-surface text-on-surface border-surface-container-high hover:border-primary'

@@ -381,6 +381,53 @@ export default {
         return jsonResponse({ success: true, orderId: orderData.id });
       }
 
+      // POST /api/upload (Admin Photo Upload)
+      if (url.pathname === '/api/upload' && request.method === 'POST') {
+        const body = await request.json().catch(() => null);
+        const dataUrl = body ? (body.image || body.base64) : null;
+        if (!dataUrl || typeof dataUrl !== 'string') {
+          return jsonResponse({ success: false, error: 'Invalid image data' }, 400);
+        }
+
+        const imgId = 'img_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+        if (kv) {
+          try {
+            await kv.put(imgId, dataUrl);
+            return jsonResponse({ success: true, url: `/api/images/${imgId}` });
+          } catch(e) {}
+        }
+        return jsonResponse({ success: true, url: dataUrl });
+      }
+
+      // GET /api/images/:id
+      if (url.pathname.startsWith('/api/images/') && request.method === 'GET') {
+        const imgId = url.pathname.replace('/api/images/', '');
+        if (kv) {
+          try {
+            const dataUrl = await kv.get(imgId);
+            if (dataUrl && dataUrl.startsWith('data:image/')) {
+              const match = dataUrl.match(/^data:(image\/[a-zA-Z0-9+]+);base64,(.+)$/);
+              if (match) {
+                const mimeType = match[1];
+                const binary = atob(match[2]);
+                const bytes = new Uint8Array(binary.length);
+                for (let i = 0; i < binary.length; i++) {
+                  bytes[i] = binary.charCodeAt(i);
+                }
+                return new Response(bytes, {
+                  headers: {
+                    'Content-Type': mimeType,
+                    'Cache-Control': 'public, max-age=31536000, immutable',
+                    'Access-Control-Allow-Origin': '*'
+                  }
+                });
+              }
+            }
+          } catch(e) {}
+        }
+        return jsonResponse({ success: false, error: 'Image not found' }, 404);
+      }
+
       // Default 404 for unknown api
       return jsonResponse({ success: false, error: 'Endpoint not found' }, 404);
     }
